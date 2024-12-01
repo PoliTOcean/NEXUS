@@ -1,0 +1,73 @@
+.cat{
+  margin: 4px;
+  border-radius: 4px;
+  overflow: hidden;
+  float: left;
+  background-color: #161A1D; 
+}
+
+.cat label {
+    float: left;
+    line-height: 2.5em;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+}
+
+.cat label span {
+  text-align: center;
+  padding: 3px 0;
+  display: block;
+}
+
+.cat label input {
+  position: absolute;
+  display: none;
+  color: #fff !important;
+}
+/* selects all of the text within the input element and changes the color of the text */
+.cat label input + span{color: #fff;}
+
+
+/* This will declare how a selected input will look giving generic properties */
+.cat input:checked + span {
+    color: #ffffff;
+    text-shadow: 0 0  6px rgba(0, 0, 0, 0.8);
+}
+
+.but input:checked + span{
+    background-color: #0055CC;
+}
+
+
+.off {
+  background-color: #AE2E24 !important;
+}
+
+.on {
+  background-color: #216E4E !important;
+}
+
+.cat.status label {
+  float: left; 
+  width: 100%;
+  height: 100%;
+  cursor: default;
+  line-height: 2.0em;
+}
+
+.disabled label {
+  cursor: not-allowed !important;
+}
+
+.clickable {
+  background-color: #282E33;
+}
+
+.clickable label {
+  cursor: pointer !important;
+}
+
+.stoppable {
+  background-color: #AE2E24;
+}

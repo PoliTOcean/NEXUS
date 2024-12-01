@@ -1,0 +1,56 @@
+buttons:
+  B:
+    onPress: "ROTATE_WRIST_CW"
+    onRelease: "STOP_WRIST"
+  Y:
+    onPress: "OPEN_NIPPER"
+    onRelease: "STOP_NIPPER"
+  X:
+    onPress: "ROTATE_WRIST_CCW"
+    onRelease: "STOP_WRIST"
+  A:
+    onPress: "CLOSE_NIPPER"
+    onRelease: "STOP_NIPPER"
+  Back:
+    onPress: "CHANGE_CONTROLLER_STATUS"
+    onRelease:
+  Guide: 
+    onPress:
+    onRelease:
+  Start:
+    onPress:
+    onRelease:
+  LS:
+    onPress: "TORQUE_WRIST_ON"
+    onRelease: "TORQUE_WRIST_OFF"
+  RS:
+    onPress: "CLOSE_NIPPER"
+    onRelease: "STOP_NIPPER"
+  LB:
+    onPress: "SNAP"
+    onRelease: 
+  RB:
+    onPress:
+    onRelease:
+  D-Pad-Up:
+    onPress: "DPAD_UP"
+    onRelease:
+  D-Pad-Down:
+    onPress: "DPAD_DOWN"
+    onRelease:
+  D-Pad-Left:
+    onPress: "DPAD_LEFT"
+    onRelease: 
+  D-Pad-Right:
+    onPress: "DPAD_RIGHT"
+    onRelease:
+  UPLOAD:
+    onPress: "ARM"
+    onRelease:
+axes:
+  LSB-X: "Y"
+  LSB-Y: "X"
+  RSB-X: "YAW"
+  RSB-Y:
+  LT: "Z_DOWN"
+  RT: "Z_UP"

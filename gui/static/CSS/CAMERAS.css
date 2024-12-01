@@ -1,0 +1,95 @@
+.max_cameras {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    grid-template-rows: repeat(12, 1fr);
+    grid-column-gap: 0px;
+    grid-row-gap: 0px;
+}
+
+.main_div {
+    grid-area: 1 / 1 / 9 / 11;
+    background-color: #101214;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    padding: 10px;
+}
+
+.main_div video {
+    width: 80%;
+    height: auto;
+    border: 1px solid #666;
+}
+
+.side_div {
+    grid-area: 9 / 1 / 13 / 11;
+    background-color: #101214;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    padding: 10px;
+}
+
+.side_div video {
+    width: 65%;
+    height: auto;
+    border: 1px solid #666;
+}
+
+.camera_screen {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    background-color: #22272B;
+    cursor: pointer;
+    border-radius: 10px;
+}
+
+.buttons_div {
+    grid-area: 1 / 11 / 13 / 13;
+    background-color: #101214;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 10px;
+    position: relative;
+    width: 70%;
+}
+
+.cameras_container {
+    padding: 10px 10px 10px 10px;
+    border-radius: 10px;
+    position: relative;
+    width: 40%;
+    background-color: #1D2125;
+    color: white;
+}
+
+.cameras_list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.image_container{
+    padding: 10px 10px 10px 10px;
+    border-radius: 10px;
+    position: relative;
+}
+
+.rotate90 {
+    -webkit-transform: rotate(90deg);
+    -moz-transform: rotate(90deg);
+    -o-transform: rotate(90deg);
+    -ms-transform: rotate(90deg);
+    transform: rotate(90deg);
+}

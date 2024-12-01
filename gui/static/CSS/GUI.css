@@ -1,0 +1,106 @@
+*,  body {
+    margin: 0;
+    padding: 0;
+      -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+     -khtml-user-select: none; /* Konqueror HTML */
+       -moz-user-select: none; /* Old versions of Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; 
+    color: white;
+}
+
+*::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom right, #4d7fff 0%, #1a56ff 100%);
+  border-radius: 5px;
+}
+
+*::-webkit-scrollbar-track:horizontal {
+  background-color: white;
+  box-shadow: inset 0 0 2px 2px gainsboro;
+}
+
+
+:root { 
+    --space-cadet: #252754ff;
+    --white: #FFFFFFff;
+    --ultra-violet: #565673ff;
+    --celestial-blue: #54A0D7ff;
+    --azul: #0970B7ff;
+}
+
+html, body {
+    position:fixed;
+    top:0;
+    bottom:0;
+    left:0;
+    right:0;
+    font-family: -apple-system,system-ui,"Segoe UI",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji";
+}
+
+
+.all {
+    width: 100%;
+    height: 100%;
+}
+
+.window {
+    display: block;
+    position: relative;
+    width: 100%;
+    height: calc(100% - 50px);
+    background-color: #101214;
+}
+
+video {
+    width: 400px;
+}
+
+.toolbar {
+    display: flex;
+    position: relative;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    height: 50px;
+    background-color: #16679C;
+}
+
+.options {
+  align-items: center;
+  appearance: button;
+  background-color: #43B3AE;
+  border-radius: 8px;
+  border-style: none;
+  box-sizing: border-box;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  flex-direction: row;
+  flex-shrink: 0;
+  font-size: 100%;
+  line-height: 1.15;
+  height: calc(100% - 10px);
+  margin: 0;
+  padding: 5px 21px;
+  text-align: center;
+  text-transform: none;
+  transition: color .13s ease-in-out,background .13s ease-in-out,opacity .13s ease-in-out,box-shadow .13s ease-in-out;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+.options:active {
+  background-color: #006AE8;
+}
+
+.options:hover {
+  background-color: #1C84FF;
+}
