@@ -2,7 +2,7 @@ let info;
 let script = document.currentScript;
 let fullUrl = script.src;
 let jsonUrl = fullUrl.replace("JS/GUI.js", "info.json");
-let pages = ["ROV", "FLOAT", "PID", "TASK_1", "CAMERAS"];
+let pages = ["ROV", "FLOAT", "PID", "TASK_1"];
 let stsObj;
 
 // [UTILS]
