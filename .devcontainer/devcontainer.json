@@ -1,0 +1,30 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/cpp
+{
+	"name": "nodejs & javascript",
+	"build": {
+		"dockerfile": "Dockerfile"
+	},
+
+	// Features to add to the dev container. More info: https://containers.dev/features.
+	// "features": {},
+
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	"forwardPorts": [5000, 8080],
+	"postCreateCommand": "chmod +x ./install.sh && ./install.sh && sudo cp .devcontainer/mosquitto /etc/init.d && sudo service mosquitto start",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-python.python",
+				"dbaeumer.vscode-eslint"
+            ],
+			"settings": {
+				"terminal.integrated.env.linux": {
+					"VIRTUAL_ENV": "${workspaceFolder}/venv",
+					"PATH": "${workspaceFolder}/venv/bin:${env:PATH}"
+				},
+				"python.pythonPath": "${workspaceFolder}/venv/bin/python"
+			}
+        }
+    }
+}
