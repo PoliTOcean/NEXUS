@@ -4,10 +4,8 @@ import yaml
 import json
 import time
 from yamlinclude import YamlIncludeConstructor
-
 from .mqtt_c import MQTTClient
 from .joystick import Joystick
-
 
 __CONFIG_FILENAME__ = "config.yaml"
 __CONFIG_JOYSTICK_KEY__ = "joystick"
@@ -31,20 +29,6 @@ class ROVController():
                                 "YAW" : 0,
                                 "Z" : 0
                                 }
-        self.armed = 0
-        self.d_pad = {
-            "UP" : "TRIM_PITCH_FORWARD",
-            "DOWN" : "TRIM_PITCH_BACKWARD",
-            "LEFT" : "TRIM_ROLL_LEFT",
-            "RIGHT" : "TRIM_ROLL_RIGHT"
-        }
-        self.d_pad_shift = {
-            "UP" : "PWM_UP",
-            "DOWN" : "PWM_DOWN",
-            "LEFT" : "PWM_L",
-            "RIGHT" : "PWM_R"
-        }
-        self.shift=0
         
         YamlIncludeConstructor.add_to_loader_class(
             loader_class=yaml.FullLoader, base_dir=path)
@@ -71,7 +55,6 @@ class ROVController():
     def __init_mqttClient(self, config):
         mqttClient = MQTTClient(config["id"], config["address"], config["port"])
         mqttClient.connect()
-         
         return mqttClient
    
     @property
@@ -102,33 +85,40 @@ class ROVController():
                 
             self.__joystick.axesStates[self.__joystick.commands['axes'][id_axes]] = value
     
+    # Handle button press/release and map them to JSON messages for MQTT 
     def __on_buttonChanged(self, id_button, state):
-        if id_button == "GUIDE":   #altrimenti quando si preme uno dei due assi crasha
-            return
-        if id_button == "UPLOAD": #ARM
-            if state:
-                if self.armed:
-                    command = "DISARM"
-                else:
-                    command = "ARM"
-                self.armed = not self.armed
-            else:
-                return
-        elif state:
-            command = self.__joystick.commands["buttons"][id_button]["onPress"]
-        else:
-            command = self.__joystick.commands["buttons"][id_button]["onRelease"]
-            
-        command_split = str(command).split("_")
-        if command_split[0] == "DPAD":
-            if self.shift:
-                command = self.d_pad_shift[command_split[1]]
-            else:
-                command = self.d_pad[command_split[1]]
 
-        if command and self.__joystick.commands["buttons"][id_button]["onRelease"]: #if no Release property is a state command
-            self.__mqttClient.publish("commands/", command)
+        button_config = self.__joystick.commands["buttons"].get(id_button)
+        if not button_config: return
+
+        command = None
+        value = None
+        shift = 0
+
+        if button_config == "SHIFT" and state:
+            shift = 1
+
+        if shift and button_config.get("onShift"):
+            command = button_config.get("onShift")
+            value = button_config.get("valueShift")
+        elif state:
+            command = button_config.get("onPress")
+            value = button_config.get("value")
+        elif not state:
+            command = button_config.get("onRelease")
+            value = button_config.get("value")
+
+        message = {
+            "command": command,
+            "value": value if value is not None else 0  # Use default 0 if no value is set
+        }
+
+        json_message = json.dumps(message)
+
+        if command and button_config["onRelease"]: #if no Release property is a state command
+            self.__mqttClient.publish("arm_commands/", command)
             print(command)
+
         elif command:
             self.__mqttClient.publish("state_commands/", command)
             print(f"state: {command}")

@@ -42,6 +42,13 @@ async function onoff(id) {
     else wh.className += " hide";
 }
 
+let rotationAngle = 0;
+function rotateVideo(){
+    const video = document.getElementById(mainCameraId);
+    rotationAngle += 90;
+    video.style.transform =  `rotate(${rotationAngle}deg)`;
+}
+
 // [LOADER INSTRUMENTS]
 let attitude;
 let compass;
@@ -58,22 +65,52 @@ const options_instruments = {
     altitude: 0, 
     pressure: 1000,
     hideBox: true,
-    // LIBRERIE MERDOSE, NON SAPETE GESTIRE NEANCHE UN PATH 
     imagesDirectory: "/static/SVG",
 };
 
+function handleRovArmed(status) {
+    switch (status) {
+        case "OK":
+            console.log("ROV is armed and operational.");
+            // additional logic
+            break;
+        case "OFF":
+            console.log("ROV is disarmed.");
+            // additional logic
+            break;
+    }
+}
 
-function PIDhandler(pidElement, val) {
-    switch (val) {
-        case 0:
+function handleControllerState(statuses, controllerState) {
+    // Iterate over each field in CONTROLLER_STATE: DEPTH, ROLL, PITCH
+    ["DEPTH", "ROLL", "PITCH"].forEach((field) => {
+        if (field in controllerState) {
+            const statusValue = controllerState[field];
+
+            // Find the corresponding DOM element for the field
+            const element = Array.from(statuses).find((sts) => {
+                let txt = sts.querySelector("label span").textContent.trim();
+                return txt === field;
+            });
+
+            if (element) {
+                PIDhandler(element, statusValue);
+            }
+        }
+    });
+}
+
+function PIDhandler(pidElement, status) {
+    switch (status) {
+        case "OFF":
             pidElement.classList.remove("on");
             pidElement.classList.remove("stoppable");
             break;
-        case 1:
+        case "READY":
             pidElement.classList.add("stoppable");
             pidElement.classList.remove("on");
             break;
-        case 2:
+        case "ACTIVE":
             pidElement.classList.add("on");
             pidElement.classList.remove("stoppable");
             break;
@@ -82,17 +119,21 @@ function PIDhandler(pidElement, val) {
 
 function updateStatusesROV(obj) {
     const statuses = document.getElementsByClassName("status STATUSES");
-    Object.keys(obj).forEach((key) => stsObj[key] = obj[key]);
-    Array.from(statuses).forEach((sts, index) => {
+
+    Array.from(statuses).forEach((sts) => {
         let txt = sts.querySelector("label span").textContent.trim();
-        if (txt in obj) stsObj[txt] = obj[txt];
-        if (txt == "PID") return PIDhandler(statuses[index], stsObj[txt]); 
-        // Update in DOM
-        if (stsObj[txt]) statuses[index].classList.add("on");
-        else statuses[index].classList.remove("on");
+
+        // Handle ARMED state
+        if (txt === "ARMED" && "ARMED" in obj) {
+            return handleRovArmed(obj["ARMED"]);
+        }
+
+        // Handle CONTROLLER STATE
+        if (txt === "CONTROLLER STATE" && "CONTROLLER_STATE" in obj) {
+            return handleControllerState(statuses, obj["CONTROLLER_STATE"]);
+        }
     });
 }
-
 
 function updateIMU(imuJSON) {
     attitude.updatePitch(imuJSON["PITCH"]);
@@ -103,9 +144,23 @@ function updateIMU(imuJSON) {
 function updateSensors(sensorsJSON) {
     const depth = document.querySelector("#data_depth");
     const temp = document.querySelector("#data_tempExt");
-    temp.innerHTML = `${parseFloat(sensorsJSON["tempExt"]).toFixed(2)} °C`;
-    depth.innerHTML = `${parseFloat(sensorsJSON["depth"]).toFixed(2)} m`;
+    // Need to update HTML:
+    const forceZ = document.querySelector("#data_force_z");
+    const forceRoll = document.querySelector("#data_force_roll");
+    const forcePitch = document.querySelector("#data_force_pitch");
+    const referenceZ = document.querySelector("#data_reference_z");
+    const referenceRoll = document.querySelector("#data_reference_roll");
+    const referencePitch = document.querySelector("#data_reference_pitch");
 
+    depth.innerHTML = `${parseFloat(sensorsJSON["depth"]).toFixed(2)} m`;
+    temp.innerHTML = `${parseFloat(sensorsJSON["tempExt"]).toFixed(2)} °C`;
+    // Need to update HTML:
+    forceZ.innerHTML = `${parseFloat(sensorsJSON["force_z"]).toFixed(2)} N`;
+    forceRoll.innerHTML = `${parseFloat(sensorsJSON["force_roll"]).toFixed(2)} Nm`;
+    forcePitch.innerHTML = `${parseFloat(sensorsJSON["force_pitch"]).toFixed(2)} Nm`;
+    referenceZ.innerHTML = `${parseFloat(sensorsJSON["reference_z"]).toFixed(2)} m`;
+    referenceRoll.innerHTML = `${parseFloat(sensorsJSON["reference_roll"]).toFixed(2)} °`;
+    referencePitch.innerHTML = `${parseFloat(sensorsJSON["reference_pitch"]).toFixed(2)} °`;
 }
 
 function ROVLoader() {
@@ -121,11 +176,4 @@ function ROVLoader() {
         FlightIndicators.TYPE_HEADING,
         options_instruments
     );
-}
-
-let rotationAngle = 0;
-function rotateVideo(){
-    const video = document.getElementById(mainCameraId);
-    rotationAngle += 90;
-    video.style.transform =  `rotate(${rotationAngle}deg)`;
 }

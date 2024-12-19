@@ -2,51 +2,99 @@ buttons:
   B:
     onPress: "ROTATE_WRIST_CW"
     onRelease: "STOP_WRIST"
+    onShift:
+    value:
+    valueShift:
   Y:
     onPress: "OPEN_NIPPER"
     onRelease: "STOP_NIPPER"
+    onShift:
+    value:
+    valueShift:
   X:
     onPress: "ROTATE_WRIST_CCW"
     onRelease: "STOP_WRIST"
+    onShift:
+    value:
+    valueShift:
   A:
     onPress: "CLOSE_NIPPER"
     onRelease: "STOP_NIPPER"
+    onShift:
+    value:
+    valueShift:
   Back:
     onPress: "CHANGE_CONTROLLER_STATUS"
     onRelease:
+    onShift:
+    value: 0
+    valueShift:
   Guide: 
-    onPress:
+    onPress: "SHIFT"
     onRelease:
+    onShift:
+    value:
+    valueShift:
   Start:
     onPress:
     onRelease:
+    onShift:
+    value:
+    valueShift:
   LS:
     onPress: "TORQUE_WRIST_ON"
     onRelease: "TORQUE_WRIST_OFF"
+    onShift:
+    value:
+    valueShift:
   RS:
     onPress: "CLOSE_NIPPER"
     onRelease: "STOP_NIPPER"
+    onShift:
+    value:
+    valueShift:
   LB:
     onPress: "SNAP"
     onRelease: 
+    onShift: "THRUST_MAX_OFFSET"
+    value:
+    valueShift: 1
   RB:
     onPress:
     onRelease:
+    onShift:
+    value:
+    valueShift:
   D-Pad-Up:
     onPress: "DPAD_UP"
     onRelease:
+    onShift: "PITCH_REFERENCE_UPDATE"
+    value:
+    valueShift: 0
   D-Pad-Down:
     onPress: "DPAD_DOWN"
     onRelease:
+    onShift: "ROLL_REFERENCE_UPDATE"
+    value:
+    valueShift: 0
   D-Pad-Left:
     onPress: "DPAD_LEFT"
     onRelease: 
+    onShift: "PITCH_REFERENCE_OFFSET"
+    value:
+    valueShift: 1
   D-Pad-Right:
     onPress: "DPAD_RIGHT"
     onRelease:
+    onShift: "ROLL_REFERENCE_OFFSET"
+    value:
+    valueShift: 1
   UPLOAD:
-    onPress: "ARM"
+    onPress: "ARM_ROV"
     onRelease:
+    onShift:
+    value: 0
+    valueShift:
 axes:
   LSB-X: "Y"
   LSB-Y: "X"
