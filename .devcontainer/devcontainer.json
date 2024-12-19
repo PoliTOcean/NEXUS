@@ -11,7 +11,7 @@
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	"forwardPorts": [5000, 8080],
-	"postCreateCommand": "python3 -m venv venv && venv/bin/pip install -r requirements.txt && cd ./static && npm install && sudo cp ../.devcontainer/mosquitto /etc/init.d && sudo service mosquitto start",
+	"postCreateCommand": "chmod +x ./install.sh && ./install.sh && sudo cp .devcontainer/mosquitto /etc/init.d && sudo service mosquitto start",
     "customizations": {
         "vscode": {
             "extensions": [

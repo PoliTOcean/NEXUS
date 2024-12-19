@@ -23,6 +23,7 @@ set -e
 PIDDIR=/run/mosquitto
 PIDFILE="${PIDDIR}/mosquitto.pid"
 DAEMON=/usr/sbin/mosquitto
+CONF_FILE=/workspaces/NEXUS/.devcontainer/mosquitto.conf
 
 # /etc/init.d/mosquitto: start and stop the mosquitto MQTT message broker
 
@@ -51,7 +52,7 @@ case "$1" in
 	fi
 	create_pid_dir
 	log_daemon_msg "Starting network daemon" "mosquitto"
-	if start-stop-daemon -u mosquitto -c mosquitto --start --quiet --oknodo --background --pidfile ${PIDFILE} --exec ${DAEMON} -- -c /etc/mosquitto/mosquitto.conf ; then
+	if start-stop-daemon -u mosquitto -c mosquitto --start --quiet --oknodo --background --pidfile ${PIDFILE} --exec ${DAEMON} -- -c ${CONF_FILE} ; then
 	    log_end_msg 0
 	else
 	    log_end_msg 1
@@ -92,7 +93,7 @@ case "$1" in
 	    rm -f ${PIDFILE}
 	fi
 	create_pid_dir
-	if start-stop-daemon -c mosquitto -u mosquitto --start --quiet --oknodo --background --pidfile ${PIDFILE} --exec ${DAEMON} -- -c /etc/mosquitto/mosquitto.conf ; then
+	if start-stop-daemon -c mosquitto -u mosquitto --start --quiet --oknodo --background --pidfile ${PIDFILE} --exec ${DAEMON} -- -c ${CONF_FILE} ; then
 	    log_end_msg 0
 	else
 	    log_end_msg 1
@@ -112,7 +113,7 @@ case "$1" in
 	    0)
 		# old daemon stopped
 		rm -f ${PIDFILE}
-		if start-stop-daemon -c mosquitto -u mosquitto --start --quiet --oknodo --background --pidfile ${PIDFILE} --exec ${DAEMON} -- -c /etc/mosquitto/mosquitto.conf ; then
+		if start-stop-daemon -c mosquitto -u mosquitto --start --quiet --oknodo --background --pidfile ${PIDFILE} --exec ${DAEMON} -- -c ${CONF_FILE} ; then
 		    log_end_msg 0
 		else
 		    log_end_msg 1
