@@ -30,6 +30,24 @@ else
     fi
 fi
 
+# Check the status of the Mosquitto service
+service_status=$(sudo service mosquitto status)
+
+# Check if the service is running
+if echo "$service_status" | grep -q "mosquitto is running"; then
+    echo "Mosquitto is already running."
+else
+    echo "Mosquitto is not running. Starting the service..."
+    sudo service mosquitto start
+    
+    # Verify if the service started successfully
+    if sudo service mosquitto status | grep -q "mosquitto is running"; then
+        echo "Mosquitto has been started successfully."
+    else
+        echo "Failed to start Mosquitto."
+    fi
+fi
+
 # Check if the executable exists in the build directory
 if [ -f "$LOCAL_DIR/build/$EXECUTABLE" ]; then
     echo "Found $EXECUTABLE"
