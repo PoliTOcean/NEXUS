@@ -7,21 +7,12 @@ const mqtt_c = mqtt.connect("mqtt://127.0.0.1:8080");
 
 mqtt_c.on("connect", () => {
     console.info("[MQTT] Ready");
-<<<<<<< HEAD
     mqtt_c.subscribe("debug/");
-=======
-    mqtt_c.subscribe("state_commands/");
-    mqtt_c.subscribe("gui/");
->>>>>>> 19bab5ddf6a4737682d047b74abba17cf8241aa9
 });
-
-
-
 
 mqtt_c.on('message', function (topic, message) {
     let text = message.toString()
     switch (topic) {
-<<<<<<< HEAD
         case "debug/":
           const debugData = JSON.parse(text);
           updateStatusesROV({
@@ -52,28 +43,9 @@ mqtt_c.on('message', function (topic, message) {
 }
 
 ,mqtt_c.on('error', (error) => {
-=======
-        case "state_commands/":
-            handleTask(text);
-            break;
-        case "gui/":
-            text = JSON.parse(text)
-            console.log(text["tempExt"])
-            updateStatusesROV({"PID": text["pidState"], "ARMED": text["armed"]});
-            updateIMU({"YAW": text["yaw"], "ROLL": text["roll"], "PITCH": text["pitch"]});
-            updateSensors(text);
-    }
-})
-
-mqtt_c.on('error', (error) => {
->>>>>>> 19bab5ddf6a4737682d047b74abba17cf8241aa9
   try {
     console.error('MQTT Error:', error);
   } catch (err) {
     console.error('Error in error handler:', err);
   }
-<<<<<<< HEAD
 }));
-=======
-});
->>>>>>> 19bab5ddf6a4737682d047b74abba17cf8241aa9
