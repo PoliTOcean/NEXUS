@@ -136,6 +136,14 @@ function updateStatusesROV(obj) {
 }
 
 function updateIMU(imuJSON) {
+    console.log("[DEBUG] updateIMU called with:", imuJSON);
+
+    if (imuJSON && typeof imuJSON === "object") {
+        console.log(`[DEBUG] PITCH: ${imuJSON["PITCH"]}, ROLL: ${imuJSON["ROLL"]}, YAW: ${imuJSON["YAW"]}`);
+    } else {
+        console.warn("[DEBUG] Invalid IMU data received:", imuJSON);
+    }
+
     attitude.updatePitch(imuJSON["PITCH"]);
     attitude.updateRoll(imuJSON["ROLL"]);
     compass.updateHeading(imuJSON["YAW"]);
@@ -145,27 +153,33 @@ function updateSensors(sensorsJSON) {
     const depth = document.querySelector("#data_depth");
     const temp = document.querySelector("#data_tempExt");
     // Need to update HTML:
-    const forceZ = document.querySelector("#data_force_z");
+    /*const forceZ = document.querySelector("#data_force_z");
     const forceRoll = document.querySelector("#data_force_roll");
     const forcePitch = document.querySelector("#data_force_pitch");
     const referenceZ = document.querySelector("#data_reference_z");
     const referenceRoll = document.querySelector("#data_reference_roll");
-    const referencePitch = document.querySelector("#data_reference_pitch");
+    const referencePitch = document.querySelector("#data_reference_pitch");*/
 
     depth.innerHTML = `${parseFloat(sensorsJSON["depth"]).toFixed(2)} m`;
     temp.innerHTML = `${parseFloat(sensorsJSON["tempExt"]).toFixed(2)} °C`;
     // Need to update HTML:
-    forceZ.innerHTML = `${parseFloat(sensorsJSON["force_z"]).toFixed(2)} N`;
+    /*forceZ.innerHTML = `${parseFloat(sensorsJSON["force_z"]).toFixed(2)} N`;
     forceRoll.innerHTML = `${parseFloat(sensorsJSON["force_roll"]).toFixed(2)} Nm`;
     forcePitch.innerHTML = `${parseFloat(sensorsJSON["force_pitch"]).toFixed(2)} Nm`;
     referenceZ.innerHTML = `${parseFloat(sensorsJSON["reference_z"]).toFixed(2)} m`;
     referenceRoll.innerHTML = `${parseFloat(sensorsJSON["reference_roll"]).toFixed(2)} °`;
-    referencePitch.innerHTML = `${parseFloat(sensorsJSON["reference_pitch"]).toFixed(2)} °`;
+    referencePitch.innerHTML = `${parseFloat(sensorsJSON["reference_pitch"]).toFixed(2)} °`;*/
 }
 
 function ROVLoader() {
     const attitudeElement = document.querySelector("#attitude");
     const compassElement = document.querySelector("#compass");
+
+    if (!attitudeElement || !compassElement) {
+        console.error("[DEBUG] Failed to initialize flight indicators: Missing DOM elements");
+        return;
+    }
+
     attitude = new FlightIndicators(
         attitudeElement,
         FlightIndicators.TYPE_ATTITUDE,
@@ -176,4 +190,6 @@ function ROVLoader() {
         FlightIndicators.TYPE_HEADING,
         options_instruments
     );
+
+    console.log("[DEBUG] Flight indicators initialized:", { attitude, compass });
 }

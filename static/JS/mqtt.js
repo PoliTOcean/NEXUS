@@ -7,14 +7,23 @@ const mqtt_c = mqtt.connect("mqtt://127.0.0.1:8080");
 
 mqtt_c.on("connect", () => {
     console.info("[MQTT] Ready");
-    mqtt_c.subscribe("debug/");
+    mqtt_c.subscribe("debug/", (err) => {
+        if (err) {
+            console.error("[MQTT] Subscription error:", err);
+        } else {
+            console.log("[MQTT] Successfully subscribed to debug/");
+        }
+    });
 });
 
 mqtt_c.on('message', function (topic, message) {
     let text = message.toString()
+    console.log(`[DEBUG] Message received on topic ${topic}:`, text)
     switch (topic) {
         case "debug/":
           const debugData = JSON.parse(text);
+          console.log(`[DEBUG] Parsed debug data:`, debugData);
+          
           updateStatusesROV({
             "ARMED": debugData["rov_armed"],
             "CONTROLLER_STATE": debugData["controller_state"]

@@ -139,7 +139,6 @@ window.onload = async () => {
         return obj;
     }, {});
 
-    // Load all pages, including "Cameras"
     for (let i = 0; i < pages.length; i++) {
         await loadPages(pages[i]);
     }
