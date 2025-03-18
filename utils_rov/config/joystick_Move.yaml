@@ -2,103 +2,147 @@ buttons:
   B:
     onPress: "ROTATE_WRIST_CW"
     onRelease: "STOP_WRIST"
-    onShift:
+    topic: "arm_commands"
+    onShiftRelease:
+    onShiftPress:
     value:
-    valueShift:
+    onShiftValue:
   Y:
-    onPress: "OPEN_NIPPER"
+    onPress: "CLOSE_NIPPER"
     onRelease: "STOP_NIPPER"
-    onShift:
+    topic: "arm_commands"
+    onShiftRelease:
+    onShiftPress:
     value:
-    valueShift:
+    onShiftValue:
   X:
     onPress: "ROTATE_WRIST_CCW"
     onRelease: "STOP_WRIST"
-    onShift:
+    topic: "arm_commands"
+    onShiftRelease: 
+    onShiftPress:
     value:
-    valueShift:
+    onShiftValue:
   A:
-    onPress: "CLOSE_NIPPER"
+    onPress: "OPEN_NIPPER"
     onRelease: "STOP_NIPPER"
-    onShift:
+    topic: "arm_commands"
+    onShiftRelease: 
+    onShiftPress: 
     value:
-    valueShift:
-  Back:
-    onPress: "CHANGE_CONTROLLER_STATUS"
-    onRelease:
-    onShift:
-    value: 0
-    valueShift:
-  Guide: 
-    onPress: "SHIFT"
-    onRelease:
-    onShift:
+    onShiftValue:
+  View:
+    onPress: "FREE"
+    onRelease: "FREE"
+    topic: "state_commands"
+    onShiftRelease:
+    onShiftPress:
+    value: 10000
+    onShiftValue: 0
+  Option: 
+    onPress: "TORQUE"
+    onRelease: "TORQUE_OFF"
+    topic: "state_commands"
+    onShiftRelease:
+    onShiftPress:
     value:
-    valueShift:
+    onShiftValue:
   Start:
-    onPress:
-    onRelease:
-    onShift:
+    onPress: "FREE"
+    onRelease: "FREE"
+    topic: "state_commands"
+    onShiftRelease:
+    onShiftPress:
     value:
-    valueShift:
-  LS:
-    onPress: "TORQUE_WRIST_ON"
-    onRelease: "TORQUE_WRIST_OFF"
-    onShift:
+    onShiftValue:
+  LC:
+    onPress: "FREE"
+    onRelease: "FREE"
+    topic:
+    onShiftRelease: 
+    onShiftPress:
     value:
-    valueShift:
-  RS:
-    onPress: "CLOSE_NIPPER"
-    onRelease: "STOP_NIPPER"
-    onShift:
-    value:
-    valueShift:
+    onShiftValue:
+  RC:
+    onPress: "FREE"
+    onRelease: "FREE"
+    topic: "arm_commands"
+    onShiftRelease:
+    onShiftPress:
+    value: 10000
+    onShiftValue: 
   LB:
-    onPress: "SNAP"
-    onRelease: 
-    onShift: "THRUST_MAX_OFFSET"
-    value:
-    valueShift: 1
+    onPress: "YAW"
+    onRelease: "YAW"
+    topic: "state_commands"
+    onShiftRelease: "YAW"
+    onShiftPress: "YAW"
+    value: -10000
+    onShiftValue: -3000
   RB:
-    onPress:
-    onRelease:
-    onShift:
-    value:
-    valueShift:
+    onPress: "YAW"
+    onRelease: "YAW"
+    topic: "state_commands"
+    onShiftRelease: "YAW"
+    onShiftPress: "YAW"
+    value: 10000
+    onShiftValue: 3000
   D-Pad-Up:
-    onPress: "DPAD_UP"
-    onRelease:
-    onShift: "PITCH_REFERENCE_UPDATE"
-    value:
-    valueShift: 0
-  D-Pad-Down:
-    onPress: "DPAD_DOWN"
-    onRelease:
-    onShift: "ROLL_REFERENCE_UPDATE"
-    value:
-    valueShift: 0
-  D-Pad-Left:
-    onPress: "DPAD_LEFT"
+    onPress: "ABLE_ANGLE_CTL"
     onRelease: 
-    onShift: "PITCH_REFERENCE_OFFSET"
+    topic: "state_commands"
+    onShiftRelease:
+    onShiftPress:
+    value: 10000
+    onShiftValue:
+  D-Pad-Down:
+    onPress: "DISABLE_ANGLE_CTL"
+    onRelease:
+    topic: "state_commands"
+    onShiftRelease:
+    onShiftPress:
     value:
-    valueShift: 1
+    onShiftValue:
+  D-Pad-Left:
+    onPress: "SHIFT"
+    onRelease: "noSHIFT"
+    topic: "state_commands"
+    onShiftRelease: "noSHIFT"
+    onShiftPress:
+    value:
+    onShiftValue:
   D-Pad-Right:
     onPress: "DPAD_RIGHT"
-    onRelease:
-    onShift: "ROLL_REFERENCE_OFFSET"
+    onRelease: "FREE"
+    topic: "state_commands"
+    onShiftRelease:
+    onShiftPress:
     value:
-    valueShift: 1
+    onShiftValue:
   UPLOAD:
-    onPress: "ARM_ROV"
-    onRelease:
-    onShift:
-    value: 0
-    valueShift:
+    onPress: "FREE"
+    onRelease: "FREE"
+    topic: "state_commands"
+    onShiftRelease:
+    onShiftPress:
+    value:
+    onShiftValue:
 axes:
-  LSB-X: "Y"
-  LSB-Y: "X"
-  RSB-X: "YAW"
-  RSB-Y:
-  LT: "Z_DOWN"
-  RT: "Z_UP"
+    LSB-X:
+      command: "X"
+      deadzone: 2000
+    LSB-Y: 
+      command: "Y"
+      deadzone: 2000
+    RSB-X: 
+      command: "ROLL"
+      deadzone: 2000
+    RSB-Y: 
+      command: "PITCH"
+      deadzone: 2000
+    LT:
+      command: "Z"
+      deadzone: 3000
+    RT:
+      command: "Z"
+      deadzone: 3000

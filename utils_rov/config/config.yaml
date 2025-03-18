@@ -1,2 +1,3 @@
 joystick: !include joystick_Move.yaml
 mqtt: !include mqtt.yaml
+joystick_flight: !include joystick_Move_flight.yaml

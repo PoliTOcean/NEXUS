@@ -8,8 +8,9 @@ import platform
 __COMMAND_CONFIG_FILE__ = "joystick_Move.yaml"
 
 class Joystick():
-    def __init__(self, commands, on_axis_changed, on_button_changed):
-        self.__commands = commands
+    def __init__(self, commands_xbox, commands_flight, on_axis_changed, on_button_changed):
+        self.__commands_flight = commands_flight
+        self.__commands_xbox = commands_xbox
         self.__on_axis_changed = on_axis_changed
         self.__on_button_changed = on_button_changed
         self.__last_pressed = 0
@@ -17,7 +18,9 @@ class Joystick():
                                 "X" : 0,
                                 "Y": 0,
                                 "YAW" : 0,
-                                "Z" : 0
+                                "Z" : 0,
+                                "ROLL": 0,
+                                "PITCH": 0
                                 }
         self.active = False
         sdl2.SDL_Init(sdl2.SDL_INIT_JOYSTICK)
@@ -33,7 +36,10 @@ class Joystick():
 
     @property
     def commands(self):
-        return self.__commands
+        if "X52" in self.name:
+           return self.__commands_flight
+        elif "Xbox" in self.name:
+            return self.__commands_xbox
 
     @property
     def mappings(self):
@@ -64,6 +70,7 @@ class Joystick():
                 self.__close()
                 print("[JOYSTICK] Joystick removed")
             elif event.type == sdl2.SDL_JOYBUTTONDOWN or event.type == sdl2.SDL_JOYBUTTONUP:
+                #print(event.jbutton.button)
                 self.__on_button_changed(self.__mappings["buttons"][event.jbutton.button], event.jbutton.state)
             elif event.type == sdl2.SDL_JOYHATMOTION:
                 if event.jhat.value == 0:

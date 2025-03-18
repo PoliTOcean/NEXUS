@@ -1,0 +1,283 @@
+buttons:
+  trigger:
+    onPress: "Z_UP"
+    onRelease: "Z_UP"
+    topic: "state_commands"
+    onShiftPress: 
+    value:
+    onShiftvalue:
+  fire:
+    onPress: "{\"ARM_ROV\":1}"
+    onRelease:
+    topic: "arm_commands"
+    onShiftPress: 
+    value:
+    onShiftvalue:
+  A:
+    onPress: "OPEN_NIPPER"
+    onRelease: "STOP_NIPPER"
+    topic: "arm_commands"
+    onShiftPress: 
+    value:
+    onShiftvalue:
+  B:
+    onPress: "{\"CHANGE_CONTROLLER_STATUS\":\"K\"}"
+    onRelease:
+    topic: "state_commands"
+    onShiftPress: 
+    value:
+    onShiftvalue:
+  C:
+    onPress:
+    onRelease: 
+    topic:
+    onShiftPress:
+    value:
+    onShiftvalue:
+  pinky:
+    onPress: "Z_DOWN"
+    onRelease: "Z_DOWN"
+    topic: "state_commands"
+    onShiftPress: 
+    value:
+    onShiftvalue:
+  D:
+    onPress:
+    onRelease: 
+    topic:
+    onShiftPress:
+    value:
+    onShiftvalue:
+  E:
+    onPress:
+    onRelease: 
+    topic:
+    onShiftPress:
+    value:
+    onShiftvalue:
+  T1:
+    onPress:
+    onRelease: 
+    topic:
+    onShiftPress:
+    value:
+    onShiftvalue:
+  T2:
+    onPress:
+    onRelease: 
+    topic:
+    onShiftPress:
+    value:
+    onShiftvalue:
+  T3:
+    onPress:
+    onRelease: 
+    topic:
+    onShiftPress:
+    value:
+    onShiftvalue:
+  T4:
+    onPress:
+    onRelease: 
+    topic:
+    onShiftPress:
+    value:
+    onShiftvalue:
+  T5:
+    onPress:
+    onRelease: 
+    topic:
+    onShiftPress:
+    value:
+    onShiftvalue:
+  T6:
+    onPress:
+    onRelease: 
+    topic:
+    onShiftPress:
+    value:
+    onShiftvalue:
+  second trigger:
+    onPress:
+    onRelease:
+    topic:
+    onShiftPress:
+    value:
+    onShiftvalue:
+  top hat up:
+    onPress:
+    onRelease: 
+    topic:
+    onShiftPress:
+    value:
+    onShiftvalue:
+  top hat right:
+    onPress:
+    onRelease: 
+    topic:
+    onShiftPress:
+    value:
+    onShiftvalue:
+  top hat down:
+    onPress:
+    onRelease: 
+    topic:
+    onShiftPress:
+    value:
+    onShiftvalue:
+  top hat left:
+    onPress:
+    onRelease: 
+    topic:
+    onShiftPress:
+    value:
+    onShiftvalue:
+  bottom_hat_up:
+    onPress: "DPAD_UP"
+    onRelease:
+    topic: "state_commands"
+    onShiftPress:
+    value:
+    onShiftvalue:
+  bottom_hat_right:
+    onPress: "DPAD_RIGHT"
+    onRelease:
+    topic: "state_commands"
+    onShiftPress:
+    value:
+    onShiftvalue:
+  bottom_hat_down:
+    onPress: "DPAD_DOWN"
+    onRelease:
+    topic: "state_commands"
+    onShiftPress:
+    value:
+    onShiftvalue:
+  bottom_hat_left:
+    onPress: "DPAD_LEFT"
+    onRelease:
+    topic: "state_commands"
+    onShiftPress:
+    value:
+    onShiftvalue:
+  throttle hat up:
+    onPress:
+    onRelease: 
+    topic:
+    onShiftPress:
+    value:
+    onShiftvalue:
+  throttle hat down:
+    onPress:
+    onRelease:
+    topic:
+    onShiftPress:
+    value:
+    onShiftvalue:
+  throttle hat right:
+    onPress:
+    onRelease: 
+    topic:
+    onShiftPress:
+    value:
+    onShiftvalue:
+  throttle hat left:
+    onPress:
+    onRelease:
+    topic:
+    onShiftPress:
+    value:
+    onShiftvalue:
+  green:
+    onPress:
+    onRelease:
+    topic:
+    onShiftPress:
+    value:
+    onShiftvalue:
+  orange:
+    onPress:
+    onRelease:
+    topic:
+    onShiftPress:
+    value:
+    onShiftvalue:
+  red:
+    onPress:
+    onRelease:
+    topic:
+    onShiftPress:
+    value:
+    onShiftvalue:
+  function:
+    onPress:
+    onRelease:
+    topic:
+    onShiftPress:
+    value:
+    onShiftvalue:
+  start/stop:
+    onPress:
+    onRelease:
+    topic:
+    onShiftPress:
+    value:
+    onShiftvalue:
+  reset:
+    onPress:
+    onRelease:
+    topic:
+    onShiftPress:
+    value:
+    onShiftvalue:
+  info:
+    onPress:
+    onRelease:
+    topic:
+    onShiftPress:
+    value:
+    onShiftvalue:
+  mouse btn:
+    onPress:
+    onRelease:
+    topic:
+    onShiftPress:
+    value:
+    onShiftvalue:
+  scroll btn:
+    onPress:
+    onRelease:
+    topic:
+    onShiftPress:
+    value:
+    onShiftvalue:
+  scroll down:
+    onPress:
+    onRelease:
+    topic:
+    onShiftPress:
+    value:
+    onShiftvalue:
+  scroll up:
+    onPress:
+    onRelease:
+    topic:
+    onShiftPress:
+    value:
+    onShiftvalue:
+axes:
+  left/right: "Y"
+  up/down: "X"
+  throttle: "Z"
+  small dial:
+  top dial:
+  rotate left/right: "YAW"
+  slider:
+  mouse left/right: 
+  mouse up/down: 
+  LSB-X: "Y"
+  LSB-Y: "X"
+  RSB-X: "YAW"
+  RSB-Y:
+  LT: "Z_DOWN"
+  RT: "Z_UP"
