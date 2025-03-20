@@ -161,7 +161,7 @@ class ROVController():
                 return
             data = {command: value}
             json_string = json.dumps(data)
-            self.__mqttClient.publish(topic, command)
+            self.__mqttClient.publish(topic, json_string)
             if self.debug:
                 print(f"sent: {json_string} to topic: {topic}")
 
