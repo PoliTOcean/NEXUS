@@ -2,7 +2,7 @@ buttons:
   B:
     onPress: "ROTATE_WRIST_CW"
     onRelease: "STOP_WRIST"
-    topic: "arm_commands"
+    topic: "arm_commands/"
     onShiftRelease:
     onShiftPress:
     value:
@@ -10,7 +10,7 @@ buttons:
   Y:
     onPress: "CLOSE_NIPPER"
     onRelease: "STOP_NIPPER"
-    topic: "arm_commands"
+    topic: "arm_commands/"
     onShiftRelease:
     onShiftPress:
     value:
@@ -18,7 +18,7 @@ buttons:
   X:
     onPress: "ROTATE_WRIST_CCW"
     onRelease: "STOP_WRIST"
-    topic: "arm_commands"
+    topic: "arm_commands/"
     onShiftRelease: 
     onShiftPress:
     value:
@@ -26,23 +26,23 @@ buttons:
   A:
     onPress: "OPEN_NIPPER"
     onRelease: "STOP_NIPPER"
-    topic: "arm_commands"
+    topic: "arm_commands/"
     onShiftRelease: 
     onShiftPress: 
     value:
     onShiftValue:
   View:
-    onPress: "FREE"
-    onRelease: "FREE"
-    topic: "state_commands"
+    onPress: "ARM_ROV"
+    onRelease:
+    topic: "state_commands/"
     onShiftRelease:
     onShiftPress:
-    value: 10000
-    onShiftValue: 0
+    value: 1
+    onShiftValue: 
   Option: 
     onPress: "TORQUE"
     onRelease: "TORQUE_OFF"
-    topic: "state_commands"
+    topic: "state_commands/"
     onShiftRelease:
     onShiftPress:
     value:
@@ -50,7 +50,7 @@ buttons:
   Start:
     onPress: "FREE"
     onRelease: "FREE"
-    topic: "state_commands"
+    topic: "state_commands/"
     onShiftRelease:
     onShiftPress:
     value:
@@ -66,7 +66,7 @@ buttons:
   RC:
     onPress: "FREE"
     onRelease: "FREE"
-    topic: "arm_commands"
+    topic: "arm_commands/"
     onShiftRelease:
     onShiftPress:
     value: 10000
@@ -74,7 +74,7 @@ buttons:
   LB:
     onPress: "YAW"
     onRelease: "YAW"
-    topic: "state_commands"
+    topic: "state_commands/"
     onShiftRelease: "YAW"
     onShiftPress: "YAW"
     value: -10000
@@ -82,7 +82,7 @@ buttons:
   RB:
     onPress: "YAW"
     onRelease: "YAW"
-    topic: "state_commands"
+    topic: "state_commands/"
     onShiftRelease: "YAW"
     onShiftPress: "YAW"
     value: 10000
@@ -90,7 +90,7 @@ buttons:
   D-Pad-Up:
     onPress: "ABLE_ANGLE_CTL"
     onRelease: 
-    topic: "state_commands"
+    topic: "state_commands/"
     onShiftRelease:
     onShiftPress:
     value: 10000
@@ -98,7 +98,7 @@ buttons:
   D-Pad-Down:
     onPress: "DISABLE_ANGLE_CTL"
     onRelease:
-    topic: "state_commands"
+    topic: "state_commands/"
     onShiftRelease:
     onShiftPress:
     value:
@@ -106,7 +106,7 @@ buttons:
   D-Pad-Left:
     onPress: "SHIFT"
     onRelease: "noSHIFT"
-    topic: "state_commands"
+    topic: "state_commands/"
     onShiftRelease: "noSHIFT"
     onShiftPress:
     value:
@@ -114,7 +114,7 @@ buttons:
   D-Pad-Right:
     onPress: "DPAD_RIGHT"
     onRelease: "FREE"
-    topic: "state_commands"
+    topic: "state_commands/"
     onShiftRelease:
     onShiftPress:
     value:
@@ -122,7 +122,7 @@ buttons:
   UPLOAD:
     onPress: "FREE"
     onRelease: "FREE"
-    topic: "state_commands"
+    topic: "state_commands/"
     onShiftRelease:
     onShiftPress:
     value:
