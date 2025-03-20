@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "fisheyegl": "github:Sampli1/fisheyegl_NEXUS",
     "flight-indicators-js": "^1.0.5",
     "mqtt": "^5.5.3",
     "socket.io-client": "^4.7.5"

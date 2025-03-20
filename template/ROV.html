@@ -62,7 +62,12 @@
             <div id="c0" class="screen" onclick="switching('camera_0')">
                 <div class="title">Camera 0</div>
                 <!--<img id="camera_0" class="rotate180 rotate90" src="file:///home/vboxuser/Desktop/EVA_2025/gui/template/ROV_files/stream_002">-->
-                <img id="camera_0" class = "video-container" src="{{url_for('static', filename='rov1.png')}}" muted autoplay loop></video>
+                <!-- <img id="camera_0" class = "video-container" src="{{url_for('static', filename='rov1.png')}}" muted autoplay loop></video> -->
+                <!-- <img  id="camera_0" class="rotate180" src="http://10.0.0.254:8079/stream" /> -->
+
+                <!-- TESTING PURPOUSES ONLY -->
+                <img id="camera_0" src="http://localhost:8079/stream" style="display: none;" />
+                <canvas id="canvas_0"></canvas>
             </div>
         </div>
         <button class = "button" onclick = "rotateVideo()"> Rotate 90° </button>
@@ -73,6 +78,7 @@
                 <div class="title">Camera 1</div>
                 <!-- <img id="camera_1" src="file:///home/vboxuser/Desktop/EVA_2025/gui/template/ROV_files/stream"> -->
                 <img id="camera_1" class = "video-container" src="{{url_for('static', filename='rov2.png')}}" muted autoplay loop></video>
+                <!-- <img  id="camera_1" class="rotate180" src="http://10.0.0.254:8080/stream"  /> -->
             </div>
         </div>  
         <!-- <button class = "button" onclick = "rotateVideo('camera_1')"> Rotate 90° </button> -->

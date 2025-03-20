@@ -146,6 +146,45 @@ window.onload = async () => {
     // Set the initial page
     page_now = "home";
 
+    
+    // Handle cameras   
+    const videoStream = document.getElementById("camera_0");
+    const canvas = document.getElementById("canvas_0");
+    canvas.src = "http://localhost:8079/stream";
+    const FPS = 60;
+
+    // Initialize the fisheye distortion effect (assuming FisheyeGl is available)
+    var distorter = FisheyeGl({
+        image: canvas.src,  // Use the canvas as the source image
+        selector: '#canvas_0', // a canvas element to work with
+        lens: {
+            a: 1,    // 0 to 4;  default 1
+            b: 1,      // 0 to 4;  default 1
+            Fx: 0.5,   // 0 to 4;  default 0.0
+            Fy: 0.5,   // 0 to 4;  default 0.0
+            scale: 0.3 // 0 to 20; default 1.5
+        },
+        fov: {
+            x: 1, // 0 to 2; default 1
+            y: 1  // 0 to 2; default 1
+        },
+    });
+
+    // Wait for the video to load metadata (dimensions)
+    videoStream.onload = function () {
+        canvas.width = videoStream.width;
+        canvas.height = videoStream.height;
+        drawFrame(); // Start drawing frames
+    };
+
+    function drawFrame() {
+        
+        
+        distorter.setImage(canvas.src);
+        
+        setTimeout(() => requestAnimationFrame(drawFrame), 1000/FPS);
+    }
+
     // Start routines
     let refresh = 2000;
     setInterval(() => statusFLOAT("STATUS"), refresh);
