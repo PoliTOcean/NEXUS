@@ -1,5 +1,63 @@
 {
+    "Saitek X52 Flight Control System": {
+        "Linux": {
+            "buttons": [
+                "trigger",
+                "fire",
+                "A",
+                "B",
+                "C",
+                "pinky",
+                "D",
+                "E",
+                "T1",
+                "T2",
+                "T3",
+                "T4",
+                "T5",
+                "T6",
+                "second trigger",
+                "top hat up",
+                "top hat right",
+                "top hat down",
+                "top hat left",
+                "throttle hat up",
+                "throttle hat right",
+                "throttle hat down",
+                "throttle hat left",
+                "green",
+                "orange",
+                "red",
+                "function",
+                "start/stop",
+                "reset",
+                "info",
+                "mouse btn",
+                "scroll btn",
+                "scroll down",
+                "scroll up"
+            ],
+            "axes": [
+                "left/right",
+                "up/down",
+                "throttle",
+                "small dial",
+                "top dial",
+                "rotate left/right",
+                "slider",
+                "mouse left/right",
+                "mouse up/down"
+            ],
+            "joyhat": [
+                "bottom_hat_up",
+                "bottom_hat_down",
+                "bottom_hat_left",
+                "bottom_hat_right"
+            ]
+        }
+    },
     "Xbox One S Controller": {
+        "Darwin": {
         "buttons": [
             "A",
             "B",
@@ -26,6 +84,35 @@
             "RT"
         ]
     },
+    "Linux": {
+        "buttons": [
+            "A",
+            "B",
+            "X",
+            "Y",
+            "LB",
+            "RB",
+            "Back",
+            "Start",
+            "LS",
+            "RS"
+        ],
+        "axes": [ 
+            "LSB-X",
+            "LSB-Y",
+            "LT",
+            "RSB-X",
+            "RSB-Y", 
+            "RT"
+        ],
+        "joyhat": [
+            "D-Pad-Up",
+            "D-Pad-Down",
+            "D-Pad-Left",
+            "D-Pad-Right"
+        ]
+    }    
+},
     "Xbox Series X Controller": {
         "Darwin" : {
             "buttons": [
@@ -59,24 +146,28 @@
             "buttons": [
                 "A",
                 "B",
+                "none",
                 "X",
                 "Y",
                 "LS",
-                "RS",
                 "LB",
+                "RB",
                 "Back",
                 "UPLOAD",
-                "UPLOAD",
-                "UPLOAD",
+                "View",
+                "Option",
+                "Start",
+                "LC",
+                "RC",
                 "UPLOAD"
             ],
             "axes": [
                 "LSB-X",
                 "LSB-Y",
-                "LT",
                 "RSB-X",
                 "RSB-Y",
-                "RT"
+                "RT",
+                "LT"
             ],
             "joyhat": [
                 "D-Pad-Up",
