@@ -7,11 +7,11 @@ const mqtt_c = mqtt.connect("mqtt://127.0.0.1:8080");
 
 mqtt_c.on("connect", () => {
     console.info("[MQTT] Ready");
-    mqtt_c.subscribe("debug/", (err) => {
+    mqtt_c.subscribe("status/", (err) => {
         if (err) {
             console.error("[MQTT] Subscription error:", err);
         } else {
-            console.log("[MQTT] Successfully subscribed to debug/");
+            console.log("[MQTT] Successfully subscribed to status/");
         }
     });
 });
@@ -20,7 +20,7 @@ mqtt_c.on('message', function (topic, message) {
     let text = message.toString()
     console.log(`[DEBUG] Message received on topic ${topic}:`, text)
     switch (topic) {
-        case "debug/":
+        case "status/":
           const debugData = JSON.parse(text);
           console.log(`[DEBUG] Parsed debug data:`, debugData);
           
