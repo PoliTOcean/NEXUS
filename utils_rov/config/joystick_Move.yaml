@@ -72,21 +72,21 @@ buttons:
     value:
     onShiftValue: 
   LB:
-    onPress: "YAW"
-    onRelease: "YAW"
+    onPress: "ROLL"
+    onRelease: "ROLL"
     topic: "axes/"
-    onShiftPress: "YAW"
-    onShiftRelease: "YAW"
-    value: -10000
-    onShiftValue: -3000
+    onShiftPress: "ROLL"
+    onShiftRelease: "ROLL"
+    value: -30000
+    onShiftValue: -15000
   RB:
-    onPress: "YAW"
-    onRelease: "YAW"
+    onPress: "ROLL"
+    onRelease: "ROLL"
     topic: "axes/"
-    onShiftPress: "YAW"
-    onShiftRelease: "YAW"
-    value: 10000
-    onShiftValue: 3000
+    onShiftPress: "ROLL"
+    onShiftRelease: "ROLL"
+    value: 30000
+    onShiftValue: 15000
   D-Pad-Up:
     onPress: "DEPTH_REFERENCE_OFFSET"
     onRelease: 
@@ -107,8 +107,8 @@ buttons:
     onPress: "SHIFT"
     onRelease: "noSHIFT"
     topic:
-    onShiftPress:
-    onShiftRelease:
+    onShiftPress: "SHIFT"
+    onShiftRelease: "noSHIFT"
     value:
     onShiftValue:
   D-Pad-Right:
@@ -122,20 +122,20 @@ buttons:
   UPLOAD:
     onPress: "ABLE_ANGLE_CTL"
     onRelease:
-    topic:
+    topic: "state_commands/"
     onShiftPress: "DISABLE_ANGLE_CTL"
     onShiftRelease:
     value:
     onShiftValue:
 axes:
     LSB-X:
-      command: "X"
-      deadzone: 2000
-    LSB-Y: 
       command: "Y"
       deadzone: 2000
+    LSB-Y: 
+      command: "X"
+      deadzone: 2000
     RSB-X: 
-      command: "ROLL"
+      command: "YAW"
       deadzone: 2000
     RSB-Y: 
       command: "PITCH"

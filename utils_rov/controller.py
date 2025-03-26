@@ -37,6 +37,7 @@ class ROVController():
                                 "PITCH": 0
                                 }
         self.shift=0
+        self.angle_control=1
         self.z_up=0
         self.z_down=0
         self.z_value=0
@@ -93,9 +94,8 @@ class ROVController():
 
         if id_axes in ['LT', 'RT']:
             value = (value + 32767)//2
-            if id_axes == 'LT':
+            if id_axes == 'RT':
                 value = value*-1
-    
         elif id_axes=='throttle':
             value=value*-1
             value = (value + 32767)//2
@@ -105,6 +105,11 @@ class ROVController():
             if self.z_down:
                 self.__joystick.axesStates["Z"] = self.z_value*-1
             return
+        
+        
+        if not self.angle_control and self.__joystick.commands['axes'][id_axes]["command"]=="PITCH":
+            value=0
+
 
         self.__joystick.axesStates[self.__joystick.commands['axes'][id_axes]["command"]] = value
 
@@ -150,6 +155,13 @@ class ROVController():
             return
         elif command == "noSHIFT":
             self.shift=0
+            return
+        
+        if command == "ABLE_ANGLE_CTL":
+            self.angle_control=1
+            return
+        elif command == "DISABLE_ANGLE_CTL":
+            self.angle_control=0
             return
 
         if command in self.__joystick.axesStates.keys():
