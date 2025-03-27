@@ -12,18 +12,6 @@ def gui():
 @app.route("/FLOAT")
 def float():
     return render_template("FLOAT.html")
-
-@app.route("/PID")
-def pid():
-    return render_template("PID.html")
-
-@app.route("/TASK_1")
-def task_1():
-    return render_template("TASK_1.html")
-
-@app.route("/TASK_2")
-def task_2():
-    return render_template("TASK_2.html")
     
 @app.route("/CAMERAS")
 def cameras():
