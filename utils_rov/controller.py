@@ -14,7 +14,6 @@ __CONFIG_JOYSTICK_KEY__ = "joystick"
 __CONFIG_JOYSTICK_FLIGHT_KEY__ = "joystick_flight"
 __CONFIG_MQTT_KEY__ = "mqtt"
 
-AXES_DEADZONE = 2000    #should always be > MIN_DIFFERENCE
 INTERVAL = 0.03         #sec
 MIN_DIFFERENCE = 50    #difference from last command sendt in order to send
 
