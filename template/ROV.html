@@ -60,12 +60,16 @@
             <div id="c0" class="screen" onclick="switching('camera_0')">
                 <div class="title">Camera 0</div>
                 <!--<img id="camera_0" class="rotate180 rotate90" src="file:///home/vboxuser/Desktop/EVA_2025/gui/template/ROV_files/stream_002">-->
+<<<<<<< HEAD
                 <!-- <img id="camera_0" class = "video-container" src="{{url_for('static', filename='rov1.png')}}" muted autoplay loop></video> -->
                 <!-- <img  id="camera_0" class="rotate180" src="http://10.0.0.254:8079/stream" /> -->
 
                 <!-- TESTING PURPOUSES ONLY -->
                 <img id="camera_0" src="http://localhost:8079/stream" style="display: none;" />
                 <canvas id="canvas_0"></canvas>
+=======
+                <img id="camera_0" class = "video-container" src="http://10.0.0.254:8080/stream" muted autoplay loop></video>
+>>>>>>> master
             </div>
         </div>
         <button class = "button" onclick = "rotateVideo()"> Rotate 90° </button>
@@ -74,17 +78,27 @@
         <div class="camera_s">
             <div id="c1" class="screen" onclick="switching('camera_1')">
                 <div class="title">Camera 1</div>
+<<<<<<< HEAD
                 
                 <img id="camera_1" src="http://localhost:8080/stream" style="display: none;" />
                 <canvas id="canvas_1"></canvas>
+=======
+                <!-- <img id="camera_1" src="file:///home/vboxuser/Desktop/EVA_2025/gui/template/ROV_files/stream"> -->
+                <img id="camera_1" class = "video-container" src="http://10.0.0.254:8079/stream" muted autoplay loop></video>
+>>>>>>> master
             </div>
         </div>  
         <div class="camera_s">
             <div id="c2" class="screen" onclick="switching('camera_2')">
                 <div class="title">Camera 2</div>
+<<<<<<< HEAD
                 
                 <img id="camera_2" src="http://localhost:8078/stream" style="display: none;" />
                 <canvas id="canvas_2"></canvas>
+=======
+                <!-- <img id="camera_2" src="file:///home/vboxuser/Desktop/EVA_2025/gui/template/ROV_files/stream_003"> -->
+                <img id="camera_2" class = "video-container" src="http://10.0.0.254:8078/stream" muted autoplay loop></video>
+>>>>>>> master
             </div>
         </div>
     </div>

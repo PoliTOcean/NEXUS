@@ -2,7 +2,7 @@ let info;
 let script = document.currentScript;
 let fullUrl = script.src;
 let jsonUrl = fullUrl.replace("JS/GUI.js", "info.json");
-let pages = ["ROV", "FLOAT", "PID", "TASK_1"];
+let pages = ["ROV", "FLOAT"];
 let stsObj;
 
 // [UTILS]
@@ -81,22 +81,17 @@ async function loadPages(page) {
 
 const container = document.querySelector('.window');
 
+
+// TODO: Ask this observer is needed or not
 const observer = new MutationObserver((mutationsList) => {
 
     for (const mutation of mutationsList) {
         if (mutation.type === 'childList') {
-            const pid = container.querySelector("#PID_form");
-
-            const task = container.querySelector("#TASK_1_FORM");
-            // Se l'ultima pagina è pronta, carica i contenuti in tutte le pagine
-            if (task && pid) {
-
+            
                 ROVLoader();
-                Task1Loader();
-                PIDLoader();
                 observer.disconnect();
 
-            }
+            
         }
     }
 });

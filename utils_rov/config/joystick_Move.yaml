@@ -2,147 +2,147 @@ buttons:
   B:
     onPress: "ROTATE_WRIST_CW"
     onRelease: "STOP_WRIST"
-    topic: "arm_commands"
-    onShiftRelease:
+    topic: "arm_commands/"
     onShiftPress:
+    onShiftRelease:
     value:
     onShiftValue:
   Y:
     onPress: "CLOSE_NIPPER"
     onRelease: "STOP_NIPPER"
-    topic: "arm_commands"
-    onShiftRelease:
+    topic: "arm_commands/"
     onShiftPress:
+    onShiftRelease:
     value:
     onShiftValue:
   X:
     onPress: "ROTATE_WRIST_CCW"
     onRelease: "STOP_WRIST"
-    topic: "arm_commands"
-    onShiftRelease: 
+    topic: "arm_commands/"
     onShiftPress:
+    onShiftRelease:
     value:
     onShiftValue:
   A:
     onPress: "OPEN_NIPPER"
     onRelease: "STOP_NIPPER"
-    topic: "arm_commands"
-    onShiftRelease: 
-    onShiftPress: 
+    topic: "arm_commands/"
+    onShiftPress:
+    onShiftRelease:
     value:
     onShiftValue:
   View:
-    onPress: "FREE"
-    onRelease: "FREE"
-    topic: "state_commands"
-    onShiftRelease:
+    onPress: "DEPTH_REFERENCE_UPDATE"
+    onRelease:
+    topic: "state_commands/"
     onShiftPress:
-    value: 10000
-    onShiftValue: 0
+    onShiftRelease:
+    value: 50
+    onShiftValue: 
   Option: 
     onPress: "TORQUE"
     onRelease: "TORQUE_OFF"
-    topic: "state_commands"
-    onShiftRelease:
+    topic: "state_commands/"
     onShiftPress:
+    onShiftRelease:
     value:
     onShiftValue:
   Start:
-    onPress: "FREE"
-    onRelease: "FREE"
-    topic: "state_commands"
-    onShiftRelease:
+    onPress: "ARM_ROV"
+    onRelease:
+    topic: "state_commands/"
     onShiftPress:
+    onShiftRelease:
     value:
     onShiftValue:
   LC:
-    onPress: "FREE"
-    onRelease: "FREE"
+    onPress:
+    onRelease:
     topic:
-    onShiftRelease: 
     onShiftPress:
+    onShiftRelease:
     value:
     onShiftValue:
   RC:
-    onPress: "FREE"
-    onRelease: "FREE"
-    topic: "arm_commands"
-    onShiftRelease:
+    onPress:
+    onRelease:
+    topic:
     onShiftPress:
-    value: 10000
+    onShiftRelease:
+    value:
     onShiftValue: 
   LB:
-    onPress: "YAW"
-    onRelease: "YAW"
-    topic: "state_commands"
-    onShiftRelease: "YAW"
-    onShiftPress: "YAW"
-    value: -10000
-    onShiftValue: -3000
+    onPress: "ROLL"
+    onRelease: "ROLL"
+    topic: "axes/"
+    onShiftPress: "ROLL"
+    onShiftRelease: "ROLL"
+    value: -30000
+    onShiftValue: -15000
   RB:
-    onPress: "YAW"
-    onRelease: "YAW"
-    topic: "state_commands"
-    onShiftRelease: "YAW"
-    onShiftPress: "YAW"
-    value: 10000
-    onShiftValue: 3000
+    onPress: "ROLL"
+    onRelease: "ROLL"
+    topic: "axes/"
+    onShiftPress: "ROLL"
+    onShiftRelease: "ROLL"
+    value: 30000
+    onShiftValue: 15000
   D-Pad-Up:
-    onPress: "ABLE_ANGLE_CTL"
+    onPress: "DEPTH_REFERENCE_OFFSET"
     onRelease: 
-    topic: "state_commands"
+    topic: "state_commands/"
+    onShiftPress: "DEPTH_REFERENCE_OFFSET"
     onShiftRelease:
-    onShiftPress:
-    value: 10000
-    onShiftValue:
+    value: 2
+    onShiftValue: 10
   D-Pad-Down:
-    onPress: "DISABLE_ANGLE_CTL"
+    onPress: "DEPTH_REFERENCE_OFFSET"
     onRelease:
-    topic: "state_commands"
+    topic: "state_commands/"
+    onShiftPress: "DEPTH_REFERENCE_OFFSET"
     onShiftRelease:
-    onShiftPress:
-    value:
-    onShiftValue:
+    value: -2
+    onShiftValue: -10
   D-Pad-Left:
     onPress: "SHIFT"
     onRelease: "noSHIFT"
-    topic: "state_commands"
+    topic:
+    onShiftPress: "SHIFT"
     onShiftRelease: "noSHIFT"
-    onShiftPress:
     value:
     onShiftValue:
   D-Pad-Right:
-    onPress: "DPAD_RIGHT"
-    onRelease: "FREE"
-    topic: "state_commands"
-    onShiftRelease:
+    onPress: "CHANGE_CONTROLLER_STATUS"
+    onRelease:
+    topic: "state_commands/"
     onShiftPress:
+    onShiftRelease:
     value:
     onShiftValue:
   UPLOAD:
-    onPress: "FREE"
-    onRelease: "FREE"
-    topic: "state_commands"
+    onPress: "ABLE_ANGLE_CTL"
+    onRelease:
+    topic: "state_commands/"
+    onShiftPress: "DISABLE_ANGLE_CTL"
     onShiftRelease:
-    onShiftPress:
     value:
     onShiftValue:
 axes:
     LSB-X:
-      command: "X"
-      deadzone: 2000
-    LSB-Y: 
       command: "Y"
       deadzone: 2000
+    LSB-Y: 
+      command: "X"
+      deadzone: 2000
     RSB-X: 
-      command: "ROLL"
+      command: "YAW"
       deadzone: 2000
     RSB-Y: 
       command: "PITCH"
       deadzone: 2000
     LT:
       command: "Z"
-      deadzone: 3000
+      deadzone: 500
     RT:
       command: "Z"
-      deadzone: 3000
+      deadzone: 500
