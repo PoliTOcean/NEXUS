@@ -1,5 +1,3 @@
-
-<!-- saved from url=(0060)file:///home/vboxuser/Desktop/EVA_2025/gui/template/ROV.html -->
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 </head><body><div class="wrapper ROV hide">
 <div class="max">
@@ -76,20 +74,19 @@
         <div class="camera_s">
             <div id="c1" class="screen" onclick="switching('camera_1')">
                 <div class="title">Camera 1</div>
-                <!-- <img id="camera_1" src="file:///home/vboxuser/Desktop/EVA_2025/gui/template/ROV_files/stream"> -->
-                <img id="camera_1" class = "video-container" src="{{url_for('static', filename='rov2.png')}}" muted autoplay loop></video>
-                <!-- <img  id="camera_1" class="rotate180" src="http://10.0.0.254:8080/stream"  /> -->
+                
+                <img id="camera_1" src="http://localhost:8080/stream" style="display: none;" />
+                <canvas id="canvas_1"></canvas>
             </div>
         </div>  
-        <!-- <button class = "button" onclick = "rotateVideo('camera_1')"> Rotate 90° </button> -->
         <div class="camera_s">
             <div id="c2" class="screen" onclick="switching('camera_2')">
                 <div class="title">Camera 2</div>
-                <!-- <img id="camera_2" src="file:///home/vboxuser/Desktop/EVA_2025/gui/template/ROV_files/stream_003"> -->
-                <img id="camera_2" class = "video-container" src="{{url_for('static', filename='rov2.png')}}" muted autoplay loop></video>
+                
+                <img id="camera_2" src="http://localhost:8078/stream" style="display: none;" />
+                <canvas id="canvas_2"></canvas>
             </div>
         </div>
-        <!-- <button class = "button" onclick = "rotateVideo('camera_2')"> Rotate 90° </button> -->
     </div>
 
 
