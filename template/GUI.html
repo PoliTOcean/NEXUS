@@ -25,21 +25,8 @@
 
         </div>
     </div>
-<<<<<<< HEAD
-    <script src="{{url_for('static', filename='./node_modules/mqtt/dist/mqtt.min.js')}}"></script>
-    <script src="{{url_for('static', filename='./node_modules/fisheyegl/dist/fisheyegl.js')}}"></script>
-    <script src="{{url_for('static', filename='./node_modules/flight-indicators-js/js/flight-indicators.js')}}"></script>
-    <script type="text/javascript" src="{{ url_for('static', filename='./JS/GUI.js')}}" ></script>
-    <script type="text/javascript" src="{{ url_for('static', filename='./JS/mqtt.js')}}" ></script>
-    <script type="text/javascript" src="{{ url_for('static', filename='./JS/ROV.js')}}" ></script>
-    <script type="text/javascript" src="{{ url_for('static', filename='./JS/Float.js')}}" ></script>
-    <script type="text/javascript" src="{{ url_for('static', filename='./JS/PID.js')}}" ></script>
-    <script type="text/javascript" src="{{ url_for('static', filename='./JS/Tasks.js')}}" ></script>
-    <script type="text/javascript" src="{{ url_for('static', filename='./JS/Stopwatch.js')}}" ></script>
- </body>
-</html>
-=======
     <script src="{{ url_for('static', filename='./node_modules/mqtt/dist/mqtt.min.js') }}"></script>
+    <script src="{{url_for('static', filename='./node_modules/fisheyegl/dist/fisheyegl.js')}}"></script>
     <script src="{{ url_for('static', filename='./node_modules/flight-indicators-js/js/flight-indicators.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='./JS/GUI.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='./JS/mqtt.js') }}"></script>
@@ -48,4 +35,3 @@
     <script type="text/javascript" src="{{ url_for('static', filename='./JS/Stopwatch.js') }}"></script>
 </body>
 </html>
->>>>>>> master
