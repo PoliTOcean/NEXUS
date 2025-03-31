@@ -1,0 +1,59 @@
+{
+    "modes": {
+        "debug": {
+            "mqtt": {
+                "ip": "mqtt://127.0.0.1:8080",
+                "topics": [
+                    "/debug_gui",
+                    "/debug_state_commands"
+                ]
+            },
+            "cameras": {
+                "0": {
+                    "status": 1,
+                    "enabled": 1,
+                    "src": "static/rov1.png"
+                },
+                "1": {
+                    "status": 1,
+                    "enabled": 1,
+                    "src": "static/rov2.png"
+                },
+                "2": {
+                    "status": 1,
+                    "enabled": 1,
+                    "src": "static/rov2.png"
+                },
+                "n_cameras": 3
+            }
+        },
+        "production": {
+            "mqtt": {
+                "ip": "mqtt://10.0.0.254:9000",
+                "topics": [
+                    "/gui",
+                    "/state_commands"
+                ]
+            },
+            "cameras": {
+                "0": {
+                    "status": 0,
+                    "enabled": 1,
+                    "src": "http://10.0.0.254:8079/stream"
+                },
+                "1": {
+                    "status": 1,
+                    "enabled": 1,
+                    "src": "http://10.0.0.254:8079/stream"
+                },
+                "2": {
+                    "status": 1,
+                    "enabled": 1,
+                    "src": "http://10.0.0.254:8079/stream"
+                },
+                "n_cameras": 3
+            }
+        }
+    },
+    "statuses": ["JOYSTICK", "ARMED", "PID"]
+}

@@ -12,6 +12,38 @@ addEventListener("resize", (event) => {
 
 // [CAMERA MANAGEMENT]
 
+let camerasInitialized = false; 
+
+
+function initializeCameras() {
+
+    if (camerasInitialized) {
+        console.log("[ROV] Cameras are already initialized. Skipping initialization.");
+        return;
+    }
+
+    if (!info || !info.cameras) {
+        console.error("[ROV] Camera information is not available in `info`.");
+        return;
+    }
+
+    console.log("[ROV] Initializing cameras with sources from info.json...");
+
+    for (let i = 0; i < info.cameras.n_cameras; i++) {
+        const cameraElement = document.querySelector(`#c${i} img`);
+        if (cameraElement) {
+            cameraElement.src = info.cameras[i].src; // Use the `src` from the `info` object
+            console.log(`[ROV] Updated camera #${i} src to: ${info.cameras[i].src}`);
+        } else {
+            console.warn(`[ROV] Camera element #c${i} not found.`);
+        }
+    }
+
+    camerasInitialized = true;
+
+}
+
+
 function switching(id) {
     let n_camera = `${id.match(/\d+/)[0]}`;
     if (info["cameras"][n_camera]["status"] == 0) return;
@@ -193,3 +225,4 @@ function ROVLoader() {
 
     console.log("[DEBUG] Flight indicators initialized:", { attitude, compass });
 }
+
