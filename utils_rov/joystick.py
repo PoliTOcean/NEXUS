@@ -62,7 +62,8 @@ class Joystick():
                     self.__connection_type = "Bluetooth"
             except Exception:
                 self.__connection_type = "Bluetooth"
-            
+        print(f"connected via {self.__connection_type}")
+
         with open(self.__path_mappings, "r") as jmaps:
             mappings = json.load(jmaps)
             if self.name in mappings:

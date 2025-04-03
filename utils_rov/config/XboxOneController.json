@@ -147,28 +147,26 @@
                 "buttons": [
                 "A",
                 "B",
-                "none",
                 "X",
                 "Y",
-                "LS",
                 "LB",
                 "RB",
-                "Back",
-                "UPLOAD",
                 "View",
                 "Option",
                 "Start",
                 "LC",
                 "RC",
-                "UPLOAD"
+                "UPLOAD",
+                "Start",
+                "Option"
                 ],
                 "axes": [
                     "LSB-X",
                     "LSB-Y",
-                    "RSB-X",
+                    "LT",
                     "RSB-Y",
-                    "RT",
-                    "LT"
+                    "RSB-X",
+                    "RT"
                 ],
                 "joyhat": [
                     "D-Pad-Up",
