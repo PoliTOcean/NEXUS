@@ -164,8 +164,8 @@
                     "LSB-X",
                     "LSB-Y",
                     "LT",
-                    "RSB-Y",
                     "RSB-X",
+                    "RSB-Y",
                     "RT"
                 ],
                 "joyhat": [
