@@ -3,3 +3,6 @@ test:
 
 nexus:
 	python3 run.py --mode production 
+
+controller:
+	python3 -m utils_rov.main --controller
