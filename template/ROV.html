@@ -1,5 +1,3 @@
-
-<!-- saved from url=(0060)file:///home/vboxuser/Desktop/EVA_2025/gui/template/ROV.html -->
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 </head><body><div class="wrapper ROV hide">
 <div class="max">
@@ -47,43 +45,28 @@
                 </label>
             </div>
         </div>
-
-        <!-- <div class="tl">
-            <div id="chart_12v"></div>
-
-        </div>
-        <div class="tl">
-            <div id="chart_5v"></div>
-            
-        </div>         -->
       </div>  
     <div class="div2">
         <div class="camera_p">
             <div id="c0" class="screen" onclick="switching('camera_0')">
                 <div class="title">Camera 0</div>
-                <!--<img id="camera_0" class="rotate180 rotate90" src="file:///home/vboxuser/Desktop/EVA_2025/gui/template/ROV_files/stream_002">-->
-                <img id="camera_0" class = "video-container" src=""  />
+                <img id="camera_0" src="http://localhost:8079/stream" />
             </div>
         </div>
-        <button class = "button" onclick = "rotateVideo()"> Rotate 90° </button>
     </div>
     <div class="div3">
         <div class="camera_s">
             <div id="c1" class="screen" onclick="switching('camera_1')">
                 <div class="title">Camera 1</div>
-                <!-- <img id="camera_1" src="file:///home/vboxuser/Desktop/EVA_2025/gui/template/ROV_files/stream"> -->
-                <img id="camera_1" class = "video-container" src=""></video>
+                <img id="camera_1" src="http://localhost:8080/stream" />
             </div>
         </div>  
-        <!-- <button class = "button" onclick = "rotateVideo('camera_1')"> Rotate 90° </button> -->
         <div class="camera_s">
             <div id="c2" class="screen" onclick="switching('camera_2')">
-                <div class="title">Camera 2</div>
-                <!-- <img id="camera_2" src="file:///home/vboxuser/Desktop/EVA_2025/gui/template/ROV_files/stream_003"> -->
-                <img id="camera_2" class = "video-container" src=""></video>
+            <div class="title">Camera 2</div>
+                <img id="camera_2" src="http://localhost:8078/stream" />
             </div>
         </div>
-        <!-- <button class = "button" onclick = "rotateVideo('camera_2')"> Rotate 90° </button> -->
     </div>
 
 

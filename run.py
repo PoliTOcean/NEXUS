@@ -25,8 +25,13 @@ if __name__ == "__main__":
         FlaskUI(
             app=app,
             server="flask",
-            fullscreen= True,
-            port=5000,
+            fullscreen= False,
+            server_kwargs={
+                "app": app,
+                "port": 5000,
+                "threaded": True,
+            },
+            browser_path="/snap/bin/chromium",
         ).run()
     
 

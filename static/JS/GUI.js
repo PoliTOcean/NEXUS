@@ -117,6 +117,54 @@ async function statusController() {
     updateStatusesROV({"JOYSTICK": status["status"]});
 }
 
+function distortionHandler(cameraId, canvasId, srcUrl) {
+    // Handle cameras   
+    const videoStream = document.getElementById(cameraId);
+
+    // Create canvas
+    const canvas = document.createElement('canvas');
+    videoStream.insertAdjacentElement('afterend', canvas);
+    videoStream.style.display = "none";
+    canvas.id = canvasId;
+    canvas.src = srcUrl;
+    const FPS = 144;
+
+    // Initialize the fisheye distortion effect (assuming FisheyeGl is available)
+    var distorter = FisheyeGl({
+        image: canvas.src,  // Use the canvas as the source image
+        selector: `#${canvasId}`, // a canvas element to work with
+        lens: {
+            a: 0.465,    // 0 to 4;    default 1
+            b: 0.613,      // 0 to 4;  default 1
+            Fx: 0.34,   // 0 to 4; default 0.0
+            Fy: 0.09,   // 0 to 4;  default 0.0
+            scale: 0.911 // 0 to 20; default 1.5
+        },
+        fov: {
+            x: 0, // 0 to 2; default 1
+            y: 0  // 0 to 2; default 1
+        },
+    });
+
+    canvas.style.width = "80%";
+    canvas.style.height = "80%";
+
+    // Wait for the video to load metadata (dimensions)
+    videoStream.onload = function () {
+        drawFrame(); // Start drawing frames
+    };
+
+    function drawFrame() {
+        distorter.setImage(canvas.src);
+        setTimeout(() => requestAnimationFrame(drawFrame), 1000/FPS);
+    }
+
+    // Delete img
+    videoStream.remove();
+}
+
+
+
 // [MAIN]
 
 window.onload = async () => {
@@ -146,6 +194,10 @@ window.onload = async () => {
 
     // Set the initial page
     page_now = "home";
+
+    //distortionHandler("camera_0", "canvas_0", "http://localhost:8079/stream");
+    //distortionHandler("camera_1", "canvas_2", "http://localhost:8080/stream");
+    distortionHandler("camera_2", "canvas_2", "http://localhost:8078/stream");
 
     // Start routines
     let refresh = 2000;
