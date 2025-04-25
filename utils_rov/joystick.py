@@ -4,6 +4,7 @@ import os
 import sdl2
 import sdl2.ext
 import platform
+import subprocess
 
 __COMMAND_CONFIG_FILE__ = "joystick_Move.yaml"
 
@@ -14,6 +15,7 @@ class Joystick():
         self.__on_axis_changed = on_axis_changed
         self.__on_button_changed = on_button_changed
         self.__last_pressed = 0
+        self.__connection_type = "USB"
         self.__axesStates = {
                                 "X" : 0,
                                 "Y": 0,
@@ -49,10 +51,23 @@ class Joystick():
         self.__joystick = sdl2.SDL_JoystickOpen(0)
         print("[...] Loading mappings")
         print(f"controller name: {self.name}")
+        
+        if "Xbox" in self.name:
+            # Attempt to determine USB/Bluetooth via lsusb output
+            try:
+                lsusb_output = subprocess.check_output(["lsusb"]).decode()
+                if "Xbox" in lsusb_output:
+                    self.__connection_type = "USB"
+                else:
+                    self.__connection_type = "Bluetooth"
+            except Exception:
+                self.__connection_type = "Bluetooth"
+        print(f"connected via {self.__connection_type}")
+
         with open(self.__path_mappings, "r") as jmaps:
             mappings = json.load(jmaps)
             if self.name in mappings:
-                self.__mappings = mappings[self.name][platform.system()]
+                self.__mappings = mappings[self.name][platform.system()][self.__connection_type]
         self.active = True
 
     def __close(self):

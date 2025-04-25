@@ -115,35 +115,36 @@
 },
     "Xbox Series X Controller": {
         "Darwin" : {
-            "buttons": [
+            "Bluetooth": {
+                "buttons": [
                 "A",
                 "B",
                 "X",
                 "Y",
+                "View",
+                "Start",
+                "Option",
+                "LC",
+                "RC",
                 "LB",
                 "RB",
-                "Back",
-                "Start",
-                "GUIDE",
-                "LS",
-                "RS",
                 "D-Pad-Up",
                 "D-Pad-Down",
                 "D-Pad-Left",
                 "D-Pad-Right",
                 "UPLOAD"
-            ],
-            "axes": [
-                "LSB-X",
-                "LSB-Y",
-                "RSB-X",
-                "RSB-Y",
-                "LT",
-                "RT"
-            ]
-        },
-        "Linux": {
-            "buttons": [
+                ],
+                "axes": [
+                    "LSB-X",
+                    "LSB-Y",
+                    "RSB-X",
+                    "RSB-Y",
+                    "LT",
+                    "RT"
+                ]
+            },
+            "USB": {
+                "buttons": [
                 "A",
                 "B",
                 "none",
@@ -160,21 +161,90 @@
                 "LC",
                 "RC",
                 "UPLOAD"
-            ],
-            "axes": [
-                "LSB-X",
-                "LSB-Y",
-                "RSB-X",
-                "RSB-Y",
-                "RT",
-                "LT"
-            ],
-            "joyhat": [
-                "D-Pad-Up",
-                "D-Pad-Down",
-                "D-Pad-Left",
-                "D-Pad-Right"
-            ]
+                ],
+                "axes": [
+                    "LSB-X",
+                    "LSB-Y",
+                    "RSB-X",
+                    "RSB-Y",
+                    "RT",
+                    "LT"
+                ],
+                "joyhat": [
+                    "D-Pad-Up",
+                    "D-Pad-Down",
+                    "D-Pad-Left",
+                    "D-Pad-Right"
+                ]
+            }
+        },    
+        "Linux": {
+            "USB": {
+                "buttons": [
+                "A",
+                "B",
+                "X",
+                "Y",
+                "LB",
+                "RB",
+                "View",
+                "Option",
+                "Start",
+                "LC",
+                "RC",
+                "UPLOAD",
+                "Start",
+                "Option"
+                ],
+                "axes": [
+                    "LSB-X",
+                    "LSB-Y",
+                    "LT",
+                    "RSB-X",
+                    "RSB-Y",
+                    "RT"
+                ],
+                "joyhat": [
+                    "D-Pad-Up",
+                    "D-Pad-Down",
+                    "D-Pad-Left",
+                    "D-Pad-Right"
+                ]
+            },
+            "Bluetooth": {
+                "buttons": [
+                "A",
+                "B",
+                "none",
+                "X",
+                "Y",
+                "LS",
+                "LB",
+                "RB",
+                "Back",
+                "UPLOAD",
+                "View",
+                "Option",
+                "Start",
+                "LC",
+                "RC",
+                "UPLOAD"
+                ],
+                "axes": [
+                    "LSB-X",
+                    "LSB-Y",
+                    "RSB-X",
+                    "RSB-Y",
+                    "RT",
+                    "LT"
+                ],
+                "joyhat": [
+                    "D-Pad-Up",
+                    "D-Pad-Down",
+                    "D-Pad-Left",
+                    "D-Pad-Right"
+                ]
+            }
         }    
     }, 
     "Wireless Controller": {

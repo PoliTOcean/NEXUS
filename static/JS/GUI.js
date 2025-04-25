@@ -1,7 +1,5 @@
 let info;
 let script = document.currentScript;
-let fullUrl = script.src;
-let jsonUrl = fullUrl.replace("JS/GUI.js", "info.json");
 let pages = ["ROV", "FLOAT"];
 let stsObj;
 
@@ -29,7 +27,6 @@ async function postRequest(url, data) {
     })
     return response.json();
 }
-
 
 
 // Need this to prevent closing of server
@@ -60,6 +57,15 @@ async function change(page) {
 
     // Update the current page tracker
     page_now = page;
+
+
+    if (page === "ROV") {
+        console.log("[INFO] ROV page is now active.");
+        initializeCameras(); 
+
+    }
+
+
 }
 
 async function loadPages(page) {
@@ -82,7 +88,6 @@ async function loadPages(page) {
 const container = document.querySelector('.window');
 
 
-// TODO: Ask this observer is needed or not
 const observer = new MutationObserver((mutationsList) => {
 
     for (const mutation of mutationsList) {
@@ -170,8 +175,14 @@ window.onload = async () => {
     body.style.width = `${w}px`; 
     body.style.height = `${h}px`;
 
-    // Load info and statuses
-    info = await getRequest(jsonUrl);
+    // Fetch info from the /info
+    info = await getRequest("/info");
+    console.log("[INFO] Loaded info:", info);
+
+    // Initialize MQTT after info is fully loaded
+    initializeMQTT();
+
+
     stsObj = info["statuses"].reduce((obj, key) => {
         obj[key] = false;
         return obj;
