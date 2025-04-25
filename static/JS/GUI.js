@@ -115,7 +115,12 @@ async function statusController() {
 function distortionHandler(cameraId, canvasId, srcUrl) {
     // Handle cameras   
     const videoStream = document.getElementById(cameraId);
-    const canvas = document.getElementById(canvasId);
+
+    // Create canvas
+    const canvas = document.createElement('canvas');
+    videoStream.insertAdjacentElement('afterend', canvas);
+    videoStream.style.display = "none";
+    canvas.id = canvasId;
     canvas.src = srcUrl;
     const FPS = 144;
 
@@ -148,6 +153,9 @@ function distortionHandler(cameraId, canvasId, srcUrl) {
         distorter.setImage(canvas.src);
         setTimeout(() => requestAnimationFrame(drawFrame), 1000/FPS);
     }
+
+    // Delete img
+    videoStream.remove();
 }
 
 
@@ -176,15 +184,15 @@ window.onload = async () => {
     // Set the initial page
     page_now = "home";
 
-    distortionHandler("camera_0", "canvas_0", "http://localhost:8079/stream");
+    //distortionHandler("camera_0", "canvas_0", "http://localhost:8079/stream");
     //distortionHandler("camera_1", "canvas_2", "http://localhost:8080/stream");
-    //distortionHandler("camera_2", "canvas_2", "http://localhost:8078/stream");
+    distortionHandler("camera_2", "canvas_2", "http://localhost:8078/stream");
 
     // Start routines
     let refresh = 2000;
-    // setInterval(() => statusFLOAT("STATUS"), refresh);
-    // setInterval(statusController, refresh);
-    // setInterval(keep_alive_server, refresh + 1000);
+    setInterval(() => statusFLOAT("STATUS"), refresh);
+    setInterval(statusController, refresh);
+    setInterval(keep_alive_server, refresh + 1000);
 }
 
 

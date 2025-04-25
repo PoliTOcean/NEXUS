@@ -19,6 +19,9 @@ def generate_frames():
             cap.set(cv2.CAP_PROP_POS_FRAMES, 0)  # Restart video when it ends
             continue
         
+        # Resize the frame to HD (1280x720)
+        frame = cv2.resize(frame, (1280, 720))
+        
         # Convert the frame to JPEG
         _, buffer = cv2.imencode('.jpg', frame)
         frame_bytes = buffer.tobytes()
