@@ -1,11 +1,37 @@
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 </head><body><div class="wrapper ROV hide">
-<div class="max">
-    <div class="div1">
-        <div class="indicators">
-            <div id="attitude"></div>
-            <div id="compass"></div>
+<div class="main_row">
+
+    <div class="camera_column">
+
+
+        <div class="camera_p">
+            <div id="c0" class="screen" onclick="switching('camera_0')">
+                <div class="camera_title">Camera 0</div>
+                <img id="camera_0" class = "video-container" src=""  />
+            </div>
         </div>
+
+        <div class="camera_row">
+
+            <div class="camera_s">
+                <div id="c1" class="screen" onclick="switching('camera_1')">
+                    <div class="camera_title">Camera 1</div>
+                    <img id="camera_1" class = "video-container" src=""></video>
+                </div>
+            </div>  
+    
+            <div class="camera_s">
+                <div id="c2" class="screen" onclick="switching('camera_2')">
+                    <div class="camera_title">Camera 2</div>
+                    <img id="camera_2" class = "video-container" src=""></video>
+                </div>
+            </div>
+    </div>
+
+    </div>
+
+    <div class="utilty_column">
 
         <div class="container"> 
             <div class="title">Stopwatch</div>
@@ -20,125 +46,125 @@
             </div>
         </div>
 
-        <div class="sensors">
-            <div class="title">Sensors</div>
-            <div class="sensor" id="sensor_depth">
-                <div class="flex_s">
-                    <img src="{{url_for('static', filename ='SVG/Depth.svg')}}" >
-                    <label>
-                        Depth:
-                    </label>
-                </div>
-                <label id="data_depth">
-                    
-                </label>
-            </div>
-            <div class="sensor" id="sensor_tempExt">
-                <div class="flex_s">
-                    <img src="{{url_for('static', filename ='SVG/temperature.svg')}}" >
-                    <label>
-                        Temperature:
-                    </label>
-                </div>
-                <label id="data_tempExt">
-                    
-                </label>
-            </div>
+        <div class="indicators">
+            <div id="attitude" class="indicator"></div>
+            <div id="compass" class="indicator"></div>
         </div>
-      </div>  
-    <div class="div2">
-        <div class="camera_p">
-            <div id="c0" class="screen" onclick="switching('camera_0')">
-                <div class="title">Camera 0</div>
-                <img id="camera_0" src="http://localhost:8079/stream" />
-            </div>
-        </div>
-    </div>
-    <div class="div3">
-        <div class="camera_s">
-            <div id="c1" class="screen" onclick="switching('camera_1')">
-                <div class="title">Camera 1</div>
-                <img id="camera_1" src="http://localhost:8080/stream" />
-            </div>
-        </div>  
-        <div class="camera_s">
-            <div id="c2" class="screen" onclick="switching('camera_2')">
-            <div class="title">Camera 2</div>
-                <img id="camera_2" src="http://localhost:8078/stream" />
-            </div>
-        </div>
-    </div>
 
 
-    <div class="div4">
+
+
+        <div class="sensor-row">
+        
+
             <div class="container">
-                <div class="title">Camere</div>
-                <div class="elenco">
-                    <div class="cat but">
-                        <label>
-                        <input type="checkbox" checked="checked" onchange="onoff('camera_0')"><span>Camera 0</span>
+    
+                <div class="sensor" id="sensor_depth">
+                    <div class="flex_s">
+                        <img src="{{url_for('static', filename ='SVG/Depth.svg')}}" >
+                    </div>
+                    <label class= "data-label" id="data_depth">
+                        3.16 m
                     </label>
-                    </div>
-                    <div class="cat but">
-                        <label>
-                        <input type="checkbox" checked="checked" onchange="onoff('camera_1')"><span>Camera 1</span>
-                    </label>
-                    </div>
-                    <div class="cat but">
-                        <label>
-                        <input type="checkbox" checked="checked" onchange="onoff('camera_2')"><span>Camera 2</span>
-                        </label>
-                    </div>
+        
+        
                 </div>
-        </div>
+    
+            </div>
+    
             <div class="container">
-                <div class="title">Status</div>
-                <div class="elenco">
-                    <div class="cat status STATUSES">
-                        <label>
-                        <span>
-                            JOYSTICK
-                        </span>
-                        </label>    
+    
+                <div class="sensor" id="sensor_depth_reference">
+                    <div class="flex_s">
+                        <!-- <img src="{{url_for('static', filename ='SVG/Depth.svg')}}" > -->
+                        <p style="text-align: center; font-size: 24px;">Depth Reference</p>
                     </div>
-                    <div class="cat status STATUSES">
-                        <label>
-                        <span>
-                            ARMED
+                    <label class= "data-label" id="data_depth_reference">
+                        0.00 m
+                    </label>
+        
+        
+                </div>
+    
+            </div>
+    
+           </div>
+    
+    
+           <div class="container no-background">
+            <div class="row">
+                <div class="cat but camera_button">
+                    <label class="column">
+                    <input type="checkbox" checked="checked" onchange="onoff('camera_0')">
+                    <span  >
+                        <div style="margin-top: 19px;">
+                            Camera 0<br>On/Off
+                
+                        </div>
+                    </span>
+                    <button  type="button"> Rotate </button>
+
+                </label>
+                </div>
+                <div class="cat but camera_button">
+                    <label class="column">
+                        <input type="checkbox" checked="checked" onchange="onoff('camera_1')">
+                        <span  >
+                            <div style="margin-top: 19px;">
+                                Camera 1<br>On/Off
+                    
+                            </div>
                         </span>
-                        </label>    
-                    </div>
-                    <div class="cat status STATUSES">
-                        <label>
-                        <span>
-                            CONTROLLER STATE
+                    <button type="button"> Rotate </button>
+
+                </label>
+                </div>
+                <div class="cat but camera_button">
+                    <label class="column">
+                        <input type="checkbox" checked="checked" onchange="onoff('camera_2')">
+                        <span >
+                            <div style="margin-top: 19px;">
+                                Camera 2<br>On/Off
+                    
+                            </div>
                         </span>
-                        </label>    
-                    </div>
+                    <button  type="button"> Rotate </button>
+
+                </label>
                 </div>
             </div>
-            <div class="container">
-                <div class="title">Photogrammetry</div>
-                <div class="elenco">
-                    <div class="cat status PHOTO clickable" onclick="startPhotogrammetry(this)">
+           </div>
+
+
+    
+       
+    
+        <div class="container">
+            <div class="elenco">
+                <div class="cat status STATUSES">
+                    <label>
+                    <span>
+                        JOYSTICK
+                    </span>
+                    </label>    
+                </div>
+                <div class="cat status STATUSES">
+                    <label>
+                    <span>
+                        ARMED
+                    </span>
+                    </label>    
+                </div>
+                <div class="cat status STATUSES">
+                    <div class="row">
                         <label>
-                        <span class="start_stop">
-                            Start
-                        </span>
-                        </label>    
-                    </div>
-                    <div class="cat status">
-                        <label>
-                            <span class="photo_status">
-                                NOT STARTED
-                            </span>
+                            <span>DEPTH</span>
                         </label>
-                    </div>
-                    <div class="cat status">
                         <label>
-                            <span class="photo_counter">
-                                0
-                            </span>
+                            <span>ROLL</span>
+                        </label>
+                        <label>
+                            <span>PITCH</span>
                         </label>
                     </div>
                 </div>

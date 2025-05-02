@@ -7,6 +7,7 @@
 }
 
 .cat label {
+    text-align: center;
     float: left;
     line-height: 2.5em;
     width: 100%;
@@ -16,7 +17,6 @@
 
 .cat label span {
   text-align: center;
-  padding: 3px 0;
   display: block;
 }
 
@@ -48,13 +48,6 @@
   background-color: #216E4E !important;
 }
 
-.cat.status label {
-  float: left; 
-  width: 100%;
-  height: 100%;
-  cursor: default;
-  line-height: 2.0em;
-}
 
 .disabled label {
   cursor: not-allowed !important;

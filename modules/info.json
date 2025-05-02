@@ -2,9 +2,9 @@
     "modes": {
         "debug": {
             "mqtt": {
-                "ip": "mqtt://127.0.0.1:8080",
+                "ip": "mqtt://127.0.0.1:9000",
                 "topics": [
-                    "/debug_gui",
+                    "/status",
                     "/debug_state_commands"
                 ]
             },
@@ -12,17 +12,17 @@
                 "0": {
                     "status": 1,
                     "enabled": 1,
-                    "src": "static/rov1.png"
+                    "src": "http://127.0.0.1:8078/stream"
                 },
                 "1": {
                     "status": 1,
                     "enabled": 1,
-                    "src": "static/rov2.png"
+                    "src": "http://127.0.0.1:8079/stream"
                 },
                 "2": {
                     "status": 1,
                     "enabled": 1,
-                    "src": "static/rov2.png"
+                    "src": "http://127.0.0.1:8080/stream"
                 },
                 "n_cameras": 3
             }
@@ -39,7 +39,7 @@
                 "0": {
                     "status": 0,
                     "enabled": 1,
-                    "src": "http://10.0.0.254:8079/stream"
+                    "src": "http://10.0.0.254:8078/stream"
                 },
                 "1": {
                     "status": 1,
@@ -49,7 +49,7 @@
                 "2": {
                     "status": 1,
                     "enabled": 1,
-                    "src": "http://10.0.0.254:8078/stream"
+                    "src": "http://10.0.0.254:8080/stream"
                 },
                 "n_cameras": 3
             }

@@ -106,9 +106,6 @@ observer.observe(container, { childList: true });
 
 
 // [STATUSES MANAGMENT]
-
-// * Trasforma il vettore in oggetto 
-
 async function statusController() {
     let response = await fetch("/CONTROLLER/start_status");
     let status = await response.json();
@@ -146,8 +143,8 @@ function distortionHandler(cameraId, canvasId, srcUrl) {
         },
     });
 
-    canvas.style.width = "80%";
-    canvas.style.height = "80%";
+    canvas.style.width = "100%";
+    canvas.style.height = "100%";
 
     // Wait for the video to load metadata (dimensions)
     videoStream.onload = function () {
@@ -158,9 +155,6 @@ function distortionHandler(cameraId, canvasId, srcUrl) {
         distorter.setImage(canvas.src);
         setTimeout(() => requestAnimationFrame(drawFrame), 1000/FPS);
     }
-
-    // Delete img
-    videoStream.remove();
 }
 
 
@@ -195,9 +189,9 @@ window.onload = async () => {
     // Set the initial page
     page_now = "home";
 
-    //distortionHandler("camera_0", "canvas_0", "http://localhost:8079/stream");
-    //distortionHandler("camera_1", "canvas_2", "http://localhost:8080/stream");
-    distortionHandler("camera_2", "canvas_2", "http://localhost:8078/stream");
+    distortionHandler("camera_2", "canvas_2", info.cameras[2].src);
+
+    console.log(info)
 
     // Start routines
     let refresh = 2000;

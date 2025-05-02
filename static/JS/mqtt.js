@@ -23,7 +23,7 @@ async function initializeMQTT() {
 
   mqtt_c.on("message", function (topic, message) {
       let text = message.toString();
-      console.log(`[DEBUG] Message received on topic ${topic}:`, text);
+      // console.log(`[DEBUG] Message received on topic ${topic}:`, text);
       switch (topic) {
           case "status/":
               const debugData = JSON.parse(text);

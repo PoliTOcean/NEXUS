@@ -3,9 +3,23 @@ from flaskwebgui import FlaskUI
 import logging
 import platform
 import argparse
+import os
 
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
+
+def get_browser_path():
+    possible_paths = [
+        "/snap/bin/chromium",
+        "/usr/bin/chromium"
+    ]
+
+    for path in possible_paths:
+        if os.path.exists(path):
+            return path
+
+    return None
+
 
 if __name__ == "__main__":
     
@@ -31,7 +45,7 @@ if __name__ == "__main__":
                 "port": 5000,
                 "threaded": True,
             },
-            browser_path="/snap/bin/chromium",
+            browser_path= get_browser_path()
         ).run()
     
 
