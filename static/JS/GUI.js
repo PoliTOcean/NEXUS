@@ -131,11 +131,11 @@ function distortionHandler(cameraId, canvasId, srcUrl) {
         image: canvas.src,  // Use the canvas as the source image
         selector: `#${canvasId}`, // a canvas element to work with
         lens: {
-            a: 0.465,    // 0 to 4;    default 1
-            b: 0.613,      // 0 to 4;  default 1
-            Fx: 0.34,   // 0 to 4; default 0.0
-            Fy: 0.09,   // 0 to 4;  default 0.0
-            scale: 0.911 // 0 to 20; default 1.5
+            a: 0.5,    // 0 to 4;    default 1
+            b: 0.75,      // 0 to 4;  default 1
+            Fx: 0.12,   // 0 to 4; default 0.0
+            Fy: 0.22,   // 0 to 4;  default 0.0
+            scale: 0.8 // 0 to 20; default 1.5
         },
         fov: {
             x: 0, // 0 to 2; default 1
