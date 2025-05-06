@@ -15,10 +15,10 @@
     display: flex;
     width: 100%;
     height: 100%;
-    
+
 }
 
-.camera_column{
+.camera_column {
     display: flex;
     flex-direction: column;
     flex: 12;
@@ -26,7 +26,7 @@
 
 }
 
-.utilty_column{
+.utilty_column {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -35,10 +35,10 @@
     gap: 10px;
 }
 
-.row{
+.row {
     display: flex;
     flex-direction: row;
-    
+
 }
 
 .column {
@@ -62,7 +62,7 @@
     display: flex;
     justify-content: center;
     color: white;
-} 
+}
 
 .camera_title {
     font-size: 1.5rem;
@@ -78,13 +78,6 @@
     flex-direction: row;
     justify-content: center;
     width: 100%;
-}
-
-
-.elenco {
-    display: flex;
-    flex-direction: column;
-        
 }
 
 
@@ -143,12 +136,12 @@ img {
 .indicators {
     width: 40%;
     display: flex;
-    flex-direction: column; 
-    align-items: center;  
-    justify-content: center; 
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
-.indicator{
+.indicator {
     margin: -10px;
 }
 
@@ -159,19 +152,20 @@ img {
 }
 
 .sensor {
-    width: 110px;
+    width: 140px;
     position: relative;
     display: flex;
     flex-direction: column;
     gap: 10px;
     align-items: center;
     justify-content: space-between;
+
     img {
         width: 50px;
         height: 50px;
         filter: invert(100%) sepia(3%) saturate(7489%) hue-rotate(198deg) brightness(123%) contrast(102%);
     }
-    
+
 }
 
 
@@ -188,74 +182,100 @@ img {
     gap: 10px;
 }
 
-.status label {
+.status-div label {
+    background-color: #161A1D;
     display: flex;
     justify-content: center;
+    margin: 5px;
 }
 
-.status label span {
-    display: inline;
+.status-div label span {
     width: calc(55px + 2vw) !important;
     height: 40px !important;
     font-size: 20px;
     align-items: center;
-    cursor: default !important;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-shadow: 0 0 6px rgba(0, 0, 0, 0.8);
+
 
 }
 
-.status .row label {
+.status-div .row label {
     border: 2px solid #ffffff15;
 
 }
 
 
 .stopwatch {
-  text-align: center;
+    text-align: center;
 }
 
 .display-container {
-  background-color: #101214;
-  border-radius: 10px;
-  padding: 10px;
-  margin: 5px;
-  display: inline-block;
-  transition: transform 0.3s ease;
+    background-color: #101214;
+    border-radius: 10px;
+    padding: 10px;
+    margin: 5px;
+    display: inline-block;
+    transition: transform 0.3s ease;
 }
 
 
 #display {
-  font-size: 40px;
-  margin: 0;
+    font-size: 40px;
+    margin: 0;
 }
 
 .buttonsContainer {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
 }
 
 .camera_button {
     width: calc(60px + 1.7vw);
     height: calc(60px + 1.7vw);
     border-radius: 50% !important;
-    border : 1px solid #ffffff20;
+    border: 1px solid #ffffff20;
+    overflow: hidden;
+    cursor: pointer; 
 }
 
 .camera_button label {
     line-height: 1.25rem !important;
+    text-align: center;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
 }
 
 .camera_button span {
     flex: 5;
+    background-color: #0055CC;
 }
+
 .camera_button button {
     border: none;
     background-color: #16679C;
     flex: 2;
-    text-shadow: 0 0  6px rgba(0, 0, 0, 0.8);
+    text-shadow: 0 0 6px rgba(0, 0, 0, 0.8);
     cursor: pointer;
 
 }
+
+.camera_button:hover {
+    box-shadow: 0 0 10px rgba(0, 85, 204, 0.8);
+    transform: scale(1.1); 
+    transition: all 0.3s ease;
+}
+
+  .camera_button label input {
+    position: absolute;
+    display: none;
+  }
+
+
 
 .button {
     margin-top: 20px;
@@ -275,10 +295,19 @@ img {
 
 
 
-.button:hover{
+.button:hover {
     background-color: #0055CC;
 }
 
 .no-background {
     background-color: transparent !important;
+}
+
+
+.ready {
+    background-color: #AE2E24 !important;
+}
+
+.on {
+    background-color: #216E4E !important;
 }

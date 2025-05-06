@@ -100,51 +100,25 @@ const options_instruments = {
     imagesDirectory: "/static/SVG",
 };
 
-function handleRovArmed(status) {
-    switch (status) {
-        case "OK":
-            console.log("ROV is armed and operational.");
-            // additional logic
-            break;
-        case "OFF":
-            console.log("ROV is disarmed.");
-            // additional logic
-            break;
-    }
-}
-
-function handleControllerState(statuses, controllerState) {
-    // Iterate over each field in CONTROLLER_STATE: DEPTH, ROLL, PITCH
-    ["DEPTH", "ROLL", "PITCH"].forEach((field) => {
-        if (field in controllerState) {
-            const statusValue = controllerState[field];
-
-            // Find the corresponding DOM element for the field
-            const element = Array.from(statuses).find((sts) => {
-                let txt = sts.querySelector("label span").textContent.trim();
-                return txt === field;
-            });
-
-            if (element) {
-                PIDhandler(element, statusValue);
-            }
-        }
-    });
-}
-
 function PIDhandler(pidElement, status) {
     switch (status) {
+
+        case false:
         case "OFF":
             pidElement.classList.remove("on");
-            pidElement.classList.remove("stoppable");
+            pidElement.classList.remove("ready");
             break;
+        case true:
+        case "OK":
+            pidElement.classList.add("on");
+            break;  
         case "READY":
-            pidElement.classList.add("stoppable");
+            pidElement.classList.add("ready");
             pidElement.classList.remove("on");
             break;
         case "ACTIVE":
             pidElement.classList.add("on");
-            pidElement.classList.remove("stoppable");
+            pidElement.classList.remove("ready");
             break;
     }
 }
@@ -153,16 +127,45 @@ function updateStatusesROV(obj) {
     const statuses = document.getElementsByClassName("status STATUSES");
 
     Array.from(statuses).forEach((sts) => {
-        let txt = sts.querySelector("label span").textContent.trim();
 
         // Handle ARMED state
-        if (txt === "ARMED" && "ARMED" in obj) {
-            return handleRovArmed(obj["ARMED"]);
+
+        if (sts.id === "ARMED") {
+
+            let armedState = obj["ARMED"];
+
+            // ? These console logs can be removed
+
+            switch (armedState) {
+                case "OK":
+                    console.log("ROV is armed and operational.");
+                    // additional logic
+                    break;
+                case "OFF":
+                    console.log("ROV is disarmed.");
+                    // additional logic
+                    break;
+            }
+
+            PIDhandler(sts, armedState);
         }
 
-        // Handle CONTROLLER STATE
-        if (txt === "CONTROLLER STATE" && "CONTROLLER_STATE" in obj) {
-            return handleControllerState(statuses, obj["CONTROLLER_STATE"]);
+        // Handle DEPTH, ROLL, PITCH states saperately
+
+        if (sts.id === "DEPTH") {
+            PIDhandler(sts, obj["CONTROLLER_STATE"]["DEPTH"]);
+        }
+        if (sts.id === "ROLL") {
+            PIDhandler(sts, obj["CONTROLLER_STATE"]["ROLL"]);
+        }
+        if (sts.id === "PITCH") {
+            PIDhandler(sts, obj["CONTROLLER_STATE"]["PITCH"]);
+        }
+
+        // Handle JOYSTICK state
+
+        if (sts.id === "JOYSTICK") {
+            PIDhandler(sts, obj["JOYSTICK"]);
         }
     });
 }
