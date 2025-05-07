@@ -73,6 +73,7 @@ video {
 }
 
 .options {
+  text-decoration: none;
   align-items: center;
   appearance: button;
   background-color: #43B3AE;

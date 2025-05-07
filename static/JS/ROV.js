@@ -186,20 +186,21 @@ function updateIMU(imuJSON) {
 
 function updateSensors(sensorsJSON) {
     const depth = document.querySelector("#data_depth");
+    const referenceZ = document.querySelector("#data_reference_z");
     // Need to update HTML:
     /*const forceZ = document.querySelector("#data_force_z");
     const forceRoll = document.querySelector("#data_force_roll");
     const forcePitch = document.querySelector("#data_force_pitch");
-    const referenceZ = document.querySelector("#data_reference_z");
     const referenceRoll = document.querySelector("#data_reference_roll");
     const referencePitch = document.querySelector("#data_reference_pitch");*/
 
     depth.innerHTML = `${parseFloat(sensorsJSON["depth"]).toFixed(2)} m`;
+    referenceZ.innerHTML = `${parseFloat(sensorsJSON["reference_z"]).toFixed(2)} m`;
+
     // Need to update HTML:
     /*forceZ.innerHTML = `${parseFloat(sensorsJSON["force_z"]).toFixed(2)} N`;
     forceRoll.innerHTML = `${parseFloat(sensorsJSON["force_roll"]).toFixed(2)} Nm`;
     forcePitch.innerHTML = `${parseFloat(sensorsJSON["force_pitch"]).toFixed(2)} Nm`;
-    referenceZ.innerHTML = `${parseFloat(sensorsJSON["reference_z"]).toFixed(2)} m`;
     referenceRoll.innerHTML = `${parseFloat(sensorsJSON["reference_roll"]).toFixed(2)} °`;
     referencePitch.innerHTML = `${parseFloat(sensorsJSON["reference_pitch"]).toFixed(2)} °`;*/
 }
