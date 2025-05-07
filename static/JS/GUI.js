@@ -110,7 +110,8 @@ async function statusController() {
     let response = await fetch("/CONTROLLER/start_status");
     let status = await response.json();
 
-    console.log(status);
+    console.log("[CONTROLLER] Status:", status);
+
     updateStatusesROV({"JOYSTICK": status["status"]});
 }
 
