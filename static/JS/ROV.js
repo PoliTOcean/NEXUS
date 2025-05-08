@@ -130,7 +130,7 @@ function updateStatusesROV(obj) {
 
         // Handle ARMED state
 
-        if (sts.id === "ARMED") {
+        if (sts.id === "ARMED" && obj["ARMED"]) {
 
             let armedState = obj["ARMED"];
 
@@ -152,19 +152,19 @@ function updateStatusesROV(obj) {
 
         // Handle DEPTH, ROLL, PITCH states saperately
 
-        if (sts.id === "DEPTH") {
+        if (sts.id === "DEPTH" && obj["CONTROLLER_STATE"]) {
             PIDhandler(sts, obj["CONTROLLER_STATE"]["DEPTH"]);
         }
-        if (sts.id === "ROLL") {
+        if (sts.id === "ROLL" && obj["CONTROLLER_STATE"]) {
             PIDhandler(sts, obj["CONTROLLER_STATE"]["ROLL"]);
         }
-        if (sts.id === "PITCH") {
+        if (sts.id === "PITCH" && obj["CONTROLLER_STATE"]) {
             PIDhandler(sts, obj["CONTROLLER_STATE"]["PITCH"]);
         }
 
         // Handle JOYSTICK state
 
-        if (sts.id === "JOYSTICK") {
+        if (sts.id === "JOYSTICK" && obj["JOYSTICK"]) {
             PIDhandler(sts, obj["JOYSTICK"]);
         }
     });

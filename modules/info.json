@@ -24,7 +24,12 @@
                     "enabled": 1,
                     "src": "http://127.0.0.1:8080/stream"
                 },
-                "n_cameras": 3
+                "3": {
+                    "status": 1,
+                    "enabled": 1,
+                    "src": "http://127.0.0.1:8081/stream"
+                },
+                "n_cameras": 4
             }
         },
         "production": {

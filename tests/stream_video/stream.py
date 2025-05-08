@@ -44,11 +44,14 @@ if __name__ == '__main__':
     thread1 = threading.Thread(target=run_app, args=(8079,))
     thread2 = threading.Thread(target=run_app, args=(8080,))
     thread3 = threading.Thread(target=run_app, args=(8078,))
+    thread4 = threading.Thread(target=run_app, args=(8081,))    
     
     thread1.start()
     thread2.start()
     thread3.start()
+    thread4.start()
     
     thread1.join()
     thread2.join()
     thread3.join()
+    thread4.join()
