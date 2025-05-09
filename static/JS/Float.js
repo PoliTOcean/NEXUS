@@ -1,3 +1,6 @@
+const BATTERY_MAX_VALUE = 12000;
+const BATTERY_MIN_VALUE = 9000;
+
 let nReport = 1;
 let mux = 1;
 let listening = 0;
@@ -137,6 +140,20 @@ async function handleStatus(status) {
             case "CONN_LOST":
                 conn.classList.remove("on");
                 break;
+            default:
+                // Battery
+                const batteryMatch = sts[i].match(/BATTERY:\s*(\d+)/);
+                if (batteryMatch) {
+                    const batteryElement = document.querySelector(".battery_level");
+                    const batteryValue = parseInt(batteryMatch[1]);
+                    if (batteryElement) {
+                        batteryElement.textContent = `
+                        ${Math.round((batteryValue - BATTERY_MIN_VALUE)/(BATTERY_MAX_VALUE - BATTERY_MIN_VALUE) * 100)}% 
+                        (${batteryValue} mV)`;
+                    }
+                }
+                break;
+
         }
     }
 }
@@ -174,17 +191,51 @@ async function msg(e, msg_id) {
 
 function switchDiv(){
     const div1 = document.getElementById('basicFloat');
-    const div2 = document.getElementById('expertFloat');
+    const div2 = document.getElementById('advancedFloat');
     const button = document.getElementById('toggleButton');
     
     if(div1.style.display === 'none') {
-        button.innerText = 'EXPERT';
+        button.innerText = 'Advanced';
         div1.style.display = 'flex';
         div2.style.display = 'none';
     }
     else {
-        button.innerText = 'BASIC';
+        button.innerText = 'Basic';
         div1.style.display = 'none';
         div2.style.display = 'flex';
     }
+}
+
+
+// Function similar to msg, we are not interested of ESP32 answers, only send the message 
+async function sendPidParams() {
+    // Read
+    const kp = parseFloat(document.getElementById("kp").value);
+    const kd = parseFloat(document.getElementById("kd").value);
+    const ki = parseFloat(document.getElementById("ki").value);
+
+    // Check errors
+    if (isNaN(kp) || isNaN(kd) || isNaN(ki)) {
+        alert("Please enter valid numeric values for Kp, Kd, and Ki.");
+        return;
+    }
+
+    // First, send PARAMS to ESP-B, mux to 0
+    mux = 0;
+    let data = await fetch(`FLOAT/msg?msg=PARAMS`);
+    if (data.status == 201) console.log("PARAMS status sent");
+    else console.error("Is USB cable connected?");
+
+    // Send params
+    data = await fetch(`FLOAT/msg?msg=${kp}`);
+    if (data.status == 201) console.log("Kp sent");
+    else console.error("Is USB cable connected?");
+
+    data = await fetch(`FLOAT/msg?msg=${kd}`);
+    if (data.status == 201) console.log("Kd sent");
+    else console.error("Is USB cable connected?");
+
+    data = await fetch(`FLOAT/msg?msg=${ki}`);
+    if (data.status == 201) console.log("Ki sent");
+    else console.error("Is USB cable connected?");
 }

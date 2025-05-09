@@ -200,36 +200,3 @@ window.onload = async () => {
     setInterval(statusController, refresh);
     setInterval(keep_alive_server, refresh + 1000);
 }
-
-
-
-
-
-// const socket = io("ws://127.0.0.1:5000",{
-    // transports: ["websocket"],
-    // reconnectionDelayMax: 10000,
-// }) 
-
-
-// socket.on("connect",() => {
-    // console.info("[Socket.io] Ready");
-    // socket.emit("test", "test");
-// });
-
-// socket.on("connect_error", (data) => {
-    // console.error("ERROR");
-    // console.log(data);
-// });
-    
-// socket.on("disconnect", (reason, details) => {
-    // console.info("DISCONNECTED");
-    // console.log(reason);
-    // console.log(details);
-// });
-
-// socket.on('error', (error) => {
-    // console.error('ERROR');
-    // console.log(error);
-// });
-
-

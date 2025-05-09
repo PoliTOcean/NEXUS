@@ -4,15 +4,16 @@
     <div class="g1">
     </div>
     <div class="g2">
-        <style>
-          #expertFloat{display: none}
-        </style>
-        <button id="toggleButton" class="floatButton" onclick="switchDiv()">EXPERT</button> 
-        <div class="container float">
-        
-            <div class="title">FLOAT</div>
-            
-            <div id="basicFloat" class="elenco">
+        <div class="title">FLOAT</div>
+        <div class="title_header">
+            <div>
+                <label><span>Battery level:</span></label>
+                <label><span class="battery_level"></span></label>
+            </div>
+            <button id="toggleButton" class="floatButton" onclick="switchDiv()">EXPERT</button> 
+        </div>
+        <div class="box_float float">
+            <div id="basicFloat" class="list">
                 <div class="cat status SERIAL">
                     <label><span>SERIAL CONNECTION</span></label>    
                 </div>
@@ -25,10 +26,6 @@
                 <div class="cat status DROP disabled" onclick="statusFLOAT('SEND_PACKAGE')">
                     <label><span>SEND PACKAGE</span></label>    
                 </div>
-            </div>
-            
-            
-            <div id="expertFloat" class="elenco">
                 <div class="cat status DROP disabled" onclick="msg(this, 1)">
                     <label><span>TOGGLE AUTO MODE</span></label>    
                 </div>
@@ -55,6 +52,29 @@
                 </div>
             </div>
         </div>
+
+        <div class="box_float form" >
+            <div class="request">
+                <label for="kp"><span>Kp:</span></label>
+                <input type="number" id="kp" inputmode="decimal" class="textInputPID">
+            </div>
+            <div class="request">
+
+                <label for="kd"><span>Kd:</span></label>
+                <input type="number" id="kd" class="textInputPID">
+            </div>
+            <div class="request">
+
+                <label for="ki"><span>Ki:</span></label>
+                <input type="number" id="ki" class="textInputPID">
+            </div>
+            <div style="display: flex; justify-content: center;">
+                <div class="cat status clickable" style="background-color: #161A1D;" onclick="sendPidParams()">
+                    <label><span>SEND</span></label>    
+                </div>
+            </div>
+            </div>
+
     </div>
 </div>
 </div>

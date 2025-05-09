@@ -2,6 +2,98 @@ span {
     color: white;
 }
 
+.cat{
+  margin: 4px;
+  border-radius: 4px;
+  overflow: hidden;
+  float: left;
+  background-color: #161A1D; 
+}
+
+.cat label {
+    float: left;
+    line-height: 2.5em;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+}
+
+.cat label span {
+  text-align: center;
+  padding: 3px 0;
+  display: block;
+}
+
+.cat label input {
+  position: absolute;
+  display: none;
+  color: #fff !important;
+}
+/* selects all of the text within the input element and changes the color of the text */
+.cat label input + span{color: #fff;}
+
+
+/* This will declare how a selected input will look giving generic properties */
+.cat input:checked + span {
+    color: #ffffff;
+    text-shadow: 0 0  6px rgba(0, 0, 0, 0.8);
+}
+
+.off {
+  background-color: #AE2E24 !important;
+}
+
+.on {
+  background-color: #216E4E !important;
+}
+
+.cat.status label {
+  float: left; 
+  width: 100%;
+  height: 100%;
+  cursor: default;
+  line-height: 2.0em;
+}
+
+
+.box_float {
+    padding: 10px 10px 10px 10px;
+    border-radius: 10px;
+    position: relative;
+    width: 40%;
+    background-color: #1D2125;
+    color: white;
+
+}
+
+.title {
+    display: flex;
+    justify-content: center;
+    margin: 0 0 10px 0;
+    height: 20px;
+    width: 100%;
+    color: white;
+} 
+
+.list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+
+.disabled label {
+  cursor: not-allowed !important;
+}
+
+.clickable {
+  background-color: #282E33 !important;
+}
+
+.clickable label {
+  cursor: pointer !important;
+}
+
 .immersion {
     background-color: #16679C !important;
 }
@@ -53,7 +145,7 @@ span {
     background-color: #101214;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
     flex-wrap: wrap;
     gap: 10px;
@@ -77,6 +169,13 @@ h2 {
     padding: 10px 10px 10px 10px;
 }
 
+.title_header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
 
 .img_style {
     margin: 10px 0 0 0;
@@ -85,9 +184,7 @@ h2 {
 .floatButton{
     margin-top: 20px;
     z-index: 2;
-    position: absolute;
-    top: 20px;
-    right: 20px;
+    position: relative;
     display: inline-block;
     padding: 5px 10px;
     border: none;
@@ -100,3 +197,33 @@ h2 {
 .button:hover{
     background-color: #0055CC;
 }
+
+
+
+/* Form */
+
+.request {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    height: fit-content;
+    gap: 10px;   
+}
+
+.request label {
+    width: 30px;
+    font-size: 1.5em;
+}
+
+.textInputPID {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid #FFFFFF;
+    color: #FFFFFF;
+    outline: none;
+    width: 100%;
+    height: fit-content;
+    padding: 5px 0;
+    font-size: 1.5em;
+}
+
