@@ -5,7 +5,7 @@ import json
 import time
 from yamlinclude import YamlIncludeConstructor
 
-from .mqtt_c import MQTTClient
+from .mqtt_c import MQTTClient, MQTTStatus
 from .joystick import Joystick
 
 
@@ -165,39 +165,99 @@ class ROVController():
 
         if command in self.__joystick.axesStates.keys():
             self.__joystick.axesStates[command] = value
-        elif command: #and self.__joystick.commands["buttons"][id_button]["onRelease"]: #if no Release property is a state comman
-            topic = self.__joystick.commands["buttons"][id_button]["topic"]
+            self.to_send = 1
+        elif command:
+            topic = self.__joystick.commands["buttons"][id_button].get("topic")
             if not topic:
-                print(f"NO TOPIC for command: {command}")
                 return
-            data = {command: value}
-            json_string = json.dumps(data)
-            self.__mqttClient.publish(topic, json_string)
-            if self.debug:
-                print(f"sent: {json_string} to topic: {topic}")
 
+            if self.__mqttClient.status == MQTTStatus.Connected:
+                data = {command: value}
+                json_string = json.dumps(data)
+                success = self.__mqttClient.publish(topic, json_string)
+                if success:
+                    if self.debug:
+                        print(f"[Controller] Sent button command: {json_string} to topic: {topic}")
+                else:
+                    if self.debug:
+                        print(f"[Controller] Failed to send button command: {json_string} to topic: {topic}. MQTT Status: {self.__mqttClient.status}")
+            else:
+                if self.debug:
+                    print(f"[Controller] MQTT not connected. Button command '{command}' not sent.")
 
-    def __on_mqttStatusChanged(self, status):
-       pass
 
     def run(self):
+        if not self.configured:
+            print("[Controller] Cannot run, not configured.")
+            return
+
         self.is_running = True
-        while True:
-            self.__joystick.update()
-            #timed loop
-            if (time.time() - self.last_send_time)>=INTERVAL:
-                for axes, last_value in self.last_value_send.items():
-                    if abs(self.__joystick.axesStates[axes] - last_value) > MIN_DIFFERENCE: #soglia oltre la quale mando il comando
-                        self.to_send = 1
-                        break
-                if self.to_send:
-                    print(json.dumps(self.__joystick.axesStates))
-                    self.__mqttClient.publish('axes/', json.dumps(self.__joystick.axesStates))
-                    self.last_send_time = time.time()
-                    for key, value in self.__joystick.axesStates.items():
-                        self.last_value_send[key] = value
-                    self.to_send = 0
-                        
+        print("[Controller] Starting run loop...")
+        last_status_check_time = 0
+        status_check_interval = 5
+
+        while self.is_running:
+            try:
+                current_time = time.time()
+
+                self.__joystick.update()
+
+                if current_time - last_status_check_time > status_check_interval:
+                    mqtt_status = self.__mqttClient.status
+                    if self.debug and mqtt_status != MQTTStatus.Connected:
+                         print(f"[Controller] MQTT Status Check: {mqtt_status}")
+                    if mqtt_status == MQTTStatus.Disconnected:
+                         pass
+                    last_status_check_time = current_time
+
+                if (current_time - self.last_send_time) >= INTERVAL:
+                    should_send_axes = False
+                    for axes, last_value in self.last_value_send.items():
+                        if axes in self.__joystick.axesStates and \
+                           abs(self.__joystick.axesStates[axes] - last_value) > MIN_DIFFERENCE:
+                            should_send_axes = True
+                            break
+
+                    if should_send_axes or self.to_send:
+                        if self.__mqttClient.status == MQTTStatus.Connected:
+                            axes_payload = json.dumps(self.__joystick.axesStates)
+                            if self.debug:
+                                print(f"[Controller] Preparing to send axes: {axes_payload}")
+
+                            success = self.__mqttClient.publish('axes/', axes_payload)
+
+                            if success:
+                                self.last_send_time = current_time
+                                for key, value in self.__joystick.axesStates.items():
+                                     if key in self.last_value_send:
+                                         self.last_value_send[key] = value
+                                self.to_send = 0
+                                if self.debug:
+                                    print(f"[Controller] Axes data sent successfully.")
+                            else:
+                                if self.debug:
+                                    print(f"[Controller] Failed to send axes data. MQTT Status: {self.__mqttClient.status}")
+                                self.to_send = 1
+                        else:
+                            if self.debug:
+                                print(f"[Controller] MQTT not connected (Status: {self.__mqttClient.status}). Axes data not sent, marked for retry.")
+                            self.to_send = 1
+
+                time.sleep(0.002)  # Sleep to prevent busy waiting
+
+            except KeyboardInterrupt:
+                print("\n[Controller] KeyboardInterrupt received. Stopping...")
+                self.is_running = False
+            except Exception as e:
+                print(f"[Controller] Unexpected error in run loop: {e}")
+                time.sleep(1)
+
+        print("[Controller] Run loop finished. Disconnecting components...")
+        if self.__mqttClient:
+            self.__mqttClient.disconnect()
+        print("[Controller] Exited.")
+
 
     def status(self):
         return self.__joystick.active
+    
