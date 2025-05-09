@@ -21,6 +21,7 @@ def get_browser_path():
     return None
 
 
+
 if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description="Run the NEXUS application.")

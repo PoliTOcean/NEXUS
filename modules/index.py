@@ -1,7 +1,12 @@
 from app import app
-from flask import render_template, send_file, jsonify
+from flask import render_template, send_file, jsonify, Response
+import subprocess
 import os,json
 
+
+@app.route("/test")
+def test():
+    return render_template('TEST.html')
 
 @app.route("/")
 def main():

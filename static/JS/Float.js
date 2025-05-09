@@ -1,3 +1,6 @@
+const MIN_BATTERY_VALUE = 9000;
+const MAX_BATTERY_VALUE = 12000;
+
 let nReport = 1;
 let mux = 1;
 let listening = 0;
