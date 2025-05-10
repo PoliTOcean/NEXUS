@@ -150,6 +150,11 @@ function updateStatusesROV(obj) {
             PIDhandler(sts, armedState);
         }
 
+        if (sts.id === "WORK" && obj["WORK"]) {
+            PIDhandler(sts, obj["WORK"]);
+        }
+
+
         // Handle DEPTH, ROLL, PITCH states saperately
 
         if (sts.id === "DEPTH" && obj["CONTROLLER_STATE"]) {
