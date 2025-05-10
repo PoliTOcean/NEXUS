@@ -1,0 +1,15 @@
+version: '3.7'
+
+services:
+  janus:
+    build: .
+    privileged: true
+    ports:
+      - "8188:8188"
+      - "8088:8088"
+      - "5004:5004/udp"
+      - "5005:5005/udp"
+      - "5006:5006/udp"
+      - "5007:5007/udp"
+    volumes:
+      - ./janus.plugin.streaming.jcfg:/opt/janus/etc/janus/janus.plugin.streaming.jcfg

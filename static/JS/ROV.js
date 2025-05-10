@@ -205,7 +205,175 @@ function updateSensors(sensorsJSON) {
     referencePitch.innerHTML = `${parseFloat(sensorsJSON["reference_pitch"]).toFixed(2)} °`;*/
 }
 
+
+
+// --- START CAMERA HANDLER
+
+let first = true;
+let activeStreams = {};
+
+function createStreamElement(streamInfo) {
+    const streamId = streamInfo.id;
+    const container = document.createElement('div');
+    container.className = first ? 'camera_p' : `camera_s`;
+
+    container.innerHTML = `
+    <div class="screen" id="c${streamInfo.id}"  onclick="switching('camera_${streamInfo.id}')/>
+        <div class="camera_title">Stream ${streamId}: ${streamInfo.description || 'No description'}</div>
+        <video id="camera_${streamId}" playsinline autoplay muted></video>
+    </div>
+    `;
+    
+    if (first) document.querySelector('.camera_column').insertBefore(container, document.querySelector('.camera_column').firstChild);
+    else document.querySelector('.camera_row').appendChild(container);
+    
+    
+    if (first) first = false;
+    return container;
+}
+
+function watchStream(streamId) {
+    janus.attach({
+    plugin: "janus.plugin.streaming",
+    success: function(pluginHandle) {
+      activeStreams[streamId] = {
+        handle: pluginHandle,
+        watching: true
+      };
+
+      pluginHandle.send({
+        message: { request: "watch", id: streamId }
+      });
+    },
+    error: function(error) {
+      console.error(`Error start stream ID ${streamId}:`, error);
+    },
+    onmessage: function(msg, jsep) {
+      if (jsep) {
+        activeStreams[streamId].handle.createAnswer({
+          jsep: jsep,
+          media: {
+            audioSend: false,
+            videoSend: false,
+            audioRecv: msg.type === 'rtp' ? true : false,
+            videoRecv: true
+          },
+          success: function(jsep) {
+            const body = { request: "start" };
+            activeStreams[streamId].handle.send({ message: body, jsep: jsep });
+          },
+          error: function(error) {
+            console.error("Errore creazione answer:", error);
+          }
+        });
+      }
+    },
+    onremotetrack: function(track, mid, flow) {
+      console.log(`Stream for ID ${streamId}`);
+      handleRemoteStream(streamId, track);
+    },
+    oncleanup: function() {
+      console.log(`Stream ID ${streamId} cleaned`);
+    }
+  });
+}
+
+function handleRemoteStream(streamId, stream) {
+    const videoElement = document.getElementById(`camera_${streamId}`);
+    if (videoElement) {
+        Janus.attachMediaStream(videoElement, new MediaStream([stream]));
+    }
+}
+
+function initializeJanus() {
+    Janus.init({
+      debug: "all",
+      callback: function() { 
+        janus = new Janus({
+          server: info.janus.ip,
+          success: function() {
+            janus.attach({
+              plugin: "janus.plugin.streaming",
+              success: function(pluginHandle) {
+                streaming = pluginHandle;
+ 
+                // Ask stream list
+                streaming.send({ 
+                  message: { request: "list" },
+                  success: function(result) {
+                    if(result && result.list) {
+                      console.log(result)
+
+                      // For each stream, create the camera:
+                      result.list.forEach(stream => {
+                        createStreamElement(stream);
+                        watchStream(stream.id);
+                      });
+                    }
+                  },
+                  error: function(error) {
+                    console.log(error);
+                    // How we handle? a warn in the gui? 
+                  }
+                });
+              },
+              error: function(error) {
+                console.log(error);
+                // How we handle? a warn in the gui? 
+              },
+              onmessage: function(msg, jsep) {
+                if(msg.list) {
+                  console.log("Stream list:", msg.list);
+                } else if (jsep) {
+
+                  console.log(msg)
+                  streaming.createAnswer({
+                    jsep: jsep,
+                    media: { 
+                      audioSend: false, 
+                      videoSend: false, 
+                      audioRecv: msg.type === 'rtp' ? true : false, 
+                      videoRecv: true 
+                    },
+                    success: function(jsep) {
+                      const body = { request: "start" };
+                      streaming.send({ message: body, jsep: jsep });
+                    },
+                    error: function(error) {
+                      console.error("Error answer:", error);
+                    }
+                  });
+                }
+              },
+              onremotetrack: function(stream) {
+                const streamId = Object.keys(activeStreams).find(id => activeStreams[id].watching);
+                if(streamId) {
+                  console.log("Received", stream);
+                  handleRemoteStream(streamId, stream);
+                }
+              },
+              oncleanup: function() {
+                console.log("Cleanup stream");
+              },
+            });
+          },
+          error: function(error) {
+            console.log("Error in Janus connection", error);
+          },
+          destroyed: function() {
+            console.log("Janus destroyed");
+          }
+        });
+      }
+    });
+}
+
+
+// --- END CAMERA HANDLER
+
 function ROVLoader() {
+    initializeJanus();
+
     const attitudeElement = document.querySelector("#attitude");
     const compassElement = document.querySelector("#compass");
 

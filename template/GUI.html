@@ -4,7 +4,6 @@
     <title>Politocean GUI</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='./CSS/GUI.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='./CSS/ROV.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='./CSS/bottoni.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='./CSS/FLOAT.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='./CSS/slider.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='./CSS/switch.css') }}">
@@ -17,7 +16,6 @@
         <div class="toolbar">
             <button class="options" id="ROV" onclick="change('ROV')">ROV</button>
             <button class="options" id="FLOAT" onclick="change('FLOAT')">FLOAT</button>
-            <a href="{{ url_for('cameras') }}" class="options">CAMERAS</a>
         </div>
         <div class="window">
 
@@ -25,8 +23,9 @@
 
         </div>
     </div>
+    <script src="{{ url_for('static', filename='./node_modules/webrtc-adapter/out/adapter.js') }}" ></script>
+    <script  src="{{ url_for('static', filename='./node_modules/janus-gateway/npm/src/janus.js') }}"></script>
     <script src="{{ url_for('static', filename='./node_modules/mqtt/dist/mqtt.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='./node_modules/janus/lib/janus.js') }}"></script>
     <script src="{{url_for('static', filename='./node_modules/fisheyegl/dist/fisheyegl.js')}}"></script>
     <script src="{{ url_for('static', filename='./node_modules/flight-indicators-js/js/flight-indicators.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='./JS/GUI.js') }}"></script>
