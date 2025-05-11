@@ -8,3 +8,4 @@ Oceanix/
 log/
 .vscode
 core
+/tests/janus-gateway
