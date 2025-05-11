@@ -10,7 +10,8 @@ def test():
 
 @app.route("/")
 def main():
-    return render_template('GUI.html')
+    is_docker = os.environ.get('IS_DOCKER', False)  # Used for iceServers in ROV.js
+    return render_template('GUI.html', IS_DOCKER=is_docker)
 
 @app.route("/ROV")
 def gui():

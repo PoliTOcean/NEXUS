@@ -10,6 +10,9 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='./CSS/dropdown.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='./node_modules/flight-indicators-js/css/flight-indicators.css') }}">
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='./po.png') }}">
+    <script>
+        window.IS_DOCKER = {{ IS_DOCKER | lower }};
+    </script>
 </head>
 <body>
     <div class="all">

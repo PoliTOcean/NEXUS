@@ -50,7 +50,7 @@ for STREAM in "${STREAMS[@]}"; do
   echo "[+] Launching $NAME on port $PORT"
 
   ffmpeg -stream_loop -1 -re -i "$VIDEO" \
-    -vf "scale=854:480" -an \
+    -an \
     -vcodec libx264 -preset ultrafast -tune zerolatency -crf 32 \
     -f rtp "rtp://127.0.0.1:$PORT" > /dev/null 2>&1 &
   

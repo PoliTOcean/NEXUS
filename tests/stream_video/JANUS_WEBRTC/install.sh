@@ -109,6 +109,14 @@ else
     exit 1
 fi
 
+# 5. in janus.jcfg in JANUS_CONFIG_DIR add this two lines after nat: {
+# stun_server = "stun.l.google.com"
+# stun_port = 19302
+sudo sed -i '/^nat: {/a \
+stun_server = "stun.l.google.com"\n\
+stun_port = 19302' "${JANUS_CONFIG_DIR}/janus.jcfg"
+
+
 echo "Janus installation and configuration steps completed."
 echo "Default Janus configuration files are in: ${JANUS_CONFIG_DIR}"
 echo "Janus plugins (including janus_streaming.so if enabled) are in: ${JANUS_PLUGIN_DIR}"

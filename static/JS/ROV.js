@@ -289,8 +289,13 @@ function initializeJanus() {
     Janus.init({
       debug: "all",
       callback: function() { 
+        const servers = window.IS_DOCKER
+          ? [{ urls: 'stun:stun.l.google.com:19302' }]
+          : [];
+        console.log("[DEBUG] ICE servers configuration:", servers);
         janus = new Janus({
           server: info.janus.ip,
+          iceServers: servers,
           success: function() {
             janus.attach({
               plugin: "janus.plugin.streaming",
