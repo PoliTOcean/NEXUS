@@ -14,9 +14,6 @@ sudo apt update -y && sudo apt install mosquitto mosquitto-clients -y
 ```bash
 chmod +x ./stream_video/JANUS_WEBRTC/install.sh && ./stream_video/JANUS_WEBRTC/install.sh
 ```
-IMPORTANT:
-Use Google Chrome, go to 'chrome://flags/#enable-webrtc-hide-local-ips-with-mdns' and disable: 'Anonymize local IPs exposed by WebRTC.'
-
 ## How to run tests
 Run:
 ```bash

@@ -114,7 +114,8 @@ fi
 # stun_port = 19302
 sudo sed -i '/^nat: {/a \
 stun_server = "stun.l.google.com"\n\
-stun_port = 19302' "${JANUS_CONFIG_DIR}/janus.jcfg"
+stun_port = 19302\n\
+ignore_mdns = true' "${JANUS_CONFIG_DIR}/janus.jcfg"
 
 
 echo "Janus installation and configuration steps completed."
