@@ -8,7 +8,7 @@ client = mqtt.Client()
 client.connect("127.0.0.1", 1883, 60)
 
 roll_range = 5
-pitch_range = 2
+pitch_range = 10
 yaw_range = 30
 frequency = 0.1
 
@@ -93,4 +93,4 @@ while True:
     
     client.publish("status/", json.dumps(payload))
     
-    time.sleep(1/60)
+    time.sleep(0.1)  # Sleep for 100ms to control the frequency of the messages

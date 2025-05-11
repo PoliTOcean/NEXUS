@@ -10,7 +10,13 @@
 	// "features": {},
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	"forwardPorts": [1883, 5000, 8080],
+	"forwardPorts": [
+		1883, // MQTT broker
+		5000, // Flask
+		9000, // MQTT websocket
+		8088, // Janus
+		8188  // Janus websocket
+		],
 	"postCreateCommand": "chmod +x ./install.sh && ./install.sh && sudo cp .devcontainer/mosquitto /etc/init.d && sudo service mosquitto start",
     "customizations": {
         "vscode": {
