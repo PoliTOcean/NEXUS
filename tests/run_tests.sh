@@ -47,6 +47,25 @@ if ! command -v mosquitto >/dev/null 2>&1; then
     exit 1
 fi
 
+
+# Check the status of the Mosquitto service
+service_status=$(sudo service mosquitto status)
+
+# Check if the service is running
+if echo "$service_status" | grep -q "mosquitto is running"; then
+    echo "Mosquitto is already running."
+else
+    echo "Mosquitto is not running. Starting the service..."
+    sudo service mosquitto start
+    
+    # Verify if the service started successfully
+    if sudo service mosquitto status | grep -q "mosquitto is running"; then
+        echo "Mosquitto has been started successfully."
+    else
+        echo "Failed to start Mosquitto."
+    fi
+fi
+
 source "$VENV_DIR/bin/activate"
 
 # Mqtt debug
