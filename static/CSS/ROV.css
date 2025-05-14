@@ -303,3 +303,9 @@
 .on {
     background-color: #216E4E !important;
 }
+
+/* TEMPORARY */
+.distorted {
+    width: 400px;
+    aspect-ratio: 1/1;
+}

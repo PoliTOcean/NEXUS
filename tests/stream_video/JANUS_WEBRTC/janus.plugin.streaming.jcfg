@@ -30,6 +30,7 @@ camera3: {
         videocodec= "h264"
         videortpmap=  "H264/90000"
         videofmtp= "profile-level-id=42e01f;packetization-mode=1"
+        metadata = '{ "fisheye": true }'
 }
 camera4: {
         type = "rtp"
@@ -41,6 +42,7 @@ camera4: {
         videocodec= "h264"
         videortpmap=  "H264/90000"
         videofmtp= "profile-level-id=42e01f;packetization-mode=1"
+        metadata = '{ "fisheye": true }'
 }
 
 

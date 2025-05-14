@@ -27,7 +27,7 @@ async function initializeMQTT() {
       switch (topic) {
           case "status/":
               const debugData = JSON.parse(text);
-              console.log(`[DEBUG] Parsed debug data:`, debugData);
+              // console.log(`[DEBUG] Parsed debug data:`, debugData);
 
               updateStatusesROV({
                   "ARMED": debugData["rov_armed"],

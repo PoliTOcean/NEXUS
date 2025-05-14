@@ -34,7 +34,6 @@ if __name__ == "__main__":
     if "Darwin" in platform.platform() or "macOS" in platform.platform():
         app.run(
             port=5000,
-            
         )
     else:
         FlaskUI(
@@ -48,15 +47,4 @@ if __name__ == "__main__":
             },
             browser_path= get_browser_path()
         ).run()
-    
 
-    # DEBUG SOCKET
-    #socketio.run(app,port=5000)
-    # SOCKET (Maybe in future will be useful)    
-    # FlaskUI(
-        # app=app,
-        # socketio=socketio,
-        # server="flask_socketio",
-        # fullscreen= True,
-        # port=5000
-    # ).run()

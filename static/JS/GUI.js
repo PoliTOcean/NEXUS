@@ -57,19 +57,9 @@ async function change(page) {
 
     // Update the current page tracker
     page_now = page;
-
-
-    if (page === "ROV") {
-        console.log("[INFO] ROV page is now active.");
-        initializeCameras(); 
-
-    }
-
-
 }
 
 async function loadPages(page) {
-
     const newpage = await (await fetch(page)).text();
     let parser = new DOMParser();
     let html = parser.parseFromString(newpage, "text/html");
@@ -115,50 +105,6 @@ async function statusController() {
     updateStatusesROV({"JOYSTICK": status["status"]});
 }
 
-function distortionHandler(cameraId, canvasId, srcUrl) {
-    // Handle cameras   
-    const videoStream = document.getElementById(cameraId);
-
-    // Create canvas
-    const canvas = document.createElement('canvas');
-    videoStream.insertAdjacentElement('afterend', canvas);
-    videoStream.style.display = "none";
-    canvas.id = canvasId;
-    canvas.src = srcUrl;
-    const FPS = 144;
-
-    // Initialize the fisheye distortion effect (assuming FisheyeGl is available)
-    var distorter = FisheyeGl({
-        image: canvas.src,  // Use the canvas as the source image
-        selector: `#${canvasId}`, // a canvas element to work with
-        lens: {
-            a: 0.5,    // 0 to 4;    default 1
-            b: 0.75,      // 0 to 4;  default 1
-            Fx: 0.12,   // 0 to 4; default 0.0
-            Fy: 0.22,   // 0 to 4;  default 0.0
-            scale: 0.8 // 0 to 20; default 1.5
-        },
-        fov: {
-            x: 0, // 0 to 2; default 1
-            y: 0  // 0 to 2; default 1
-        },
-    });
-
-    canvas.style.width = "100%";
-    canvas.style.height = "100%";
-
-    // Wait for the video to load metadata (dimensions)
-    videoStream.onload = function () {
-        drawFrame(); // Start drawing frames
-    };
-
-    function drawFrame() {
-        distorter.setImage(canvas.src);
-        setTimeout(() => requestAnimationFrame(drawFrame), 1000/FPS);
-    }
-}
-
-
 
 // [MAIN]
 
@@ -171,7 +117,8 @@ window.onload = async () => {
     body.style.height = `${h}px`;
 
     // Fetch info from the /info
-    info = await getRequest("/info");
+    info = await getRequest("/info"); 
+
     console.log("[INFO] Loaded info:", info);
 
     // Initialize MQTT after info is fully loaded
@@ -190,8 +137,6 @@ window.onload = async () => {
     // Set the initial page
     page_now = "home";
 
-    distortionHandler("camera_2", "canvas_2", info.cameras[2].src);
-
     console.log(info)
 
     // Start routines
@@ -200,36 +145,3 @@ window.onload = async () => {
     setInterval(statusController, refresh);
     setInterval(keep_alive_server, refresh + 1000);
 }
-
-
-
-
-
-// const socket = io("ws://127.0.0.1:5000",{
-    // transports: ["websocket"],
-    // reconnectionDelayMax: 10000,
-// }) 
-
-
-// socket.on("connect",() => {
-    // console.info("[Socket.io] Ready");
-    // socket.emit("test", "test");
-// });
-
-// socket.on("connect_error", (data) => {
-    // console.error("ERROR");
-    // console.log(data);
-// });
-    
-// socket.on("disconnect", (reason, details) => {
-    // console.info("DISCONNECTED");
-    // console.log(reason);
-    // console.log(details);
-// });
-
-// socket.on('error', (error) => {
-    // console.error('ERROR');
-    // console.log(error);
-// });
-
-

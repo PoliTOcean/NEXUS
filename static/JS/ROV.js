@@ -14,36 +14,7 @@ addEventListener("resize", (event) => {
 
 let camerasInitialized = false; 
 
-
-function initializeCameras() {
-
-    if (camerasInitialized) {
-        console.log("[ROV] Cameras are already initialized. Skipping initialization.");
-        return;
-    }
-
-    if (!info || !info.cameras) {
-        console.error("[ROV] Camera information is not available in `info`.");
-        return;
-    }
-
-    console.log("[ROV] Initializing cameras with sources from info.json...");
-
-    for (let i = 0; i < info.cameras.n_cameras; i++) {
-        const cameraElement = document.querySelector(`#c${i} img`);
-        if (cameraElement) {
-            cameraElement.src = info.cameras[i].src; // Use the `src` from the `info` object
-            console.log(`[ROV] Updated camera #${i} src to: ${info.cameras[i].src}`);
-        } else {
-            console.warn(`[ROV] Camera element #c${i} not found.`);
-        }
-    }
-
-    camerasInitialized = true;
-
-}
-
-
+// TODO: TO FIX AS SOON AS POSSIBLE !! NOW N_CAMERAS AND OTHER CAMERA RELATED INFO COME FROM JANUS 
 function switching(id) {
     let n_camera = `${id.match(/\d+/)[0]}`;
     if (info["cameras"][n_camera]["status"] == 0) return;
@@ -138,11 +109,11 @@ function updateStatusesROV(obj) {
 
             switch (armedState) {
                 case "OK":
-                    console.log("ROV is armed and operational.");
+                    // console.log("ROV is armed and operational.");
                     // additional logic
                     break;
                 case "OFF":
-                    console.log("ROV is disarmed.");
+                    // console.log("ROV is disarmed.");
                     // additional logic
                     break;
             }
@@ -171,12 +142,12 @@ function updateStatusesROV(obj) {
 }
 
 function updateIMU(imuJSON) {
-    console.log("[DEBUG] updateIMU called with:", imuJSON);
+    // console.log("[DEBUG] updateIMU called with:", imuJSON);
 
     if (imuJSON && typeof imuJSON === "object") {
-        console.log(`[DEBUG] PITCH: ${imuJSON["PITCH"]}, ROLL: ${imuJSON["ROLL"]}, YAW: ${imuJSON["YAW"]}`);
+        // console.log(`[DEBUG] PITCH: ${imuJSON["PITCH"]}, ROLL: ${imuJSON["ROLL"]}, YAW: ${imuJSON["YAW"]}`);
     } else {
-        console.warn("[DEBUG] Invalid IMU data received:", imuJSON);
+        // console.warn("[DEBUG] Invalid IMU data received:", imuJSON);
     }
 
     attitude.updatePitch(imuJSON["PITCH"]);
@@ -217,16 +188,21 @@ function createStreamElement(streamInfo) {
     const container = document.createElement('div');
     container.className = first ? 'camera_p' : `camera_s`;
 
+    const metadata = JSON.parse(streamInfo.metadata);
+
     container.innerHTML = `
-    <div class="screen" id="c${streamInfo.id}"  onclick="switching('camera_${streamInfo.id}')/>
-        <div class="camera_title">Stream ${streamId}: ${streamInfo.description || 'No description'}</div>
-        <video id="camera_${streamId}" playsinline autoplay muted></video>
-    </div>
+        <div class="screen" id="c${streamInfo.id}" onclick="switching('camera_${streamInfo.id}')">
+            <div class="camera_title">Stream ${streamId}: ${streamInfo.description || 'No description'}</div>
+            <video id="video_${streamId}" playsinline autoplay muted ></video>
+            ${metadata.fisheye ? `<canvas class="distorted" id="canvas_${streamId}"></canvas>` : "<span><span/>"}
+        </div>
     `;
-    
+
+    // This ensures the innerHTML is actually applied and DOM elements exist before distortionHandler runs. Javascript...
+    setTimeout(() => metadata.fisheye && distortionHandler(`video_${streamId}`, `canvas_${streamId}`, `canvas_raw_${streamId}`), 0);
+
     if (first) document.querySelector('.camera_column').insertBefore(container, document.querySelector('.camera_column').firstChild);
     else document.querySelector('.camera_row').appendChild(container);
-    
     
     if (first) first = false;
     return container;
@@ -279,7 +255,7 @@ function watchStream(streamId) {
 }
 
 function handleRemoteStream(streamId, stream) {
-    const videoElement = document.getElementById(`camera_${streamId}`);
+    const videoElement = document.getElementById(`video_${streamId}`);
     if (videoElement) {
         Janus.attachMediaStream(videoElement, new MediaStream([stream]));
     }
@@ -371,6 +347,65 @@ function initializeJanus() {
         });
       }
     });
+}
+
+
+// ! FISHEYE
+
+function distortionHandler(cameraId, canvasId, canvasRawId) {
+    // Handle cameras   
+    const videoStream = document.getElementById(cameraId);
+
+    // Create canvas
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.id = canvasRawId;
+    canvas.style.width = "100%";
+    canvas.style.height = "100%";
+
+    videoStream.insertAdjacentElement('afterend', canvas);
+    
+
+    // Put video in the jail hidden div
+    const hiddenContainer = document.querySelector(".hidden_media");
+    hiddenContainer.appendChild(canvas);
+    videoStream.style.visibility = 'hidden';
+    videoStream.style.position = 'absolute';
+    videoStream.style.top = '-10px';
+    videoStream.style.left = '-10px';
+
+    // Initialize the fisheye distortion effect (assuming FisheyeGl is available)
+    var distorter = FisheyeGl({
+        image: canvas.toDataURL("image/png"),  // Use the canvas as the source image
+        selector: `#${canvasId}`, // a canvas element to work with
+        lens: {
+            a: 0.5,    // 0 to 4;    default 1
+            b: 0.75,      // 0 to 4;  default 1
+            Fx: 0.12,   // 0 to 4; default 0.0
+            Fy: 0.22,   // 0 to 4;  default 0.0
+            scale: 0.8 // 0 to 20; default 1.5
+        },
+        fov: {
+            x: 0, // 0 to 2; default 1
+            y: 0  // 0 to 2; default 1
+        },
+    });
+
+    
+
+
+    function renderLoop() {
+      if (videoStream.readyState >= 2) { // HAVE_CURRENT_DATA
+
+          ctx.drawImage(videoStream, 0, 0, canvas.width, canvas.height);
+          distorter.setImage(canvas.toDataURL("image/png"));
+      }
+      setTimeout(() => {
+          requestAnimationFrame(renderLoop);
+      }, 1000 / 60);
+    }
+
+    renderLoop();
 }
 
 
