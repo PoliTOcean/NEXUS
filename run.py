@@ -43,6 +43,7 @@ if __name__ == "__main__":
             server_kwargs={
                 "app": app,
                 "port": 5000,
+                "host" : "0.0.0.0",
                 "threaded": True,
             },
             browser_path= get_browser_path()
