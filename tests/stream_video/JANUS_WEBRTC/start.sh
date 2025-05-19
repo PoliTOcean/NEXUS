@@ -36,10 +36,11 @@ trap cleanup SIGINT SIGTERM SIGHUP
 
 # Stream definitions: (name port)
 STREAMS=(
-  "camera1 5004"
-  "camera2 5005"
-  "camera3 5006"
-  "camera4 5007"
+  "camera1 5001"
+  "camera2 5002"
+  "camera3 5003"
+  "camera4 5004"
+  "camera5 5005"
 )
 
 for STREAM in "${STREAMS[@]}"; do

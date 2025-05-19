@@ -99,14 +99,14 @@ function updateStatusesROV(obj) {
 
     Array.from(statuses).forEach((sts) => {
 
-        // Handle ARMED state
 
         if (sts.id === "ARMED" && obj["ARMED"]) {         
-            PIDhandler(sts, obj["ARMED"]);
+          PIDhandler(sts, obj["ARMED"])
+        };
+
+        if (sts.id === "WORK" && obj["WORK"]) {
+            PIDhandler(sts, obj["WORK"]);
         }
-
-        // Handle DEPTH, ROLL, PITCH states saperately
-
         if (sts.id === "DEPTH" && obj["CONTROLLER_STATE"]) {
             PIDhandler(sts, obj["CONTROLLER_STATE"]["DEPTH"]);
         }

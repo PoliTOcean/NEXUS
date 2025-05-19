@@ -32,6 +32,7 @@ async function initializeMQTT() {
               updateStatusesROV({
                   "ARMED": debugData["rov_armed"],
                   "CONTROLLER_STATE": debugData["controller_state"],
+                  "WORK": debugData["work_mode"],
               });
               updateIMU({
                   "PITCH": debugData["pitch"],
