@@ -101,41 +101,25 @@ function updateStatusesROV(obj) {
 
         // Handle ARMED state
 
-        if (sts.id === "ARMED") {
-
-            let armedState = obj["ARMED"];
-
-            // ? These console logs can be removed
-
-            switch (armedState) {
-                case "OK":
-                    // console.log("ROV is armed and operational.");
-                    // additional logic
-                    break;
-                case "OFF":
-                    // console.log("ROV is disarmed.");
-                    // additional logic
-                    break;
-            }
-
-            PIDhandler(sts, armedState);
+        if (sts.id === "ARMED" && obj["ARMED"]) {         
+            PIDhandler(sts, obj["ARMED"]);
         }
 
         // Handle DEPTH, ROLL, PITCH states saperately
 
-        if (sts.id === "DEPTH") {
+        if (sts.id === "DEPTH" && obj["CONTROLLER_STATE"]) {
             PIDhandler(sts, obj["CONTROLLER_STATE"]["DEPTH"]);
         }
-        if (sts.id === "ROLL") {
+        if (sts.id === "ROLL" && obj["CONTROLLER_STATE"]) {
             PIDhandler(sts, obj["CONTROLLER_STATE"]["ROLL"]);
         }
-        if (sts.id === "PITCH") {
+        if (sts.id === "PITCH" && obj["CONTROLLER_STATE"]) {
             PIDhandler(sts, obj["CONTROLLER_STATE"]["PITCH"]);
         }
 
         // Handle JOYSTICK state
 
-        if (sts.id === "JOYSTICK") {
+        if (sts.id === "JOYSTICK" && obj["JOYSTICK"]) {
             PIDhandler(sts, obj["JOYSTICK"]);
         }
     });
@@ -188,7 +172,7 @@ function createStreamElement(streamInfo) {
     const container = document.createElement('div');
     container.className = first ? 'camera_p' : `camera_s`;
 
-    const metadata = JSON.parse(streamInfo.metadata);
+    const metadata = {'fisheye': false};
 
     container.innerHTML = `
         <div class="screen" id="c${streamInfo.id}" onclick="switching('camera_${streamInfo.id}')">
