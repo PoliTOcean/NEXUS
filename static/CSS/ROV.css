@@ -29,6 +29,8 @@ video {
     flex-direction: column;
     flex: 15;
     align-items: center;
+    justify-content: center;
+    gap : 20px;
 
 }
 

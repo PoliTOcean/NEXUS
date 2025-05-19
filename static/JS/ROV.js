@@ -1,5 +1,5 @@
 let page_now;
-let mainCameraId = 'camera_0'
+let mainCameraId = "1";
 
 addEventListener("resize", (event) => {
     let h = window.innerHeight;
@@ -14,43 +14,55 @@ addEventListener("resize", (event) => {
 
 let camerasInitialized = false; 
 
-// TODO: TO FIX AS SOON AS POSSIBLE !! NOW N_CAMERAS AND OTHER CAMERA RELATED INFO COME FROM JANUS 
-function switching(id) {
-    let n_camera = `${id.match(/\d+/)[0]}`;
-    if (info["cameras"][n_camera]["status"] == 0) return;
-    let z = -1;
-    for (let i = 0; i < info["cameras"]["n_cameras"] && z == -1; i++) if (info["cameras"][`${i}`]["status"] == 0) z = i;
-    let camera_p = document.querySelector(".camera_p");
-    let camera_s = document.querySelectorAll(`.camera_s`);
-    let target, deploy;
-    camera_s.forEach((el) => {
-        if (el.firstElementChild.id == `c${n_camera}`) {
-            target = el.firstElementChild;
-            deploy = el;
+let cameraStates = {}; // { [streamId]: { status: 1, enabled: 1 } }
+
+function updateCameraStatesFromJanus(streamList) {
+    streamList.forEach(stream => {
+        if (!cameraStates[stream.id]) {
+            cameraStates[stream.id] = { status: 1, enabled: 1 };
         }
     });
-    camera_p.append(target);
-    deploy.append(camera_p.firstElementChild);
-    info["cameras"][n_camera]["status"] = 0;
-    info["cameras"][z]["status"] = 1;
-    mainCameraId = target.querySelector('video').id;
 }
 
+
+function switching(id) {
+    let camera_number = `${id.match(/\d+/)[0]}`;
+    const camera_p = document.querySelector(".camera_p");
+    const mainScreen = camera_p.querySelector(".screen");
+
+    if (mainCameraId !== camera_number) {
+        let camera_s = document.querySelectorAll(`.camera_s`);
+        let target, deploy;
+        camera_s.forEach((el) => {
+            if (el.firstElementChild.id == `c${camera_number}`) {
+                target = el.firstElementChild;
+                deploy = el;
+            }
+        });
+        if (target && deploy) {
+            camera_p.append(target);
+            deploy.append(camera_p.firstElementChild);
+            // Update cameraStates
+            Object.keys(cameraStates).forEach(cid => {
+                cameraStates[cid].status = (cid === camera_number) ? 0 : 1;
+            });
+            mainCameraId = camera_number;
+        }
+    }
+    // If the clicked camera is already the real main camera, do nothing or add logic as needed
+}
+
+
 async function onoff(id) {
-    let wh = document.querySelectorAll(`#c${id.match(/\d+/)[0]}`)[0];
-    console.log(wh);
-    console.log(info)
-    info["cameras"][`${id.match(/\d+/)[0]}`]["enabled"] = !info["cameras"][`${id.match(/\d+/)[0]}`]["enabled"];
-    if (info["cameras"][`${id.match(/\d+/)[0]}`]["enabled"] == 1) wh.className = wh.className.replace(" hide", "");
+    let camera_number = `${id.match(/\d+/)[0]}`;
+    let wh = document.querySelectorAll(`#c${camera_number}`)[0];
+    if (!cameraStates[camera_number]) return;
+    cameraStates[camera_number].enabled = !cameraStates[camera_number].enabled;
+    if (cameraStates[camera_number].enabled) wh.className = wh.className.replace(" hide", "");
     else wh.className += " hide";
 }
 
-let rotationAngle = 0;
-function rotateVideo(){
-    const video = document.getElementById(mainCameraId);
-    rotationAngle += 90;
-    video.style.transform =  `rotate(${rotationAngle}deg)`;
-}
+
 
 // [LOADER INSTRUMENTS]
 let attitude;
@@ -100,7 +112,7 @@ function updateStatusesROV(obj) {
     Array.from(statuses).forEach((sts) => {
 
 
-        if (sts.id === "ARMED" && obj["ARMED"]) {         
+        if (sts.id === "ARMED" && obj["ARMED"]) {
           PIDhandler(sts, obj["ARMED"])
         };
 
@@ -169,6 +181,9 @@ let activeStreams = {};
 
 function createStreamElement(streamInfo) {
     const streamId = streamInfo.id;
+    if (!cameraStates[streamId]) {
+        cameraStates[streamId] = { status: 1, enabled: 1 };
+    }
     const container = document.createElement('div');
     container.className = first ? 'camera_p' : `camera_s`;
 
@@ -245,6 +260,8 @@ function handleRemoteStream(streamId, stream) {
     }
 }
 
+
+
 function initializeJanus() {
     Janus.init({
       debug: "all",
@@ -268,6 +285,8 @@ function initializeJanus() {
                   success: function(result) {
                     if(result && result.list) {
                       console.log(result)
+
+                      updateCameraStatesFromJanus(result.list);
 
                       // For each stream, create the camera:
                       result.list.forEach(stream => {
@@ -396,6 +415,9 @@ function distortionHandler(cameraId, canvasId, canvasRawId) {
 // --- END CAMERA HANDLER
 
 function ROVLoader() {
+
+    
+
     initializeJanus();
 
     const attitudeElement = document.querySelector("#attitude");
