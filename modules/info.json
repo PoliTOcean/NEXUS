@@ -15,12 +15,12 @@
         },
         "production": {
             "janus": {
-                "ip": "ws://10.0.0.254:8188"
+                "ip": "ws:127.0.0.1:8188"
             },
             "mqtt": {
                 "ip": "mqtt://10.0.0.254:9000",
                 "topics": [
-                    "/gui",
+                    "/status",
                     "/state_commands"
                 ]
             }
