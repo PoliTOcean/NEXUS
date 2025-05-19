@@ -1,5 +1,6 @@
 let page_now;
 let mainCameraId = "1";
+let initialMainCameraId = "1";
 
 addEventListener("resize", (event) => {
     let h = window.innerHeight;
@@ -28,7 +29,29 @@ function updateCameraStatesFromJanus(streamList) {
 function switching(id) {
     let camera_number = `${id.match(/\d+/)[0]}`;
     const camera_p = document.querySelector(".camera_p");
-    const mainScreen = camera_p.querySelector(".screen");
+
+    // if main camera clicked switch the main camera with initial main camera
+    if (mainCameraId === camera_number) {
+        let camera_s = document.querySelectorAll(`.camera_s`);
+        let target, deploy;
+        camera_s.forEach((el) => {
+            if (el.firstElementChild.id == `c${initialMainCameraId}`) {
+                target = el.firstElementChild;
+                deploy = el;
+            }
+        });
+        if (target && deploy) {
+            camera_p.append(target);
+            deploy.append(camera_p.firstElementChild);
+            // Update cameraStates
+            Object.keys(cameraStates).forEach(cid => {
+                cameraStates[cid].status = (cid === initialMainCameraId) ? 0 : 1;
+            }
+            );
+            mainCameraId = initialMainCameraId;
+               return;
+        }
+    }
 
     if (mainCameraId !== camera_number) {
         let camera_s = document.querySelectorAll(`.camera_s`);
