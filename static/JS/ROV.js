@@ -210,7 +210,12 @@ function createStreamElement(streamInfo) {
     const container = document.createElement('div');
     container.className = first ? 'camera_p' : `camera_s`;
 
-    const metadata = {'fisheye': false};
+    let metadata = {'fisheye': false};
+    try {
+        metadata = JSON.parse(streamInfo.metadata);
+    } catch (e) {
+        console.error("Failed to parse metadata:", e);
+    }
 
     container.innerHTML = `
         <div class="screen" id="c${streamInfo.id}" onclick="switching('camera_${streamInfo.id}')">

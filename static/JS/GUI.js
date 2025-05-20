@@ -77,22 +77,6 @@ async function loadPages(page) {
 const container = document.querySelector('.window');
 
 
-const observer = new MutationObserver((mutationsList) => {
-
-    for (const mutation of mutationsList) {
-        if (mutation.type === 'childList') {
-            
-                ROVLoader();
-                observer.disconnect();
-
-            
-        }
-    }
-});
-
-observer.observe(container, { childList: true });
-
-
 
 // [STATUSES MANAGMENT]
 async function statusController() {
@@ -143,4 +127,6 @@ window.onload = async () => {
     setInterval(() => statusFLOAT("STATUS"), refresh);
     setInterval(statusController, refresh);
     setInterval(keep_alive_server, refresh + 1000);
+
+    ROVLoader();
 }
