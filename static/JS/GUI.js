@@ -42,10 +42,9 @@ async function change(page) {
 
     // Hide the current page
 
-    if (page_now !== "home") {
-        const currentPageElement = document.getElementsByClassName(page_now)[0];
-        if (currentPageElement) currentPageElement.classList.add("hide");
-    }
+    const currentPageElement = document.getElementsByClassName(page_now)[0];
+    if (currentPageElement) currentPageElement.classList.add("hide");
+    
 
     // Show the target page
     const newPageElement = document.getElementsByClassName(page)[0];

@@ -5,6 +5,10 @@ import platform
 import argparse
 import os
 
+from utils_rov import mapping_viz
+
+
+
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
 
@@ -23,6 +27,8 @@ def get_browser_path():
 
 
 if __name__ == "__main__":
+    
+    mapping_viz.init_mapping_viz()
     
     parser = argparse.ArgumentParser(description="Run the NEXUS application.")
     parser.add_argument("--mode", choices=["debug", "production"], required=True, help="Mode to run the application in.")
