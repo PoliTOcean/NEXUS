@@ -56,9 +56,9 @@ buttons:
     value:
     onShiftValue:
   LC:
-    onPress:
+    onPress: "WORK_MODE"
     onRelease:
-    topic:
+    topic: "state_commands/"
     onShiftPress:
     onShiftRelease:
     value:
@@ -93,16 +93,16 @@ buttons:
     topic: "state_commands/"
     onShiftPress: "DEPTH_REFERENCE_OFFSET"
     onShiftRelease:
-    value: 2
-    onShiftValue: 10
+    value: 0.02
+    onShiftValue: 0.1
   D-Pad-Down:
     onPress: "DEPTH_REFERENCE_OFFSET"
     onRelease:
     topic: "state_commands/"
     onShiftPress: "DEPTH_REFERENCE_OFFSET"
     onShiftRelease:
-    value: -2
-    onShiftValue: -10
+    value: -0.02
+    onShiftValue: -0.1
   D-Pad-Left:
     onPress: "SHIFT"
     onRelease: "noSHIFT"

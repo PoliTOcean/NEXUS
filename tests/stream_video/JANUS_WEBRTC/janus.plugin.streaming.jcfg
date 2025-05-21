@@ -1,7 +1,7 @@
 camera1: {
         type = "rtp"
         id = 1
-        description = "Camera 1"
+        description = "main"
         video = true
         videoport = 5001
         videopt = 100
@@ -13,7 +13,7 @@ camera1: {
 camera2: {
         type = "rtp"
         id = 2
-        description = "Camera 2"
+        description = "right"
         video = true
         videoport = 5002
         videopt = 100
@@ -25,7 +25,7 @@ camera2: {
 camera3: {
         type = "rtp"
         id = 3
-        description = "Camera 3"
+        description = "top"
         video = true
         videoport = 5003
         videopt = 100
@@ -37,7 +37,7 @@ camera3: {
 camera4: {
         type = "rtp"
         id = 4
-        description = "Camera 4"
+        description = "bottom"
         video = true
         videoport = 5004
         videopt = 100
@@ -49,7 +49,7 @@ camera4: {
 camera5: {
         type = "rtp"
         id = 5
-        description = "Camera 5"
+        description = "arm"
         video = true
         videoport = 5005
         videopt = 100
