@@ -21,11 +21,16 @@
             <button class="options" id="FLOAT" onclick="change('FLOAT')">FLOAT</button>
         </div>
         <div class="window">
+            
+            <div class="home">
+                <div style="display: flex; justify-content: center;">
+                    <img src="{{ url_for('utils_rov', filename='xbox_controller_map.svg') }}" alt="Xbox Controller Map" style="max-width: 100%; height: auto;">   
+                </div>
+            </div>
 
             <!-- COMPONENTS -->
 
-        </div>
-    </div>
+              
     <script src="{{ url_for('static', filename='./node_modules/webrtc-adapter/out/adapter.js') }}" ></script>
     <script  src="{{ url_for('static', filename='./node_modules/janus-gateway/npm/src/janus.js') }}"></script>
     <script src="{{ url_for('static', filename='./node_modules/mqtt/dist/mqtt.min.js') }}"></script>

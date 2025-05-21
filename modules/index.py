@@ -1,8 +1,11 @@
 from app import app
-from flask import render_template, send_file, jsonify, Response
+from flask import render_template, send_file, jsonify, Response, send_from_directory
 import subprocess
 import os,json
 
+@app.route('/utils_rov/<path:filename>')
+def utils_rov(filename):
+    return send_from_directory('utils_rov', filename)
 
 @app.route("/test")
 def test():

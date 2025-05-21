@@ -328,10 +328,11 @@ def create_controller_map(config, output_file):
     dwg.save()
     print(f"Controller map saved as {output_file}")
 
-if __name__ == "__main__":
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    config_file = os.path.join(script_dir, "config", "joystick_Move.yaml")
-    output_image = "xbox_controller_map.svg"
+def init_mapping_viz():
     
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    output_image = os.path.join(script_dir, "xbox_controller_map.svg")
+
+    config_file = os.path.join(script_dir, "config", "joystick_Move.yaml")
     config = load_config(config_file)
     create_controller_map(config, output_image)

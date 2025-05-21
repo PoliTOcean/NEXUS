@@ -3,46 +3,60 @@ camera1: {
         id = 1
         description = "Camera 1"
         video = true
-        videoport = 5004
+        videoport = 5001
         videopt = 100
         videocodec= "h264"
         videortpmap=  "H264/90000"
         videofmtp= "profile-level-id=42e01f;packetization-mode=1"
+        metadata = "{\"fisheye\": false}"
 }
 camera2: {
         type = "rtp"
         id = 2
         description = "Camera 2"
         video = true
-        videoport = 5005
+        videoport = 5002
         videopt = 100
         videocodec= "h264"
         videortpmap=  "H264/90000"
         videofmtp= "profile-level-id=42e01f;packetization-mode=1"
+        metadata = "{\"fisheye\": false}"
 }
 camera3: {
         type = "rtp"
         id = 3
         description = "Camera 3"
         video = true
-        videoport = 5006
+        videoport = 5003
         videopt = 100
         videocodec= "h264"
         videortpmap=  "H264/90000"
         videofmtp= "profile-level-id=42e01f;packetization-mode=1"
-        metadata = '{ "fisheye": true }'
+        metadata = "{\"fisheye\": true}"
 }
 camera4: {
         type = "rtp"
         id = 4
         description = "Camera 4"
         video = true
-        videoport = 5007
+        videoport = 5004
         videopt = 100
         videocodec= "h264"
         videortpmap=  "H264/90000"
         videofmtp= "profile-level-id=42e01f;packetization-mode=1"
-        metadata = '{ "fisheye": true }'
+        metadata = "{\"fisheye\": true}"
+}
+camera5: {
+        type = "rtp"
+        id = 5
+        description = "Camera 5"
+        video = true
+        videoport = 5005
+        videopt = 100
+        videocodec= "h264"
+        videortpmap=  "H264/90000"
+        videofmtp= "profile-level-id=42e01f;packetization-mode=1"
+        metadata = "{\"fisheye\": false}"
 }
 
 
