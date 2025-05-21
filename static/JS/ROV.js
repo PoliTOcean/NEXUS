@@ -225,8 +225,9 @@ function createStreamElement(streamInfo) {
         </div>
     `;
 
+    console.log(metadata);
     // This ensures the innerHTML is actually applied and DOM elements exist before distortionHandler runs. Javascript...
-    setTimeout(() => metadata.fisheye && distortionHandler(`video_${streamId}`, `canvas_${streamId}`, `canvas_raw_${streamId}`), 0);
+    setTimeout(() => metadata.fisheye && distortionHandler(`video_${streamId}`, `canvas_${streamId}`, `canvas_raw_${streamId}`, metadata.fisheyeSettings), 0);
 
     if (first) document.querySelector('.camera_column').insertBefore(container, document.querySelector('.camera_column').firstChild);
     else document.querySelector('.camera_row').appendChild(container);
@@ -383,7 +384,7 @@ function initializeJanus() {
 
 // ! FISHEYE
 
-function distortionHandler(cameraId, canvasId, canvasRawId) {
+function distortionHandler(cameraId, canvasId, canvasRawId, distorsionSettings) {
     // Handle cameras   
     const videoStream = document.getElementById(cameraId);
 
@@ -406,20 +407,12 @@ function distortionHandler(cameraId, canvasId, canvasRawId) {
     videoStream.style.left = '-10px';
 
     // Initialize the fisheye distortion effect (assuming FisheyeGl is available)
+    console.log(distorsionSettings);
     var distorter = FisheyeGl({
         image: canvas.toDataURL("image/png"),  // Use the canvas as the source image
         selector: `#${canvasId}`, // a canvas element to work with
-        lens: {
-            a: 0.5,    // 0 to 4;    default 1
-            b: 0.75,      // 0 to 4;  default 1
-            Fx: 0.12,   // 0 to 4; default 0.0
-            Fy: 0.22,   // 0 to 4;  default 0.0
-            scale: 0.8 // 0 to 20; default 1.5
-        },
-        fov: {
-            x: 0, // 0 to 2; default 1
-            y: 0  // 0 to 2; default 1
-        },
+        lens: distorsionSettings.lens,
+        fov: distorsionSettings.fov,
     });
 
     
