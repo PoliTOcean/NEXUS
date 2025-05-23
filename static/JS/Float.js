@@ -78,11 +78,11 @@ async function listeningFLOAT() {
 }
 
 async function handleStatus(status) {
-    const serial = document.getElementsByClassName("status SERIAL")[0];
-    const ready = document.getElementsByClassName("status READY")[0];
     const drop = document.getElementsByClassName("status DROP");
-    const immersion = document.getElementsByClassName("status IMMERSION")[0];
-    const listen = document.getElementsByClassName("status LISTENING")[0];
+    const serial = document.querySelector(".status.SERIAL");
+    const ready = document.querySelector(".status.READY");
+    const immersion = document.querySelector(".status.IMMERSION");
+    const listen = document.querySelector(".status.LISTENING");
     const auto_mode = document.querySelector(".status.AUTO_MODE");
     const conn = document.querySelector(".status.CONN");
     if (!status.status) status = await startFloat();
@@ -92,16 +92,6 @@ async function handleStatus(status) {
         switch (sts[i].trim()) {
             case "CONNECTED":
                 serial.classList.add("on");
-                ready.classList.remove("on");                
-                for (let i = 0; i < drop.length; i++) {
-                    drop[i].classList.remove("clickable");
-                    drop[i].classList.add("disabled");
-                }
-                mux = 0;
-                break;
-
-            case "CONNECTED&READY":
-                serial.classList.add("on");
                 ready.classList.add("on");                
                 for (let i = 0; i < drop.length; i++) {
                     drop[i].classList.add("clickable");
@@ -109,12 +99,12 @@ async function handleStatus(status) {
                 }
                 mux = 1;
                 break;
-            case "IMMERSION":
+            case "EXECUTING_CMD":
                 for (let i = 0; i < drop.length; i++) drop[i].classList.remove("clickable");
                 mux = 0;
                 immersion.classList.add("immersion");
                 break;
-            case "UPLOAD_DATA":
+            case "CONNECTED_W_DATA":
                 for (let i = 0; i < drop.length; i++) drop[i].classList.remove("clickable");
                 mux = 0;
                 listen.classList.add("listening");
@@ -131,7 +121,7 @@ async function handleStatus(status) {
             case "AUTO_MODE_NO":
                 auto_mode.classList.remove("on");
                 break;
-            case "AUTO_MODE_NO":
+            case "AUTO_MODE_YES":
                 auto_mode.classList.add("on");
                 break;
             case "CONN_OK":
@@ -139,6 +129,9 @@ async function handleStatus(status) {
                 break;
             case "CONN_LOST":
                 conn.classList.remove("on");
+                break;
+            case "STATUS_ERROR":
+                console.error("SOMETHING WENT WRONG");
                 break;
             default:
                 // Battery
@@ -189,6 +182,7 @@ async function msg(e, msg_id) {
     else alert("Is USB cable connected?")
 }
 
+// TODO We have to fix that
 function switchDiv(){
     const div1 = document.getElementById('basicFloat');
     const div2 = document.getElementById('advancedFloat');
@@ -214,28 +208,17 @@ async function sendPidParams() {
     const kd = parseFloat(document.getElementById("kd").value);
     const ki = parseFloat(document.getElementById("ki").value);
 
+
     // Check errors
     if (isNaN(kp) || isNaN(kd) || isNaN(ki)) {
         alert("Please enter valid numeric values for Kp, Kd, and Ki.");
         return;
     }
 
+    let msg = `PARAMS ${kp} ${kd} ${ki}`;
     // First, send PARAMS to ESP-B, mux to 0
     mux = 0;
-    let data = await fetch(`FLOAT/msg?msg=PARAMS`);
+    let data = await fetch(`FLOAT/msg?msg=${encodeURIComponent(msg)}`);
     if (data.status == 201) console.log("PARAMS status sent");
-    else console.error("Is USB cable connected?");
-
-    // Send params
-    data = await fetch(`FLOAT/msg?msg=${kp}`);
-    if (data.status == 201) console.log("Kp sent");
-    else console.error("Is USB cable connected?");
-
-    data = await fetch(`FLOAT/msg?msg=${kd}`);
-    if (data.status == 201) console.log("Kd sent");
-    else console.error("Is USB cable connected?");
-
-    data = await fetch(`FLOAT/msg?msg=${ki}`);
-    if (data.status == 201) console.log("Ki sent");
     else console.error("Is USB cable connected?");
 }
