@@ -58,14 +58,7 @@ def msg_status(s: Serial, msg: str):
         if msg == 'SEND_PACKAGE':
             float_data = json.loads(line)
             print(float_data)
-            times = datetime(
-                int(float_data['year']), 
-                int(float_data['month']), 
-                int(float_data['day']), 
-                int(float_data['hour']), 
-                int(float_data["minute"]), 
-                int(float_data["second"])
-            ).strftime('%Y-%m-%dT%H:%M:%SZ')
+            times = int(float_data['mseconds'])
             depth = float_data['depth']
             pressure = float_data['pressure']
             cn = float_data['company_number']
@@ -124,14 +117,7 @@ def handle_upload_data(s: Serial):
             
             float_data = json.loads(decoded)
             depth.append(float(float_data['depth']))
-            times.append(datetime(
-                int(float_data['year']), 
-                int(float_data['month']), 
-                int(float_data['day']), 
-                int(float_data['hour']), 
-                int(float_data["minute"]), 
-                int(float_data["second"])
-            ).strftime('%Y-%m-%dT%H:%M:%SZ'))
+            times.append(int(float_data['mseconds']))
             pressure.append(float_data['pressure'])
             if cn == '':
                 cn = float_data["company_number"]
