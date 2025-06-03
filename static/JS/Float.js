@@ -1,8 +1,9 @@
-const BATTERY_MAX_VALUE = 12000;
-const BATTERY_MIN_VALUE = 9000;
+const BATTERY_MAX_VALUE = 12600;
+const BATTERY_MIN_VALUE = 11500;
 
 let nReport = 1;
 let mux = 1;
+let manualMuxLock = false;
 let listening = 0;
 
 async function startFloat() {
@@ -73,11 +74,15 @@ async function listeningFLOAT() {
         listening = 0;
         immersion.classList.remove("immersion");
         listen.classList.remove("listening");
+        manualMuxLock = false;
+        mux = 1;
     }
     console.log(sts);
 }
 
+// This function handles the status coming from ESP-B
 async function handleStatus(status) {
+    // Get all the statuses symbol in the Float page
     const drop = document.getElementsByClassName("status DROP");
     const serial = document.querySelector(".status.SERIAL");
     const ready = document.querySelector(".status.READY");
@@ -85,38 +90,45 @@ async function handleStatus(status) {
     const listen = document.querySelector(".status.LISTENING");
     const auto_mode = document.querySelector(".status.AUTO_MODE");
     const conn = document.querySelector(".status.CONN");
+
+    
     if (!status.status) status = await startFloat();
     console.log(status);
     sts = status.text.split("|");
+
+    function disableFunction() {
+        for (let i = 0; i < drop.length; i++) {        
+            drop[i].classList.remove("clickable");
+            drop[i].classList.add("disabled");
+        }
+    }
+
     for (let i = 0; i < sts.length; i++) {
         switch (sts[i].trim()) {
             case "CONNECTED":
                 serial.classList.add("on");
                 ready.classList.add("on");                
-                for (let i = 0; i < drop.length; i++) {
-                    drop[i].classList.add("clickable");
-                    drop[i].classList.remove("disabled");
-                }
-                mux = 1;
                 break;
             case "EXECUTING_CMD":
                 for (let i = 0; i < drop.length; i++) drop[i].classList.remove("clickable");
+                manualMuxLock = true;
                 mux = 0;
                 immersion.classList.add("immersion");
                 break;
             case "CONNECTED_W_DATA":
                 for (let i = 0; i < drop.length; i++) drop[i].classList.remove("clickable");
+                manualMuxLock = true;
                 mux = 0;
                 listen.classList.add("listening");
                 listening = 1;
                 listeningFLOAT();
             case "DATA_ABORTED":
-                mux = 0;
                 break
             case "NO USB":
                 serial.classList.remove("on");
                 ready.classList.remove("on");
-                for (let i = 0; i < drop.length; i++) drop[i].classList.remove("enabled");
+                conn.classList.remove("on");
+                disableFunction();
                 mux = 0;
             case "AUTO_MODE_NO":
                 auto_mode.classList.remove("on");
@@ -126,9 +138,15 @@ async function handleStatus(status) {
                 break;
             case "CONN_OK":
                 conn.classList.add("on");
+                for (let i = 0; i < drop.length; i++) {
+                    drop[i].classList.add("clickable");
+                    drop[i].classList.remove("disabled");
+                }
+                if (!manualMuxLock) mux = 1;
                 break;
             case "CONN_LOST":
                 conn.classList.remove("on");
+                disableFunction();
                 break;
             case "STATUS_ERROR":
                 console.error("SOMETHING WENT WRONG");
@@ -151,37 +169,50 @@ async function handleStatus(status) {
     }
 }
 
-
+// Routine operation -> every 2 seconds
 async function statusFLOAT(msg) {
+    // If we are in a listening operation
     if (listening) {
         listeningFLOAT()    
         return;
     }
+
+    // Otherwise, get float status or the package 
     let data = await getRequest(`/FLOAT/status?msg=${msg}`);
     switch (msg) {
         case "STATUS":
             handleStatus(data);
             break
         case "SEND_PACKAGE":
-            if (mux == 1) publishPackage(data);
+            if (mux == 1) { 
+                publishPackage(data);
+            }
             //else alert("NOT READY FOR PACKAGE");
             break
     }
 }
 
-let msgs = ["GO", "SWITCH_AUTO_MODE", "TRY_UPLOAD", "BALANCE", "CLEAR_SD"]
 
+// This function sends a message
+let msgs = ["GO", "SWITCH_AUTO_MODE", "TRY_UPLOAD", "BALANCE", "CLEAR_SD"]
 async function msg(e, msg_id) {
+    // Handle mux
     if (!mux) {
         console.log("NOT READY FOR MSG");
         return;
     }
+    // Lock
     mux = 0;
+
+    // send msg
     const data = await fetch(`FLOAT/msg?msg=${msgs[msg_id]}`);
+
     if (data.status == 201) mux = 1;
     else alert("Is USB cable connected?")
 }
 
+
+// Switch between Advanced and Basic operations
 // TODO We have to fix that
 function switchDiv(){
     const div1 = document.getElementById('basicFloat');
@@ -201,7 +232,7 @@ function switchDiv(){
 }
 
 
-// Function similar to msg, we are not interested of ESP32 answers, only send the message 
+// Similar to msg function but with kp,kd,ki args
 async function sendPidParams() {
     // Read
     const kp = parseFloat(document.getElementById("kp").value);
