@@ -32,16 +32,16 @@ buttons:
     value:
     onShiftValue:
   View:
-    onPress: "CHANGE_PITCH_STATUS"
+    onPress: "DEPTH_REFERENCE_UPDATE"
     onRelease:
     topic: "state_commands/"
     onShiftPress:
     onShiftRelease:
-    value:
+    value: 50
     onShiftValue: 
   Option: 
-    onPress: "TORQUE"
-    onRelease: "TORQUE_OFF"
+    onPress: "CHANGE_CONTROLLER_STATUS"
+    onRelease:
     topic: "state_commands/"
     onShiftPress:
     onShiftRelease:
@@ -56,9 +56,9 @@ buttons:
     value:
     onShiftValue:
   LC:
-    onPress:
+    onPress: "WORK_MODE"
     onRelease:
-    topic:
+    topic: "state_commands/"
     onShiftPress:
     onShiftRelease:
     value:
@@ -80,60 +80,50 @@ buttons:
     value: -30000
     onShiftValue: -15000
   RB:
-<<<<<<< Updated upstream
-    onPress: "ROLL"
-    onRelease: "ROLL"
-    topic: "axes/"
-    onShiftPress: "ROLL"
-    onShiftRelease: "ROLL"
-    value: 30000
-    onShiftValue: 15000
-=======
-    onPress: "TORQUE_WRIST_ON"
-    onRelease: "TORQUE_WRIST_OFF"
-    topic: "arm_commands/"
+    onPress: "TORQUE"
+    onRelease: "TORQUE_OFF"
+    topic: "state_commands/"
     onShiftPress:
     onShiftRelease:
     value:
     onShiftValue:
->>>>>>> Stashed changes
   D-Pad-Up:
     onPress: "DEPTH_REFERENCE_OFFSET"
     onRelease: 
     topic: "state_commands/"
     onShiftPress: "DEPTH_REFERENCE_OFFSET"
     onShiftRelease:
-    value: 2
-    onShiftValue: 10
+    value: -0.02
+    onShiftValue: -0.1
   D-Pad-Down:
     onPress: "DEPTH_REFERENCE_OFFSET"
     onRelease:
     topic: "state_commands/"
     onShiftPress: "DEPTH_REFERENCE_OFFSET"
     onShiftRelease:
-    value: -2
-    onShiftValue: -10
+    value: 0.02
+    onShiftValue: 0.1
   D-Pad-Left:
-    onPress: "SHIFT"
+    onPress: "PITCH_REFERENCE_OFFSET"
     onRelease: "noSHIFT"
-    topic:
-    onShiftPress: "SHIFT"
-    onShiftRelease: "noSHIFT"
-    value:
+    topic: "state_commands/"
+    onShiftPress:
+    onShiftRelease:
+    value: -2
     onShiftValue:
   D-Pad-Right:
-    onPress: "CHANGE_CONTROLLER_STATUS"
+    onPress: "PITCH_REFERENCE_OFFSET"
     onRelease:
     topic: "state_commands/"
     onShiftPress:
     onShiftRelease:
-    value:
+    value: 2
     onShiftValue:
   UPLOAD:
-    onPress: "VERTICAL_MODE_TOGGLE"
+    onPress: "ABLE_ANGLE_CTL"
     onRelease:
     topic: "state_commands/"
-    onShiftPress:
+    onShiftPress: "DISABLE_ANGLE_CTL"
     onShiftRelease:
     value:
     onShiftValue:
