@@ -37,7 +37,7 @@ buttons:
     topic: "state_commands/"
     onShiftPress:
     onShiftRelease:
-    value: 50
+    value: 0.50
     onShiftValue: 
   Option: 
     onPress: "CHANGE_CONTROLLER_STATUS"
@@ -72,52 +72,52 @@ buttons:
     value:
     onShiftValue: 
   LB:
-    onPress: "ROLL"
-    onRelease: "ROLL"
-    topic: "axes/"
-    onShiftPress: "ROLL"
-    onShiftRelease: "ROLL"
-    value: -30000
-    onShiftValue: -15000
-  RB:
-    onPress: "TORQUE"
-    onRelease: "TORQUE_OFF"
+    onPress: "DEPTH_REFERENCE_OFFSET"
+    onRelease:
     topic: "state_commands/"
+    onShiftPress:
+    onShiftRelease:
+    value: 0.02
+    onShiftValue:
+  RB:
+    onPress: "DEPTH_REFERENCE_OFFSET"
+    onRelease:
+    topic: "state_commands/"
+    onShiftPress:
+    onShiftRelease:
+    value: -0.02
+    onShiftValue:
+  D-Pad-Up:
+    onPress: "PITCH_REFERENCE_OFFSET"
+    onRelease: 
+    topic: "state_commands/"
+    onShiftPress:
+    onShiftRelease:
+    value: -2.0
+    onShiftValue:
+  D-Pad-Down:
+    onPress: "PITCH_REFERENCE_OFFSET"
+    onRelease:
+    topic: "state_commands/"
+    onShiftPress:
+    onShiftRelease:
+    value: 2.0
+    onShiftValue:
+  D-Pad-Left:
+    onPress:
+    onRelease:
+    topic:
     onShiftPress:
     onShiftRelease:
     value:
     onShiftValue:
-  D-Pad-Up:
-    onPress: "DEPTH_REFERENCE_OFFSET"
-    onRelease: 
-    topic: "state_commands/"
-    onShiftPress: "DEPTH_REFERENCE_OFFSET"
-    onShiftRelease:
-    value: -0.02
-    onShiftValue: -0.1
-  D-Pad-Down:
-    onPress: "DEPTH_REFERENCE_OFFSET"
-    onRelease:
-    topic: "state_commands/"
-    onShiftPress: "DEPTH_REFERENCE_OFFSET"
-    onShiftRelease:
-    value: 0.02
-    onShiftValue: 0.1
-  D-Pad-Left:
-    onPress: "PITCH_REFERENCE_OFFSET"
-    onRelease: "noSHIFT"
-    topic: "state_commands/"
-    onShiftPress:
-    onShiftRelease:
-    value: -2
-    onShiftValue:
   D-Pad-Right:
-    onPress: "PITCH_REFERENCE_OFFSET"
+    onPress:
     onRelease:
-    topic: "state_commands/"
+    topic:
     onShiftPress:
     onShiftRelease:
-    value: 2
+    value:
     onShiftValue:
   UPLOAD:
     onPress: "ABLE_ANGLE_CTL"
