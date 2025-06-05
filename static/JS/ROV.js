@@ -296,7 +296,8 @@ function initializeJanus() {
       debug: "all",
       callback: function() { 
         const servers = window.IS_DOCKER
-          ? [{ urls: 'stun:stun.l.google.com:19302' }]
+          // ? [{ urls: 'stun:stun.l.google.com:19302' }]
+          ? []
           : [];
         console.log("[DEBUG] ICE servers configuration:", servers);
         janus = new Janus({

@@ -109,13 +109,31 @@ else
     exit 1
 fi
 
-# 5. in janus.jcfg in JANUS_CONFIG_DIR add this two lines after nat: {
-# stun_server = "stun.l.google.com"
-# stun_port = 19302
-sudo sed -i '/^nat: {/a \
-stun_server = "stun.l.google.com"\n\
-stun_port = 19302\n\
-ignore_mdns = true' "${JANUS_CONFIG_DIR}/janus.jcfg"
+sudo tee "${JANUS_CONFIG_DIR}/janus.jcfg" > /dev/null <<EOF
+general: {
+    configs_folder = "${JANUS_CONFIG_DIR}"
+    plugins_folder = "${JANUS_PLUGIN_DIR}"
+    transports_folder = "${JANUS_INSTALL_PREFIX}/lib/janus/transports"
+    events_folder = "${JANUS_INSTALL_PREFIX}/lib/janus/events"
+    interface = "0.0.0.0"
+}
+
+media: {
+    ipv6 = false
+    ice_enforce_list = "127.0.0.1"
+    ice_ignore_list = "vmnet,vboxnet,docker"
+    ice_lite = true
+    ice_tcp = false
+    ignore_mdns = true
+    rtp_port_range = "20000-40000"
+}
+
+nat: {
+    ice_enforce_list = "127.0.0.1"
+    nice_debug = false
+    full_trickle = false
+}
+EOF
 
 
 echo "Janus installation and configuration steps completed."
