@@ -37,7 +37,7 @@
 
 
 
-        <div class="sensor-row">
+        <div class="sensor-row" style="margin-bottom: 5px;">
         
 
             <div class="container">
@@ -71,9 +71,44 @@
             </div>
     
            </div>
+
+           <div class="sensor-row">
+        
+
+            <div class="container">
+    
+                <div class="sensor" id="sensor_pitch">
+                    <div class="flex_s">
+                        <img style="filter: unset !important; scale: 1.3;" src="{{url_for('static', filename ='SVG/pitch_angle.svg')}}" >
+                    </div>
+                    <label class= "data-label" id="data_pitch">
+                        3.16 m
+                    </label>
+        
+        
+                </div>
+    
+            </div>
+    
+            <div class="container">
+    
+                <div class="sensor" id="sensor_pitch_reference">
+                    <div class="flex_s">
+                        <img style="filter: unset !important; scale: 1.6;" src="{{url_for('static', filename ='SVG/reference_pitch_angle.svg')}}" >
+                    </div>
+                    <label class= "data-label" id="data_reference_pitch">
+                        0.00 m
+                    </label>
+        
+        
+                </div>
+    
+            </div>
+    
+           </div>
         
            <div class="container no-background">
-            <div class="column">
+            <div class="camera_buttons_column">
 
                 <div class="row top">
 
@@ -155,18 +190,17 @@
                     </label>    
                 </div>
                 <div class="status-div">
-                    <label id="ARMED" class="status STATUSES">
-                    <span  >
-                        ARMED
-                    </span>
-                    </label>    
-                </div>
-                 <div class="status-div">
-                    <label id="WORK" class="status STATUSES">
-                    <span  >
-                        WORK
-                    </span>
-                    </label>    
+                    <div class="row">
+                        <label id="WORK" class="status STATUSES">
+                            <span>WORK</span>
+                        </label>
+                        <label id="ARMED" class="status STATUSES">
+                            <span  >ARMED</span>
+                        </label>
+                        <label id="TORQUE" class="status STATUSES">
+                            <span  >TORQUE</span>
+                        </label>
+                    </div>
                 </div>
                 <div class="status-div">
                     <div class="row">

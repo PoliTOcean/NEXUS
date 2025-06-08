@@ -21,6 +21,7 @@ while True:
     pidState = random.randint(0, 2) 
     armed = random.randint(0, 1) 
     work_mode = random.randint(0, 1) 
+    torque_mode = random.randint(0, 1)
  
     
     depth_state = random.choice(["ACTIVE", "READY", "OFF"])
@@ -71,6 +72,7 @@ while True:
     payload = {
         "rov_armed": ["OK", "OFF"][armed],
         "work_mode": ["OK", "OFF"][work_mode],  
+        "torque_mode": ["OK", "OFF"][torque_mode],
         "controller_state": {
             "DEPTH": depth_state,
             "ROLL": roll_state,

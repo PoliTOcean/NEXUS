@@ -16,8 +16,13 @@ addEventListener("resize", (event) => {
 let camerasInitialized = false; 
 
 let cameraStates = {}; // { [streamId]: { status: 1, enabled: 1 } }
+let cameraOrder = [];
+let currentCameraIndex = 0;
 
+// Update cameraOrder whenever cameras are initialized or updated
 function updateCameraStatesFromJanus(streamList) {
+    cameraOrder = streamList.map(stream => `${stream.id}`);
+    currentCameraIndex = cameraOrder.indexOf(mainCameraId);
     streamList.forEach(stream => {
         if (!cameraStates[stream.id]) {
             cameraStates[stream.id] = { status: 1, enabled: 1 };
@@ -27,6 +32,19 @@ function updateCameraStatesFromJanus(streamList) {
 
 
 function switching(id) {
+    // Handle "next" and "previous"
+    if (id === "next" || id === "previous") {
+        if (cameraOrder.length === 0) return;
+        if (id === "next") {
+            currentCameraIndex = (currentCameraIndex + 1) % cameraOrder.length;
+        } else if (id === "previous") {
+            currentCameraIndex = (currentCameraIndex - 1 + cameraOrder.length) % cameraOrder.length;
+        }
+        const nextCameraId = cameraOrder[currentCameraIndex];
+        switching(`camera_${nextCameraId}`);
+        return;
+    }
+
     let camera_number = `${id.match(/\d+/)[0]}`;
     const camera_p = document.querySelector(".camera_p");
 
@@ -49,7 +67,8 @@ function switching(id) {
             }
             );
             mainCameraId = initialMainCameraId;
-               return;
+            currentCameraIndex = cameraOrder.indexOf(mainCameraId);
+            return;
         }
     }
 
@@ -70,6 +89,7 @@ function switching(id) {
                 cameraStates[cid].status = (cid === camera_number) ? 0 : 1;
             });
             mainCameraId = camera_number;
+            currentCameraIndex = cameraOrder.indexOf(mainCameraId);
         }
     }
     // If the clicked camera is already the real main camera, do nothing or add logic as needed
@@ -134,13 +154,17 @@ function updateStatusesROV(obj) {
 
     Array.from(statuses).forEach((sts) => {
 
-
+        if (sts.id === "JOYSTICK" && obj["JOYSTICK"]) {
+            PIDhandler(sts, obj["JOYSTICK"]);
+        }
         if (sts.id === "ARMED" && obj["ARMED"]) {
           PIDhandler(sts, obj["ARMED"])
         };
-
         if (sts.id === "WORK" && obj["WORK"]) {
             PIDhandler(sts, obj["WORK"]);
+        }
+        if (sts.id === "TORQUE" && obj["TORQUE"]) {
+            PIDhandler(sts, obj["TORQUE"]);
         }
         if (sts.id === "DEPTH" && obj["CONTROLLER_STATE"]) {
             PIDhandler(sts, obj["CONTROLLER_STATE"]["DEPTH"]);
@@ -152,11 +176,6 @@ function updateStatusesROV(obj) {
             PIDhandler(sts, obj["CONTROLLER_STATE"]["PITCH"]);
         }
 
-        // Handle JOYSTICK state
-
-        if (sts.id === "JOYSTICK" && obj["JOYSTICK"]) {
-            PIDhandler(sts, obj["JOYSTICK"]);
-        }
     });
 }
 
@@ -177,22 +196,26 @@ function updateIMU(imuJSON) {
 function updateSensors(sensorsJSON) {
     const depth = document.querySelector("#data_depth");
     const referenceZ = document.querySelector("#data_reference_z");
+    const referencePitch = document.querySelector("#data_reference_pitch");
+    const pitch = document.querySelector("#data_pitch");
+
     // Need to update HTML:
     /*const forceZ = document.querySelector("#data_force_z");
     const forceRoll = document.querySelector("#data_force_roll");
     const forcePitch = document.querySelector("#data_force_pitch");
     const referenceRoll = document.querySelector("#data_reference_roll");
-    const referencePitch = document.querySelector("#data_reference_pitch");*/
+    */
 
     depth.innerHTML = `${parseFloat(sensorsJSON["depth"]).toFixed(2)} m`;
     referenceZ.innerHTML = `${parseFloat(sensorsJSON["reference_z"]).toFixed(2)} m`;
-
+    referencePitch.innerHTML = `${parseFloat(sensorsJSON["reference_pitch"]).toFixed(2)} °`;
+    pitch.innerHTML = `${parseFloat(sensorsJSON["pitch"]).toFixed(2)} °`;
     // Need to update HTML:
     /*forceZ.innerHTML = `${parseFloat(sensorsJSON["force_z"]).toFixed(2)} N`;
     forceRoll.innerHTML = `${parseFloat(sensorsJSON["force_roll"]).toFixed(2)} Nm`;
     forcePitch.innerHTML = `${parseFloat(sensorsJSON["force_pitch"]).toFixed(2)} Nm`;
     referenceRoll.innerHTML = `${parseFloat(sensorsJSON["reference_roll"]).toFixed(2)} °`;
-    referencePitch.innerHTML = `${parseFloat(sensorsJSON["reference_pitch"]).toFixed(2)} °`;*/
+    */
 }
 
 

@@ -63,11 +63,16 @@ video {
     flex-direction: column;
 }
 
+.camera_buttons_column {
+    display: flex;
+    flex-direction: column;
+    margin: -5px 0 -5px 0;
+}
 
 
 
 .container {
-    padding: 10px;
+    padding: 5px; 
     border-radius: 10px;
     position: relative;
     background-color: #1D2125;
@@ -158,7 +163,7 @@ video {
 .sensor-row {
     display: flex;
     flex-direction: row;
-    gap: 10px;
+    gap: 5px;
     margin-top: -10px;
 }
 
@@ -172,8 +177,8 @@ video {
     justify-content: space-between;
 
     img {
-        width: 50px;
-        height: 50px;
+        width: 40px;
+        height: 40px;
         filter: invert(100%) sepia(3%) saturate(7489%) hue-rotate(198deg) brightness(123%) contrast(102%);
     }
 
