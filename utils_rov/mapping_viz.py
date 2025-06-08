@@ -1,6 +1,7 @@
 import yaml
 import svgwrite
 import os
+import base64
 
 def load_config(yaml_file):
     with open(yaml_file, 'r') as file:
@@ -11,6 +12,9 @@ def create_controller_map(config, output_file):
     # Create larger SVG drawing
     dwg = svgwrite.Drawing(output_file, profile='full', size=('1200px', '900px'))
     
+    # Add white background
+    dwg.add(dwg.rect(insert=(0, 0), size=('100%', '100%'), fill='white'))
+    
     # Add styles with additional color for shift commands and free commands
     dwg.add(dwg.style("""
         .button { fill: white; stroke-width: 2; }
@@ -18,7 +22,7 @@ def create_controller_map(config, output_file):
         .command-label { font-family: Arial; font-size: 14px; }
         .topic-label { font-family: Arial; font-size: 10px; font-style: italic; }
         .shift-command { font-family: Arial; font-size: 14px; fill: #9b59b6; }
-        .arm-command { stroke: #3498db; fill: #3498db; }
+        .arm-command { stroke: #0066ff; fill: #0066ff; }
         .state-command { stroke: #e74c3c; fill: #e74c3c; }
         .axis-control { stroke: #2ecc71; fill: #2ecc71; }
         .free-command { stroke: #777; fill: #777; }
@@ -27,54 +31,69 @@ def create_controller_map(config, output_file):
         .subtitle { font-family: Arial; font-size: 16px; text-anchor: middle; fill: #666; }
     """))
     
-    # Draw controller body - with more realistic Xbox controller shape
-    controller = dwg.add(dwg.g(id='controller'))
-    controller.add(dwg.path(
-        d="M350,250 C300,250 250,270 220,310 C180,360 170,420 170,450 C170,500 180,550 220,600 C260,650 320,670 350,680 "
-          "C450,700 650,700 750,680 C780,670 840,650 880,600 C920,550 930,500 930,450 C930,420 920,360 880,310 C850,270 800,250 750,250 "
-          "C650,240 450,240 350,250 Z",
-        class_="controller-outline"
-    ))
-    
     # Add title
     dwg.add(dwg.text('Xbox Controller Button Mapping', insert=(600, 40), class_="title"))
     dwg.add(dwg.text('Generated from joystick_Move.yaml', insert=(600, 70), class_="subtitle"))
     
+    # Embed controller PNG as background
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    controller_png_path = os.path.join(script_dir, "controller.png")
+    
+    try:
+        # Check if PNG file exists
+        if os.path.exists(controller_png_path):
+            # Encode PNG as base64 and embed directly
+            with open(controller_png_path, 'rb') as img_file:
+                img_data = base64.b64encode(img_file.read()).decode('utf-8')
+                img_uri = f"data:image/png;base64,{img_data}"
+            
+            # Add the controller PNG as an image element with base64 data
+            controller_image = dwg.image(href=img_uri, insert=(50, 240), size=('1000px', '700px'))
+            dwg.add(controller_image)
+            print("Successfully embedded controller.png as base64")
+        else:
+            raise FileNotFoundError("controller.png not found")
+        
+    except FileNotFoundError:
+        print(f"Warning: controller.png not found at {controller_png_path}")
+    except Exception as e:
+        print(f"Error reading controller.png: {e}")
+
     # Define button positions - scaled up
     button_positions = {
         # Face buttons
-        'A': (800, 480),
+        'A': (780, 480),
         'B': (850, 430),
-        'X': (750, 430),
-        'Y': (800, 380),
+        'X': (710, 430),
+        'Y': (780, 360),
         
         # Shoulder buttons and triggers
         'LB': (300, 280),
         'RB': (800, 280),
-        'LT': (300, 240),
-        'RT': (800, 240),
+        'LT': (300, 270),
+        'RT': (800, 270),
         
         # Center buttons
-        'View': (450, 400),
-        'Option': (650, 400), 
-        'Start': (550, 350),
+        'View': (480, 400),
+        'Option': (620, 400), 
+        'Start': (550, 320),
         
         # Thumbsticks - right one moved lower
-        'LC': (350, 450),
-        'RC': (650, 550),  # Right stick lowered to 550
-        'LSB-X': (350, 450),
-        'LSB-Y': (350, 450),
-        'RSB-X': (650, 550),  # Updated to match RC
-        'RSB-Y': (650, 550),  # Updated to match RC
+        'LC': (320, 420),
+        'RC': (670, 550),
+        'LSB-X': (320, 420),
+        'LSB-Y': (320, 420),
+        'RSB-X': (670, 550),
+        'RSB-Y': (670, 550),
         
         # D-pad
-        'D-Pad-Up': (450, 530),
-        'D-Pad-Down': (450, 570),
-        'D-Pad-Left': (430, 550),
-        'D-Pad-Right': (470, 550),
+        'D-Pad-Up': (440, 510),
+        'D-Pad-Down': (440, 630),
+        'D-Pad-Left': (390, 570),
+        'D-Pad-Right': (490, 570),
         
         # Extra buttons - UPLOAD on line with Back/Opt
-        'UPLOAD': (550, 400),
+        'UPLOAD': (550, 440),
     }
     
     # Label offset configurations
@@ -83,39 +102,39 @@ def create_controller_map(config, output_file):
         'A': {'x': 50, 'y': 30},
         'B': {'x': 40, 'y': 20},
         'X': {'x': 120, 'y': -40},
-        'Y': {'x': 80, 'y': -60},
+        'Y': {'x': 80, 'y': -30},
         
         # Shoulder buttons
-        'LB': {'x': 70, 'y': -10},
-        'RB': {'x': -70, 'y': -10},
-        'LT': {'x': -120, 'y': -30},
-        'RT': {'x': 120, 'y': -30},
+        'LB': {'x': -70, 'y': -10},
+        'RB': {'x': 70, 'y': -10},
+        'LT': {'x': 0, 'y': -70},
+        'RT': {'x': 0, 'y': -70},
         
         # Center buttons
         'View': {'x': 0, 'y': -50},
-        'Option': {'x': 10, 'y': -50},
-        'Start': {'x': 0, 'y': -50},
+        'Option': {'x': 1, 'y': -50},
+        'Start': {'x': 0, 'y': -20},
         
         # Thumbsticks
-        'LC': {'x': -60, 'y': -10},
+        'LC': {'x': -80, 'y': -10},
         'RC': {'x': 10, 'y': 90},
         
         # D-pad
-        'D-Pad-Up': {'x': -70, 'y': -10},
-        'D-Pad-Down': {'x': -30, 'y': 60},
+        'D-Pad-Up': {'x': -70, 'y': -1},
+        'D-Pad-Down': {'x': -30, 'y': 20},
         'D-Pad-Left': {'x': -70, 'y': 30},
         'D-Pad-Right': {'x': 10, 'y': 60},
         
         # UPLOAD positioned below the button
-        'UPLOAD': {'x': 1, 'y': 60}
+        'UPLOAD': {'x': 1, 'y': 280}
     }
     
     # Axis label offset configuration
     axis_label_offsets = {
-        'LSB-X': {'x': -40, 'y': -70},
+        'LSB-X': {'x': -60, 'y': -70},
         'RSB-X': {'x': 70, 'y': 20},
-        'LT': {'x': -40, 'y': -20},
-        'RT': {'x': 40, 'y': -20}
+        'LT': {'x': 0, 'y': -40},
+        'RT': {'x': 0, 'y': -40}
     }
     
     # Draw buttons and labels
@@ -137,16 +156,16 @@ def create_controller_map(config, output_file):
             button_group = dwg.add(dwg.g(id=f'button-{button_name}'))
             
             # Draw button
-            if button_name in ['A', 'B', 'X', 'Y']:
-                button_group.add(dwg.circle(center=(x, y), r=20, class_="button" + (" " + button_class if button_class else "")))
-                button_group.add(dwg.text(button_name, insert=(x, y+5), class_="button-label"))
-            elif button_name in ['LB', 'RB', 'LT', 'RT']:
-                button_group.add(dwg.rect((x-25, y-15), (50, 30), rx=5, ry=5, class_="button" + (" " + button_class if button_class else "")))
-                button_group.add(dwg.text(button_name, insert=(x, y+5), class_="button-label"))
-            elif 'D-Pad' not in button_name and button_name not in ['LSB-X', 'LSB-Y', 'RSB-X', 'RSB-Y']:
-                button_group.add(dwg.rect((x-20, y-15), (40, 30), rx=5, ry=5, class_="button" + (" " + button_class if button_class else "")))
-                short_name = button_name.replace('Option', 'Opt').replace('View', 'Back')
-                button_group.add(dwg.text(short_name, insert=(x, y+5), class_="button-label"))
+            # if button_name in ['A', 'B', 'X', 'Y']:
+            #     button_group.add(dwg.circle(center=(x, y), r=20, class_="button" + (" " + button_class if button_class else "")))
+            #     button_group.add(dwg.text(button_name, insert=(x, y+5), class_="button-label"))
+            # if button_name in ['LB', 'RB', 'LT', 'RT']:
+            #     button_group.add(dwg.rect((x-25, y-15), (50, 30), rx=5, ry=5, class_="button" + (" " + button_class if button_class else "")))
+            #     button_group.add(dwg.text(button_name, insert=(x, y+5), class_="button-label"))
+            # elif 'D-Pad' not in button_name and button_name not in ['LSB-X', 'LSB-Y', 'RSB-X', 'RSB-Y']:
+            #     button_group.add(dwg.rect((x-20, y-15), (40, 30), rx=5, ry=5, class_="button" + (" " + button_class if button_class else "")))
+            #     short_name = button_name.replace('Option', 'Opt').replace('View', 'Back')
+            #     button_group.add(dwg.text(short_name, insert=(x, y+5), class_="button-label"))
             
             # Get command info
             command = button_config.get('onPress', '')
@@ -230,26 +249,26 @@ def create_controller_map(config, output_file):
     
     # Draw thumbsticks
     thumbsticks = dwg.add(dwg.g(id='thumbsticks'))
-    thumbsticks.add(dwg.circle(center=(350, 450), r=25, class_="button axis-control"))  # Left stick
-    thumbsticks.add(dwg.circle(center=(650, 550), r=25, class_="button axis-control"))  # Right stick - updated position
+    # thumbsticks.add(dwg.circle(center=(350, 450), r=25, class_="button axis-control"))  # Left stick
+    # thumbsticks.add(dwg.circle(center=(650, 550), r=25, class_="button axis-control"))  # Right stick - updated position
     
     # Draw D-pad as a cross instead of a circle
     dpad = dwg.add(dwg.g(id='dpad'))
     dpad_center_x, dpad_center_y = 450, 550
     
     # Horizontal rectangle for D-pad
-    dpad.add(dwg.rect(
-        (dpad_center_x - 25, dpad_center_y - 10), 
-        (50, 20), 
-        class_="button state-command"
-    ))
+    # dpad.add(dwg.rect(
+    #     (dpad_center_x - 25, dpad_center_y - 10), 
+    #     (50, 20), 
+    #     class_="button state-command"
+    # ))
     
     # Vertical rectangle for D-pad
-    dpad.add(dwg.rect(
-        (dpad_center_x - 10, dpad_center_y - 25), 
-        (20, 50), 
-        class_="button state-command"
-    ))
+    # dpad.add(dwg.rect(
+    #     (dpad_center_x - 10, dpad_center_y - 25), 
+    #     (20, 50), 
+    #     class_="button state-command"
+    # ))
     
     # Draw axis controls
     axes = config.get('axes', {})
