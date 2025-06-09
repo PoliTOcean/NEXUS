@@ -32,8 +32,8 @@ def create_controller_map(config, output_file):
     """))
     
     # Add title
-    dwg.add(dwg.text('Xbox Controller Button Mapping', insert=(600, 40), class_="title"))
-    dwg.add(dwg.text('Generated from joystick_Move.yaml', insert=(600, 70), class_="subtitle"))
+    dwg.add(dwg.text('Xbox Controller Button Mapping', insert=(550, 40), class_="title"))
+    dwg.add(dwg.text('Generated from joystick_Move.yaml', insert=(550, 70), class_="subtitle"))
     
     # Embed controller PNG as background
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -99,10 +99,10 @@ def create_controller_map(config, output_file):
     # Label offset configurations
     label_offsets = {
         # Face buttons
-        'A': {'x': 50, 'y': 30},
-        'B': {'x': 40, 'y': 20},
-        'X': {'x': 120, 'y': -40},
-        'Y': {'x': 80, 'y': -30},
+        'A': {'x': 170, 'y': 30},
+        'B': {'x': 90, 'y': 20},
+        'X': {'x': 200, 'y': -40},
+        'Y': {'x': 110, 'y': -30},
         
         # Shoulder buttons
         'LB': {'x': -70, 'y': -10},
@@ -112,17 +112,17 @@ def create_controller_map(config, output_file):
         
         # Center buttons
         'View': {'x': 0, 'y': -50},
-        'Option': {'x': 1, 'y': -50},
+        'Option': {'x': 1, 'y': -70},
         'Start': {'x': 0, 'y': -20},
         
         # Thumbsticks
-        'LC': {'x': -80, 'y': -10},
-        'RC': {'x': 10, 'y': 90},
+        'LC': {'x': -140, 'y': -10},
+        'RC': {'x': 70, 'y': 90},
         
         # D-pad
-        'D-Pad-Up': {'x': -70, 'y': -1},
-        'D-Pad-Down': {'x': -30, 'y': 20},
-        'D-Pad-Left': {'x': -70, 'y': 30},
+        'D-Pad-Up': {'x': -100, 'y': -1},
+        'D-Pad-Down': {'x': -60, 'y': 20},
+        'D-Pad-Left': {'x': -70, 'y': 1},
         'D-Pad-Right': {'x': 10, 'y': 60},
         
         # UPLOAD positioned below the button
@@ -131,8 +131,8 @@ def create_controller_map(config, output_file):
     
     # Axis label offset configuration
     axis_label_offsets = {
-        'LSB-X': {'x': -60, 'y': -70},
-        'RSB-X': {'x': 70, 'y': 20},
+        'LSB-X': {'x': -120, 'y': -70},
+        'RSB-X': {'x': 100, 'y': 40},
         'LT': {'x': 0, 'y': -40},
         'RT': {'x': 0, 'y': -40}
     }
@@ -326,7 +326,7 @@ def create_controller_map(config, output_file):
                                        class_="topic-label axis-control", text_anchor=anchor))
     
     # Add legend in center
-    legend = dwg.add(dwg.g(id='legend', transform='translate(550, 150)'))
+    legend = dwg.add(dwg.g(id='legend', transform='translate(550, 130)'))
     legend.add(dwg.rect((-110, -50), (220, 180), fill='white', stroke='#333', rx=5, ry=5))
     legend.add(dwg.text('Legend', insert=(0, -25), class_="subtitle", text_anchor="middle"))
     
