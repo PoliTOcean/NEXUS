@@ -1,7 +1,9 @@
 # Tests
 
-## Prerequisites
 
+## Test ROV page
+
+### Prerequisites
 Installed:
 - mosquitto (already running if executed in devcontainer)
 ```bash
@@ -14,7 +16,7 @@ sudo apt update -y && sudo apt install mosquitto mosquitto-clients -y
 ```bash
 chmod +x ./stream_video/JANUS_WEBRTC/install.sh && ./stream_video/JANUS_WEBRTC/install.sh
 ```
-## How to run tests
+### How to run tests
 Run:
 ```bash
 chmod +x ./run_tests.sh
@@ -26,3 +28,7 @@ Now, you can run the GUI with
 ```bash
 make test
 ```
+
+## Test FLOAT page
+
+Flash the `/float/float.ino` script to the ESP32.

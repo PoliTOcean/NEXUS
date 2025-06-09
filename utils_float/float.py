@@ -14,15 +14,28 @@ import threading
 def plot_pressure_time(data, arg, ylabel):
     depth = data[arg]
     time = data['times']
-    time = [datetime.strptime(t, '%Y-%m-%dT%H:%M:%SZ') for t in time]
+
+    is_datetime = False
+    try:
+        time = [datetime.strptime(t, '%Y-%m-%dT%H:%M:%SZ') for t in time]
+        is_datetime = True
+    except Exception:
+        time = [float(t) for t in time]
+
+    plt.figure()
     plt.plot(time, depth, linestyle='-', marker='o')
-    plt.xlabel('Time (UTC)')
     plt.ylabel(ylabel)
     plt.grid()
-    plt.gcf().autofmt_xdate()
-    myFmt = mdates.DateFormatter('%Y-%m-%d %H:%M:%S')
-    plt.gca().xaxis.set_major_formatter(myFmt)
-    plt.gca().xaxis.set_major_locator(mdates.AutoDateLocator())
+
+    if is_datetime:
+        plt.xlabel('Time (UTC)')
+        plt.gcf().autofmt_xdate()
+        myFmt = mdates.DateFormatter('%Y-%m-%d %H:%M:%S')
+        plt.gca().xaxis.set_major_formatter(myFmt)
+        plt.gca().xaxis.set_major_locator(mdates.AutoDateLocator())
+    else:
+        plt.xlabel('Time (ms)')
+
     buffer = BytesIO()
     plt.savefig(buffer, format='png')
     buffer.seek(0)
@@ -52,20 +65,16 @@ def start_communication(s: Serial):
 
 def msg_status(s: Serial, msg: str):
     try:
+        s.reset_output_buffer()
+        s.reset_input_buffer()
         s.write(f'{msg}\n'.encode('utf-8'))
         time.sleep(0.03)
         line = s.readline().strip().decode()
         if msg == 'SEND_PACKAGE':
+            print(line)
             float_data = json.loads(line)
             print(float_data)
-            times = datetime(
-                int(float_data['year']), 
-                int(float_data['month']), 
-                int(float_data['day']), 
-                int(float_data['hour']), 
-                int(float_data["minute"]), 
-                int(float_data["second"])
-            ).strftime('%Y-%m-%dT%H:%M:%SZ')
+            times = int(float_data['mseconds'])
             depth = float_data['depth']
             pressure = float_data['pressure']
             cn = float_data['company_number']
@@ -124,14 +133,7 @@ def handle_upload_data(s: Serial):
             
             float_data = json.loads(decoded)
             depth.append(float(float_data['depth']))
-            times.append(datetime(
-                int(float_data['year']), 
-                int(float_data['month']), 
-                int(float_data['day']), 
-                int(float_data['hour']), 
-                int(float_data["minute"]), 
-                int(float_data["second"])
-            ).strftime('%Y-%m-%dT%H:%M:%SZ'))
+            times.append(int(float_data['mseconds']))
             pressure.append(float_data['pressure'])
             if cn == '':
                 cn = float_data["company_number"]
