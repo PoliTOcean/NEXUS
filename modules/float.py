@@ -14,7 +14,12 @@ def float_msg():
         data['text'] = "SERIAL NOT OPENED"
         return jsonify(data), 400
     msg = request.args.get('msg')
-    send(s, msg)
+    try:
+        send(s, msg)
+    except:
+        data['status'] = False
+        data['text'] = "SERIAL INTERRUPTED"
+        return jsonify(data), 400
     data['status'] = True
     data['text'] = 'SUCCESS'
     return jsonify(data), 201
@@ -35,7 +40,12 @@ def float_status():
         data['text'] = 'SERIAL NOT OPENED'
         return jsonify(data), 200
     msg = request.args.get('msg')
-    sts = msg_status(s, msg)
+    try:
+        sts = msg_status(s, msg)
+    except:
+        data['status'] = False
+        data['text'] = "SERIAL INTERRUPTED"
+        return jsonify(data), 400
     data['status'] = sts['status']
     data['text'] = sts['text']
     return jsonify(data), 201

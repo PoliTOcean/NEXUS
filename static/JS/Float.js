@@ -152,19 +152,33 @@ async function handleStatus(status) {
                 console.error("SOMETHING WENT WRONG");
                 break;
             default:
-                // Battery
-                const batteryMatch = sts[i].match(/BATTERY:\s*(\d+)/);
-                if (batteryMatch) {
-                    const batteryElement = document.querySelector(".battery_level");
-                    const batteryValue = parseInt(batteryMatch[1]);
-                    if (batteryElement) {
-                        batteryElement.textContent = `
-                        ${Math.round((batteryValue - BATTERY_MIN_VALUE)/(BATTERY_MAX_VALUE - BATTERY_MIN_VALUE) * 100)}% 
-                        (${batteryValue} mV)`;
+                // Battery & RSSI
+                const line = sts[i];
+                if (line.includes("BATTERY")) {
+                    const batteryMatch = line.match(/BATTERY:\s*(\d+)/);
+                    if (batteryMatch) {
+                        const batteryElement = document.querySelector(".battery_level");
+                        const batteryValue = parseInt(batteryMatch[1]);
+                        if (batteryElement) {
+                            const percentage = Math.round(
+                                (batteryValue - BATTERY_MIN_VALUE) / 
+                                (BATTERY_MAX_VALUE - BATTERY_MIN_VALUE) * 100
+                            );
+                            batteryElement.textContent = `${percentage}% (${batteryValue} mV)`;
+                        }
+                    }
+                } 
+                else if (line.includes("RSSI")) {
+                    const rssiMatch = line.match(/RSSI:\s*(-?\d+)/);
+                    if (rssiMatch) {
+                        const rssiElement = document.querySelector(".rssi_level");
+                        const rssiValue = parseInzt(rssiMatch[1]);
+                        if (rssiElement) {
+                            rssiElement.textContent = `${rssiValue} dBm`;
+                        }
                     }
                 }
                 break;
-
         }
     }
 }
@@ -194,7 +208,7 @@ async function statusFLOAT(msg) {
 
 
 // This function sends a message
-let msgs = ["GO", "SWITCH_AUTO_MODE", "TRY_UPLOAD", "BALANCE", "CLEAR_SD"]
+let msgs = ["GO", "SWITCH_AUTO_MODE", "TRY_UPLOAD", "BALANCE", "CLEAR_SD", "HOME_MOTOR"]
 async function msg(e, msg_id) {
     // Handle mux
     if (!mux) {

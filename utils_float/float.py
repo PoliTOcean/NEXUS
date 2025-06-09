@@ -3,13 +3,15 @@ import json
 import time
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
-from datetime import datetime, timezone
+import matplotlib
+from datetime import datetime
 import os
 from io import BytesIO
 import base64
 import pytz
 import threading
 
+matplotlib.use("Agg")
 
 def plot_pressure_time(data, arg, ylabel):
     depth = data[arg]
@@ -44,8 +46,12 @@ def plot_pressure_time(data, arg, ylabel):
     return base64_img
     
 def start_communication(s: Serial):
+    # This property is buggy, it does not understand if the serial is interrupted
+    # But if you arrived here it means that serial does not reply anymore
     if (s.is_open):
-        return 1
+        s.close()  
+
+    # Try to open serial communication      
     with open(os.path.dirname(os.path.abspath(__file__)) + "/config/float.json") as jmaps:
         conf = json.load(jmaps)
         s.baudrate = conf['baudrate']

@@ -9,6 +9,7 @@
             <div>
                 <label><span>Battery level:</span></label>
                 <label><span class="battery_level"></span></label>
+                <label><span class="rssi_level"></span></label>
             </div>
             <button id="toggleButton" class="floatButton" onclick="switchDiv()">EXPERT</button> 
         </div>
@@ -37,6 +38,9 @@
                 </div>
                 <div class="cat status DROP disabled" onclick="msg(this, 4)">
                     <label><span>CLEAR SD</span></label>    
+                </div>
+                <div class="cat status DROP disabled" onclick="msg(this, 5)">
+                    <label><span>HOME MOTOR</span></label>    
                 </div>
                 <div class="cat status IMMERSION">
                     <label><span>IMMERSION</span></label>    
