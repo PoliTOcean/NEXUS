@@ -32,12 +32,12 @@ buttons:
     value:
     onShiftValue:
   View:
-    onPress: "DEPTH_REFERENCE_UPDATE"
+    onPress: "VERTICAL_MODE_TOGGLE"
     onRelease:
     topic: "state_commands/"
     onShiftPress:
     onShiftRelease:
-    value: 0.50
+    value:
     onShiftValue: 
   Option: 
     onPress: "CHANGE_CONTROLLER_STATUS"
@@ -64,12 +64,12 @@ buttons:
     value:
     onShiftValue:
   RC:
-    onPress:
+    onPress: "PITCH_REFERENCE_UPDATE"
     onRelease:
-    topic:
+    topic: "state_commands/"
     onShiftPress:
     onShiftRelease:
-    value:
+    value: 0
     onShiftValue: 
   LB:
     onPress: "DEPTH_REFERENCE_OFFSET"
@@ -93,7 +93,7 @@ buttons:
     topic: "state_commands/"
     onShiftPress:
     onShiftRelease:
-    value: -2.0
+    value: 2.0
     onShiftValue:
   D-Pad-Down:
     onPress: "PITCH_REFERENCE_OFFSET"
@@ -101,29 +101,29 @@ buttons:
     topic: "state_commands/"
     onShiftPress:
     onShiftRelease:
-    value: 2.0
+    value: -2.0
     onShiftValue:
   D-Pad-Left:
-    onPress:
+    onPress: "PREV_CAMERA"
     onRelease:
-    topic:
+    topic: "camera_control"
     onShiftPress:
     onShiftRelease:
     value:
     onShiftValue:
   D-Pad-Right:
-    onPress:
+    onPress: "NEXT_CAMERA"
     onRelease:
-    topic:
+    topic: "camera_control"
     onShiftPress:
     onShiftRelease:
     value:
     onShiftValue:
   UPLOAD:
-    onPress: "ABLE_ANGLE_CTL"
+    onPress: "TORQUE_WRIST_TOGGLE"
     onRelease:
     topic: "state_commands/"
-    onShiftPress: "DISABLE_ANGLE_CTL"
+    onShiftPress:
     onShiftRelease:
     value:
     onShiftValue:
