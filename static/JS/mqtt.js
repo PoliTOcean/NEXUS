@@ -60,11 +60,11 @@ async function initializeMQTT() {
                   "reference_pitch": debugData["reference_pitch"],
               });
               break;
-          case "camera_control":
-              if (text === "NEXT_CAMERA") {
+          case "camera_control/":
+              if (text.includes("NEXT_CAMERA")) {
                     console.log("[MQTT] NEXT_CAMERA message received");
                     switching("next");
-              } else if (text === "PREV_CAMERA") {
+              } else if (text.includes("PREV_CAMERA")) {
 
                     console.log("[MQTT] PREV_CAMERA message received");
                     switching("previous");

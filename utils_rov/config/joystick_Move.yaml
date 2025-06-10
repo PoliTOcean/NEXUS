@@ -106,7 +106,7 @@ buttons:
   D-Pad-Left:
     onPress: "PREV_CAMERA"
     onRelease:
-    topic: "camera_control"
+    topic: "camera_control/"
     onShiftPress:
     onShiftRelease:
     value:
@@ -114,7 +114,7 @@ buttons:
   D-Pad-Right:
     onPress: "NEXT_CAMERA"
     onRelease:
-    topic: "camera_control"
+    topic: "camera_control/"
     onShiftPress:
     onShiftRelease:
     value:
@@ -122,7 +122,7 @@ buttons:
   UPLOAD:
     onPress: "TORQUE_WRIST_TOGGLE"
     onRelease:
-    topic: "state_commands/"
+    topic: "arm_commands/"
     onShiftPress:
     onShiftRelease:
     value:
