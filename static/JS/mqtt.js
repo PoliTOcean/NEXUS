@@ -20,11 +20,11 @@ async function initializeMQTT() {
           }
       });
       // Subscribe to camera_control topic
-      mqtt_c.subscribe("camera_control", (err) => {
+      mqtt_c.subscribe("camera_control/", (err) => {
           if (err) {
               console.error("[MQTT] Subscription error for camera_control:", err);
           } else {
-              console.log("[MQTT] Subscribed to camera_control");
+              console.log("[MQTT] Subscribed to camera_control/");
           }
       });
   });
