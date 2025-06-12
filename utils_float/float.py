@@ -89,7 +89,7 @@ def msg_status(s: Serial, msg: str):
                 print(f"[FLOAT] Timeout waiting for response to {msg}")
                 if msg == 'SEND_PACKAGE':
                     return {
-                        'text': '{"company_name":"Timeout","times":0,"pressure":"0","depth":0}',
+                        'text': '{"company_number":"Timeout","times":0,"pressure":"0","depth":0}',
                         'status': 1
                     }
                 return {
@@ -103,18 +103,34 @@ def msg_status(s: Serial, msg: str):
         
         if msg == 'SEND_PACKAGE':
             try:
-                # Try to parse as JSON directly
+                # Try to parse as JSON directly to validate it
                 json_obj = json.loads(line)
-                # The Arduino sends a properly formatted JSON string, so we'll pass it through
-                print(f"[FLOAT] Valid JSON package: {json_obj}")
+                
+                # Ensure all required fields exist with proper defaults
+                if 'company_number' not in json_obj and 'company_number' not in json_obj:
+                    json_obj['company_number'] = 'Unknown'
+                
+                if 'mseconds' not in json_obj and 'times' not in json_obj:
+                    json_obj['mseconds'] = 0
+                    
+                if 'depth' not in json_obj:
+                    json_obj['depth'] = 0.0
+                    
+                if 'pressure' not in json_obj:
+                    json_obj['pressure'] = '0'
+                
+                # Convert back to a properly formatted JSON string
+                formatted_json = json.dumps(json_obj)
+                print(f"[FLOAT] Valid JSON package: {formatted_json}")
+                
                 return {
-                    'text': line,  # Return the raw JSON string
+                    'text': formatted_json,  # Return the properly formatted JSON string
                     'status': 1
                 }
             except (json.JSONDecodeError, KeyError, ValueError) as e:
                 print(f"[FLOAT] Error parsing package: {str(e)}")
                 return {
-                    'text': '{"company_name":"Error","times":0,"pressure":"0","depth":0}',
+                    'text': '{"company_number":"Error","mseconds":0,"pressure":"0","depth":0}',
                     'status': 1
                 }
 
@@ -238,7 +254,7 @@ def handle_upload_data(s: Serial):
         print(f"[FLOAT] Error sending confirmation: {str(e)}")
     
     if times and depth:
-        json_complete = {"times": times, "depth": depth, "pressure": pressure, "company_name": cn}
+        json_complete = {"times": times, "depth": depth, "pressure": pressure, "company_number": cn}
         try:
             data = [plot_pressure_time(json_complete, 'depth', 'Depth (m)'), 
                    plot_pressure_time(json_complete, 'pressure', 'Pressure (Pa)')]
@@ -253,7 +269,7 @@ def handle_upload_data(s: Serial):
         'status': 1,
         'data': {
             'img': data,
-            'raw': {"times": times, "depth": depth, "pressure": pressure, "company_name": cn} if times and depth else {}
+            'raw': {"times": times, "depth": depth, "pressure": pressure, "company_number": cn} if times and depth else {}
         }
     }
     print("[FLOAT] Thread finished")

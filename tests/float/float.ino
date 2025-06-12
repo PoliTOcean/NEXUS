@@ -42,9 +42,10 @@ void processInput(char str[MAXS]) {
     }
   }
   else if (strcmp(str, "SEND_PACKAGE") == 0) {
-      String jsonString = "{\"company_number\": \"EX_01\", \"depth\":" + String(30.5, 3) + 
-                          ", \"mseconds\":" + String(10)  +
-                          ", \"pressure\":\"" + String(100) + "\" }";
+      // Use consistent field naming: company_number instead of company_number
+      String jsonString = "{\"company_number\": \"FLOAT-SENSOR\", \"depth\":" + String(30.5, 3) + 
+                          ", \"mseconds\":" + String(millis())  +
+                          ", \"pressure\":\"" + String(random(11500, 12600)) + "\" }";
       Serial.println(jsonString);
       return;
   }

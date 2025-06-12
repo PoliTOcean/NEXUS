@@ -29,7 +29,7 @@ function publishReport(data) {
     if (img != "NO_DATA") {
         p.innerHTML = "";
         for (let i = 0; i < raw.times.length; i++) {
-            p.innerHTML += `${raw.company_name}&emsp;${raw.times[i]}&emsp;${raw.pressure[i]} Pa&emsp;${raw.depth[i]} m<br/>`;
+            p.innerHTML += `${raw.company_number}&emsp;${raw.times[i]}&emsp;${raw.pressure[i]} Pa&emsp;${raw.depth[i]} m<br/>`;
         }
         img_el[0].src = "data:image/jpeg;charset=utf-8;base64," + img[0];
         img_el[1].src = "data:image/jpeg;charset=utf-8;base64," + img[1];
@@ -77,13 +77,43 @@ function publishPackage(status) {
             }
         }
         
-        // Now display the data
-        p.innerHTML = `${raw.company_name || 'Unknown'}&emsp;${raw.mseconds || raw.times || 0}&emsp;${raw.pressure || 0} Pa&emsp;${raw.depth || 0} m<br/>`;
+        // Format all keys and values nicely for display
+        const companyName = raw.company_number || raw.company_number || 'Unknown';
+        const time = raw.mseconds || raw.times || 0;
+        const pressure = raw.pressure || 0;
+        const depth = raw.depth || 0;
+        
+        // Create a formatted JSON representation
+        const formattedJson = JSON.stringify(raw, null, 2)
+            .replace(/[{},]/g, '') // Remove braces and commas
+            .replace(/"/g, '') // Remove quotes
+            .replace(/\n\s\s/g, '\n'); // Clean up indentation
+        
+        // Display a clean table-like format
+        p.innerHTML = `<strong>Company:</strong> ${companyName}<br>` +
+                      `<strong>Time:</strong> ${time} ms<br>` +
+                      `<strong>Pressure:</strong> ${pressure} Pa<br>` +
+                      `<strong>Depth:</strong> ${depth} m<br>` +
+                      `<hr><pre>${formattedJson}</pre>`;
+        
         div.classList.add('report');
         p.classList.add('raw');
         div.append(h1);
         div.append(p);
-        tab.appendChild(div);
+        
+        // Insert at the beginning of the container for newest-first order
+        if (tab.firstChild) {
+            tab.insertBefore(div, tab.firstChild);
+        } else {
+            tab.appendChild(div);
+        }
+        
+        // Limit the number of displayed packages to prevent memory issues
+        const maxPackages = 10;
+        const packages = tab.getElementsByClassName('report');
+        if (packages.length > maxPackages) {
+            tab.removeChild(packages[packages.length - 1]);
+        }
     } catch (e) {
         console.error("Error in publishPackage:", e);
     }
@@ -278,7 +308,7 @@ async function handleStatus(status) {
 async function statusFLOAT(msg) {
     // If we are in a listening operation
     if (listening) {
-        listeningFLOAT()    
+        listeningFLOAT();
         return;
     }
 
@@ -288,13 +318,24 @@ async function statusFLOAT(msg) {
         let data = await getRequest(`/FLOAT/status?msg=${msg}`);
         console.log(`Response for ${msg}:`, data);
         
+        // Check if we have valid data before processing
+        if (!data) {
+            console.error("Received empty data from server");
+            return;
+        }
+        
         switch (msg) {
             case "STATUS":
                 handleStatus(data);
                 break;
             case "SEND_PACKAGE":
                 if (mux == 1) { 
-                    publishPackage(data);
+                    if (data.text && data.text !== "INVALID_DATA" && 
+                        data.text !== "TIMEOUT_ON_SEND_PACKAGE") {
+                        publishPackage(data);
+                    } else {
+                        console.warn("Received invalid package data:", data.text);
+                    }
                 }
                 else console.log("NOT READY FOR PACKAGE - MUX is locked");
                 break;
