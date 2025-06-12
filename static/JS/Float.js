@@ -237,29 +237,44 @@ async function fetchProfileData() {
         // Re-enable button based on next status poll if appropriate
         return;
     }
-    
+
+    // Poll /FLOAT/listen until data is ready
     if (profileStatusEl) profileStatusEl.textContent = "Fetching data from backend...";
     logToFloatSerial("Calling /FLOAT/listen endpoint...");
 
-    try {
-        const response = await fetch(`/FLOAT/listen`);
-        const data = await response.json();
-        logToFloatSerial(`/FLOAT/listen response: Status ${data.status}, Text: ${data.text}`);
+    let pollAttempts = 0;
+    let maxPolls = 40; // ~40*250ms = 10s max wait
+    let pollDelay = 250;
 
-        if (response.ok && data.status && data.text === "FINISHED") {
-            if (profileStatusEl) profileStatusEl.textContent = "Data received and processed.";
-            displayProfileData(data.data);
-            updateFloatStatusIndicator('float-data-avail-status', 'FETCHED', null);
-        } else if (data.text === "LOADING") {
-            if (profileStatusEl) profileStatusEl.textContent = "Data transfer in progress... try again shortly if it persists.";
-        } else {
-            if (profileStatusEl) profileStatusEl.textContent = `Error fetching profile data: ${data.text}`;
-            logToFloatSerial(`Error fetching profile data from /FLOAT/listen: ${data.text}`);
+    while (pollAttempts < maxPolls) {
+        try {
+            const response = await fetch(`/FLOAT/listen`);
+            const data = await response.json();
+            logToFloatSerial(`/FLOAT/listen response: Status ${data.status}, Text: ${data.text}`);
+
+            if (response.ok && data.status && data.text === "FINISHED") {
+                if (profileStatusEl) profileStatusEl.textContent = "Data received and processed.";
+                displayProfileData(data.data);
+                updateFloatStatusIndicator('float-data-avail-status', 'FETCHED', null);
+                return;
+            } else if (data.text === "LOADING") {
+                if (profileStatusEl) profileStatusEl.textContent = "Data transfer in progress... waiting for data...";
+                await new Promise(resolve => setTimeout(resolve, pollDelay));
+                pollAttempts++;
+                continue;
+            } else {
+                if (profileStatusEl) profileStatusEl.textContent = `Error fetching profile data: ${data.text}`;
+                logToFloatSerial(`Error fetching profile data from /FLOAT/listen: ${data.text}`);
+                return;
+            }
+        } catch (error) {
+            if (profileStatusEl) profileStatusEl.textContent = "Network error fetching profile data.";
+            logToFloatSerial(`Network error on /FLOAT/listen: ${error}`);
+            return;
         }
-    } catch (error) {
-        if (profileStatusEl) profileStatusEl.textContent = "Network error fetching profile data.";
-        logToFloatSerial(`Network error on /FLOAT/listen: ${error}`);
     }
+    if (profileStatusEl) profileStatusEl.textContent = "Timeout waiting for data from backend.";
+    logToFloatSerial("Timeout waiting for /FLOAT/listen to return FINISHED.");
 }
 
 function displayProfileData(profileData) {
