@@ -391,4 +391,34 @@ async function attemptFloatSerialConnection() {
             return;
         }
         const data = await response.json();
-        if
+        if (data.status) {
+            logToFloatSerial(`Float connection successful: ${data.text}`);
+            parseAndDisplayStatus(data.text); // Update UI with initial status
+        } else {
+            logToFloatSerial(`Failed to connect to float: ${data.text}`);
+            parseAndDisplayStatus(data.text); // Display error like "NO USB"
+        }
+    } catch (error) {
+        logToFloatSerial(`Network error during initial float connection: ${error}`);
+        parseAndDisplayStatus("NO USB"); // Simulate a disconnect
+    }
+}
+
+async function initializeFloatPage() {
+    logToFloatSerial("Initializing Float Page Logic...");
+    
+    // Attempt to load float config if available via info object
+    if (typeof info !== "undefined" && info && info.float_config) {
+        FLOAT_TARGET_DEPTH = info.float_config.target_depth || 2.5;
+        FLOAT_MAX_ERROR = info.float_config.max_error || 0.45;
+        logToFloatSerial(`Loaded float config: Target Depth=${FLOAT_TARGET_DEPTH}, Max Error=${FLOAT_MAX_ERROR}`);
+    } else {
+        logToFloatSerial(`Using default float config or info.float_config not found: Target Depth=${FLOAT_TARGET_DEPTH}, Max Error=${FLOAT_MAX_ERROR}`);
+    }
+    
+    // Attempt initial serial connection
+    await attemptFloatSerialConnection();
+    
+    // Start polling for status updates
+    setInterval(pollFloatStatus, 3000); // Poll status every 3 seconds
+}
