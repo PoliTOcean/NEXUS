@@ -1,5 +1,6 @@
 let page_now;
-let mainCameraId = 'camera_0'
+let mainCameraId = "1";
+let initialMainCameraId = "1";
 
 addEventListener("resize", (event) => {
     let h = window.innerHeight;
@@ -14,72 +15,97 @@ addEventListener("resize", (event) => {
 
 let camerasInitialized = false; 
 
+let cameraStates = {}; // { [streamId]: { status: 1, enabled: 1 } }
+let cameraOrder = [];
+let currentCameraIndex = 0;
 
-function initializeCameras() {
-
-    if (camerasInitialized) {
-        console.log("[ROV] Cameras are already initialized. Skipping initialization.");
-        return;
-    }
-
-    if (!info || !info.cameras) {
-        console.error("[ROV] Camera information is not available in `info`.");
-        return;
-    }
-
-    console.log("[ROV] Initializing cameras with sources from info.json...");
-
-    for (let i = 0; i < info.cameras.n_cameras; i++) {
-        const cameraElement = document.querySelector(`#c${i} img`);
-        if (cameraElement) {
-            cameraElement.src = info.cameras[i].src; // Use the `src` from the `info` object
-            console.log(`[ROV] Updated camera #${i} src to: ${info.cameras[i].src}`);
-        } else {
-            console.warn(`[ROV] Camera element #c${i} not found.`);
+// Update cameraOrder whenever cameras are initialized or updated
+function updateCameraStatesFromJanus(streamList) {
+    cameraOrder = streamList.map(stream => `${stream.id}`);
+    currentCameraIndex = cameraOrder.indexOf(mainCameraId);
+    streamList.forEach(stream => {
+        if (!cameraStates[stream.id]) {
+            cameraStates[stream.id] = { status: 1, enabled: 1 };
         }
-    }
-
-    camerasInitialized = true;
-
+    });
 }
 
 
 function switching(id) {
-    let n_camera = `${id.match(/\d+/)[0]}`;
-    if (info["cameras"][n_camera]["status"] == 0) return;
-    let z = -1;
-    for (let i = 0; i < info["cameras"]["n_cameras"] && z == -1; i++) if (info["cameras"][`${i}`]["status"] == 0) z = i;
-    let camera_p = document.querySelector(".camera_p");
-    let camera_s = document.querySelectorAll(`.camera_s`);
-    let target, deploy;
-    camera_s.forEach((el) => {
-        if (el.firstElementChild.id == `c${n_camera}`) {
-            target = el.firstElementChild;
-            deploy = el;
+    // Handle "next" and "previous"
+    if (id === "next" || id === "previous") {
+        if (cameraOrder.length === 0) return;
+        if (id === "next") {
+            currentCameraIndex = (currentCameraIndex + 1) % cameraOrder.length;
+        } else if (id === "previous") {
+            currentCameraIndex = (currentCameraIndex - 1 + cameraOrder.length) % cameraOrder.length;
         }
-    });
-    camera_p.append(target);
-    deploy.append(camera_p.firstElementChild);
-    info["cameras"][n_camera]["status"] = 0;
-    info["cameras"][z]["status"] = 1;
-    mainCameraId = target.querySelector('video').id;
+        const nextCameraId = cameraOrder[currentCameraIndex];
+        switching(`camera_${nextCameraId}`);
+        return;
+    }
+
+    let camera_number = `${id.match(/\d+/)[0]}`;
+    const camera_p = document.querySelector(".camera_p");
+
+    // if main camera clicked switch the main camera with initial main camera
+    if (mainCameraId === camera_number) {
+        let camera_s = document.querySelectorAll(`.camera_s`);
+        let target, deploy;
+        camera_s.forEach((el) => {
+            if (el.firstElementChild.id == `c${initialMainCameraId}`) {
+                target = el.firstElementChild;
+                deploy = el;
+            }
+        });
+        if (target && deploy) {
+            camera_p.append(target);
+            deploy.append(camera_p.firstElementChild);
+            // Update cameraStates
+            Object.keys(cameraStates).forEach(cid => {
+                cameraStates[cid].status = (cid === initialMainCameraId) ? 0 : 1;
+            }
+            );
+            mainCameraId = initialMainCameraId;
+            currentCameraIndex = cameraOrder.indexOf(mainCameraId);
+            return;
+        }
+    }
+
+    if (mainCameraId !== camera_number) {
+        let camera_s = document.querySelectorAll(`.camera_s`);
+        let target, deploy;
+        camera_s.forEach((el) => {
+            if (el.firstElementChild.id == `c${camera_number}`) {
+                target = el.firstElementChild;
+                deploy = el;
+            }
+        });
+        if (target && deploy) {
+            camera_p.append(target);
+            deploy.append(camera_p.firstElementChild);
+            // Update cameraStates
+            Object.keys(cameraStates).forEach(cid => {
+                cameraStates[cid].status = (cid === camera_number) ? 0 : 1;
+            });
+            mainCameraId = camera_number;
+            currentCameraIndex = cameraOrder.indexOf(mainCameraId);
+        }
+    }
+    // If the clicked camera is already the real main camera, do nothing or add logic as needed
 }
 
+
 async function onoff(id) {
-    let wh = document.querySelectorAll(`#c${id.match(/\d+/)[0]}`)[0];
-    console.log(wh);
-    console.log(info)
-    info["cameras"][`${id.match(/\d+/)[0]}`]["enabled"] = !info["cameras"][`${id.match(/\d+/)[0]}`]["enabled"];
-    if (info["cameras"][`${id.match(/\d+/)[0]}`]["enabled"] == 1) wh.className = wh.className.replace(" hide", "");
+    let camera_number = `${id.match(/\d+/)[0]}`;
+    let wh = document.querySelectorAll(`#c${camera_number}`)[0];
+    if (!cameraStates[camera_number]) return;
+    cameraStates[camera_number].enabled = !cameraStates[camera_number].enabled;
+    if (cameraStates[camera_number].enabled) wh.className = wh.className.replace(" hide", "");
     else wh.className += " hide";
 }
 
-let rotationAngle = 0;
-function rotateVideo(){
-    const video = document.getElementById(mainCameraId);
-    rotationAngle += 90;
-    video.style.transform =  `rotate(${rotationAngle}deg)`;
-}
+
 
 // [LOADER INSTRUMENTS]
 let attitude;
@@ -128,55 +154,38 @@ function updateStatusesROV(obj) {
 
     Array.from(statuses).forEach((sts) => {
 
-        // Handle ARMED state
-
-        if (sts.id === "ARMED") {
-
-            let armedState = obj["ARMED"];
-
-            // ? These console logs can be removed
-
-            switch (armedState) {
-                case "OK":
-                    console.log("ROV is armed and operational.");
-                    // additional logic
-                    break;
-                case "OFF":
-                    console.log("ROV is disarmed.");
-                    // additional logic
-                    break;
-            }
-
-            PIDhandler(sts, armedState);
+        if (sts.id === "JOYSTICK" && obj["JOYSTICK"]) {
+            PIDhandler(sts, obj["JOYSTICK"]);
         }
-
-        // Handle DEPTH, ROLL, PITCH states saperately
-
-        if (sts.id === "DEPTH") {
+        if (sts.id === "ARMED" && obj["ARMED"]) {
+          PIDhandler(sts, obj["ARMED"])
+        };
+        if (sts.id === "WORK" && obj["WORK"]) {
+            PIDhandler(sts, obj["WORK"]);
+        }
+        if (sts.id === "TORQUE" && obj["TORQUE"]) {
+            PIDhandler(sts, obj["TORQUE"]);
+        }
+        if (sts.id === "DEPTH" && obj["CONTROLLER_STATE"]) {
             PIDhandler(sts, obj["CONTROLLER_STATE"]["DEPTH"]);
         }
-        if (sts.id === "ROLL") {
+        if (sts.id === "ROLL" && obj["CONTROLLER_STATE"]) {
             PIDhandler(sts, obj["CONTROLLER_STATE"]["ROLL"]);
         }
-        if (sts.id === "PITCH") {
+        if (sts.id === "PITCH" && obj["CONTROLLER_STATE"]) {
             PIDhandler(sts, obj["CONTROLLER_STATE"]["PITCH"]);
         }
 
-        // Handle JOYSTICK state
-
-        if (sts.id === "JOYSTICK") {
-            PIDhandler(sts, obj["JOYSTICK"]);
-        }
     });
 }
 
 function updateIMU(imuJSON) {
-    console.log("[DEBUG] updateIMU called with:", imuJSON);
+    // console.log("[DEBUG] updateIMU called with:", imuJSON);
 
     if (imuJSON && typeof imuJSON === "object") {
-        console.log(`[DEBUG] PITCH: ${imuJSON["PITCH"]}, ROLL: ${imuJSON["ROLL"]}, YAW: ${imuJSON["YAW"]}`);
+        // console.log(`[DEBUG] PITCH: ${imuJSON["PITCH"]}, ROLL: ${imuJSON["ROLL"]}, YAW: ${imuJSON["YAW"]}`);
     } else {
-        console.warn("[DEBUG] Invalid IMU data received:", imuJSON);
+        // console.warn("[DEBUG] Invalid IMU data received:", imuJSON);
     }
 
     attitude.updatePitch(imuJSON["PITCH"]);
@@ -187,25 +196,275 @@ function updateIMU(imuJSON) {
 function updateSensors(sensorsJSON) {
     const depth = document.querySelector("#data_depth");
     const referenceZ = document.querySelector("#data_reference_z");
+    const referencePitch = document.querySelector("#data_reference_pitch");
+    const pitch = document.querySelector("#data_pitch");
+
     // Need to update HTML:
     /*const forceZ = document.querySelector("#data_force_z");
     const forceRoll = document.querySelector("#data_force_roll");
     const forcePitch = document.querySelector("#data_force_pitch");
     const referenceRoll = document.querySelector("#data_reference_roll");
-    const referencePitch = document.querySelector("#data_reference_pitch");*/
+    */
 
     depth.innerHTML = `${parseFloat(sensorsJSON["depth"]).toFixed(2)} m`;
     referenceZ.innerHTML = `${parseFloat(sensorsJSON["reference_z"]).toFixed(2)} m`;
-
+    referencePitch.innerHTML = `${parseFloat(sensorsJSON["reference_pitch"]).toFixed(2)} °`;
+    pitch.innerHTML = `${parseFloat(sensorsJSON["pitch"]).toFixed(2)} °`;
     // Need to update HTML:
     /*forceZ.innerHTML = `${parseFloat(sensorsJSON["force_z"]).toFixed(2)} N`;
     forceRoll.innerHTML = `${parseFloat(sensorsJSON["force_roll"]).toFixed(2)} Nm`;
     forcePitch.innerHTML = `${parseFloat(sensorsJSON["force_pitch"]).toFixed(2)} Nm`;
     referenceRoll.innerHTML = `${parseFloat(sensorsJSON["reference_roll"]).toFixed(2)} °`;
-    referencePitch.innerHTML = `${parseFloat(sensorsJSON["reference_pitch"]).toFixed(2)} °`;*/
+    */
 }
 
+
+
+// --- START CAMERA HANDLER
+
+let first = true;
+let activeStreams = {};
+
+function createStreamElement(streamInfo) {
+    const streamId = streamInfo.id;
+    if (!cameraStates[streamId]) {
+        cameraStates[streamId] = { status: 1, enabled: 1 };
+    }
+    const container = document.createElement('div');
+    container.className = first ? 'camera_p' : `camera_s`;
+
+    let metadata = {'fisheye': false};
+    try {
+        metadata = JSON.parse(streamInfo.metadata);
+    } catch (e) {
+        console.error("Failed to parse metadata:", e);
+    }
+
+    container.innerHTML = `
+        <div class="screen" id="c${streamInfo.id}" onclick="switching('camera_${streamInfo.id}')">
+            <div class="camera_title">Stream ${streamId}: ${streamInfo.description || 'No description'}</div>
+            <video id="video_${streamId}" playsinline autoplay muted ></video>
+            ${metadata.fisheye ? `<canvas class="distorted" id="canvas_${streamId}"></canvas>` : "<span><span/>"}
+        </div>
+    `;
+
+    console.log(metadata);
+    // This ensures the innerHTML is actually applied and DOM elements exist before distortionHandler runs. Javascript...
+    setTimeout(() => metadata.fisheye && distortionHandler(`video_${streamId}`, `canvas_${streamId}`, `canvas_raw_${streamId}`, metadata.fisheyeSettings), 0);
+
+    if (first) document.querySelector('.camera_column').insertBefore(container, document.querySelector('.camera_column').firstChild);
+    else document.querySelector('.camera_row').appendChild(container);
+    
+    if (first) first = false;
+    return container;
+}
+
+function watchStream(streamId) {
+    janus.attach({
+    plugin: "janus.plugin.streaming",
+    success: function(pluginHandle) {
+      activeStreams[streamId] = {
+        handle: pluginHandle,
+        watching: true
+      };
+
+      pluginHandle.send({
+        message: { request: "watch", id: streamId }
+      });
+    },
+    error: function(error) {
+      console.error(`Error start stream ID ${streamId}:`, error);
+    },
+    onmessage: function(msg, jsep) {
+      if (jsep) {
+        activeStreams[streamId].handle.createAnswer({
+          jsep: jsep,
+          media: {
+            audioSend: false,
+            videoSend: false,
+            audioRecv: msg.type === 'rtp' ? true : false,
+            videoRecv: true
+          },
+          success: function(jsep) {
+            const body = { request: "start" };
+            activeStreams[streamId].handle.send({ message: body, jsep: jsep });
+          },
+          error: function(error) {
+            console.error("Errore creazione answer:", error);
+          }
+        });
+      }
+    },
+    onremotetrack: function(track, mid, flow) {
+      console.log(`Stream for ID ${streamId}`);
+      handleRemoteStream(streamId, track);
+    },
+    oncleanup: function() {
+      console.log(`Stream ID ${streamId} cleaned`);
+    }
+  });
+}
+
+function handleRemoteStream(streamId, stream) {
+    const videoElement = document.getElementById(`video_${streamId}`);
+    if (videoElement) {
+        Janus.attachMediaStream(videoElement, new MediaStream([stream]));
+    }
+}
+
+
+
+function initializeJanus() {
+    Janus.init({
+      debug: "all",
+      callback: function() { 
+        const servers = window.IS_DOCKER
+          // ? [{ urls: 'stun:stun.l.google.com:19302' }]
+          ? []
+          : [];
+        console.log("[DEBUG] ICE servers configuration:", servers);
+        janus = new Janus({
+          server: info.janus.ip,
+          iceServers: servers,
+          success: function() {
+            janus.attach({
+              plugin: "janus.plugin.streaming",
+              success: function(pluginHandle) {
+                streaming = pluginHandle;
+ 
+                // Ask stream list
+                streaming.send({ 
+                  message: { request: "list" },
+                  success: function(result) {
+                    if(result && result.list) {
+                      console.log(result)
+
+                      updateCameraStatesFromJanus(result.list);
+
+                      // For each stream, create the camera:
+                      result.list.forEach(stream => {
+                        createStreamElement(stream);
+                        watchStream(stream.id);
+                      });
+                    }
+                  },
+                  error: function(error) {
+                    console.log(error);
+                    // How we handle? a warn in the gui? 
+                  }
+                });
+              },
+              error: function(error) {
+                console.log(error);
+                // How we handle? a warn in the gui? 
+              },
+              onmessage: function(msg, jsep) {
+                if(msg.list) {
+                  console.log("Stream list:", msg.list);
+                } else if (jsep) {
+
+                  console.log(msg)
+                  streaming.createAnswer({
+                    jsep: jsep,
+                    media: { 
+                      audioSend: false, 
+                      videoSend: false, 
+                      audioRecv: msg.type === 'rtp' ? true : false, 
+                      videoRecv: true 
+                    },
+                    success: function(jsep) {
+                      const body = { request: "start" };
+                      streaming.send({ message: body, jsep: jsep });
+                    },
+                    error: function(error) {
+                      console.error("Error answer:", error);
+                    }
+                  });
+                }
+              },
+              onremotetrack: function(stream) {
+                const streamId = Object.keys(activeStreams).find(id => activeStreams[id].watching);
+                if(streamId) {
+                  console.log("Received", stream);
+                  handleRemoteStream(streamId, stream);
+                }
+              },
+              oncleanup: function() {
+                console.log("Cleanup stream");
+              },
+            });
+          },
+          error: function(error) {
+            console.log("Error in Janus connection", error);
+          },
+          destroyed: function() {
+            console.log("Janus destroyed");
+          }
+        });
+      }
+    });
+}
+
+
+// ! FISHEYE
+
+function distortionHandler(cameraId, canvasId, canvasRawId, distorsionSettings) {
+    // Handle cameras   
+    const videoStream = document.getElementById(cameraId);
+
+    // Create canvas
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.id = canvasRawId;
+    canvas.style.width = "100%";
+    canvas.style.height = "100%";
+
+    videoStream.insertAdjacentElement('afterend', canvas);
+    
+
+    // Put video in the jail hidden div
+    const hiddenContainer = document.querySelector(".hidden_media");
+    hiddenContainer.appendChild(canvas);
+    videoStream.style.visibility = 'hidden';
+    videoStream.style.position = 'absolute';
+    videoStream.style.top = '-10px';
+    videoStream.style.left = '-10px';
+
+    // Initialize the fisheye distortion effect (assuming FisheyeGl is available)
+    console.log(distorsionSettings);
+    var distorter = FisheyeGl({
+        image: canvas.toDataURL("image/png"),  // Use the canvas as the source image
+        selector: `#${canvasId}`, // a canvas element to work with
+        lens: distorsionSettings.lens,
+        fov: distorsionSettings.fov,
+    });
+
+    
+
+
+    function renderLoop() {
+      if (videoStream.readyState >= 2) { // HAVE_CURRENT_DATA
+
+          ctx.drawImage(videoStream, 0, 0, canvas.width, canvas.height);
+          distorter.setImage(canvas.toDataURL("image/png"));
+      }
+      setTimeout(() => {
+          requestAnimationFrame(renderLoop);
+      }, 1000 / 60);
+    }
+
+    renderLoop();
+}
+
+
+// --- END CAMERA HANDLER
+
 function ROVLoader() {
+
+    
+
+    initializeJanus();
+
     const attitudeElement = document.querySelector("#attitude");
     const compassElement = document.querySelector("#compass");
 

@@ -1,11 +1,20 @@
 from app import app
-from flask import render_template, send_file, jsonify
+from flask import render_template, send_file, jsonify, Response, send_from_directory
+import subprocess
 import os,json
 
+@app.route('/utils_rov/<path:filename>')
+def utils_rov(filename):
+    return send_from_directory('utils_rov', filename)
+
+@app.route("/test")
+def test():
+    return render_template('TEST.html')
 
 @app.route("/")
 def main():
-    return render_template('GUI.html')
+    is_docker = os.environ.get('IS_DOCKER', False)  # Used for iceServers in ROV.js
+    return render_template('GUI.html', IS_DOCKER=is_docker)
 
 @app.route("/ROV")
 def gui():

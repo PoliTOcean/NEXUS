@@ -8,7 +8,7 @@ client = mqtt.Client()
 client.connect("127.0.0.1", 1883, 60)
 
 roll_range = 5
-pitch_range = 2
+pitch_range = 10
 yaw_range = 30
 frequency = 0.1
 
@@ -19,7 +19,10 @@ while True:
     yaw = yaw_range * math.sin(2 * math.pi * frequency * current_time)
     
     pidState = random.randint(0, 2) 
-    armed = random.randint(0, 1)  
+    armed = random.randint(0, 1) 
+    work_mode = random.randint(0, 1) 
+    torque_mode = random.randint(0, 1)
+ 
     
     depth_state = random.choice(["ACTIVE", "READY", "OFF"])
     roll_state = random.choice(["ACTIVE", "READY", "OFF"])
@@ -67,7 +70,9 @@ while True:
     }
     
     payload = {
-        "rov_armed": ["OK", "OFF"][armed],  
+        "rov_armed": ["OK", "OFF"][armed],
+        "work_mode": ["OK", "OFF"][work_mode],  
+        "torque_mode": ["OK", "OFF"][torque_mode],
         "controller_state": {
             "DEPTH": depth_state,
             "ROLL": roll_state,
@@ -93,4 +98,4 @@ while True:
     
     client.publish("status/", json.dumps(payload))
     
-    time.sleep(1/60)
+    time.sleep(0.1)  # Sleep for 100ms to control the frequency of the messages

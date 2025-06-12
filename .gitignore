@@ -7,3 +7,6 @@
 Oceanix/
 log/
 .vscode
+core
+/tests/janus-gateway
+utils_rov/xbox_controller_map.svg

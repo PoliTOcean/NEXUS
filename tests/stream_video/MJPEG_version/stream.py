@@ -8,7 +8,7 @@ import threading
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
-video_path = os.path.join(os.path.dirname(__file__), "test_video.mp4")
+video_path = os.path.join(os.path.dirname(__file__), "../test_video.mp4")
 
 def generate_frames():
     cap = cv2.VideoCapture(video_path)

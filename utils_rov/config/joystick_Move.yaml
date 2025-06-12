@@ -32,16 +32,16 @@ buttons:
     value:
     onShiftValue:
   View:
-    onPress: "DEPTH_REFERENCE_UPDATE"
+    onPress: "VERTICAL_MODE_TOGGLE"
     onRelease:
     topic: "state_commands/"
     onShiftPress:
     onShiftRelease:
-    value: 50
+    value:
     onShiftValue: 
   Option: 
-    onPress: "TORQUE"
-    onRelease: "TORQUE_OFF"
+    onPress: "CHANGE_CONTROLLER_STATUS"
+    onRelease:
     topic: "state_commands/"
     onShiftPress:
     onShiftRelease:
@@ -56,74 +56,74 @@ buttons:
     value:
     onShiftValue:
   LC:
-    onPress:
+    onPress: "WORK_MODE"
     onRelease:
-    topic:
+    topic: "state_commands/"
     onShiftPress:
     onShiftRelease:
     value:
     onShiftValue:
   RC:
-    onPress:
+    onPress: "PITCH_REFERENCE_UPDATE"
     onRelease:
-    topic:
+    topic: "state_commands/"
+    onShiftPress:
+    onShiftRelease:
+    value: 0
+    onShiftValue: 
+  LB:
+    onPress: "DEPTH_REFERENCE_OFFSET"
+    onRelease:
+    topic: "state_commands/"
+    onShiftPress:
+    onShiftRelease:
+    value: 0.02
+    onShiftValue:
+  RB:
+    onPress: "DEPTH_REFERENCE_OFFSET"
+    onRelease:
+    topic: "state_commands/"
+    onShiftPress:
+    onShiftRelease:
+    value: -0.02
+    onShiftValue:
+  D-Pad-Up:
+    onPress: "PITCH_REFERENCE_OFFSET"
+    onRelease: 
+    topic: "state_commands/"
+    onShiftPress:
+    onShiftRelease:
+    value: 2.0
+    onShiftValue:
+  D-Pad-Down:
+    onPress: "PITCH_REFERENCE_OFFSET"
+    onRelease:
+    topic: "state_commands/"
+    onShiftPress:
+    onShiftRelease:
+    value: -2.0
+    onShiftValue:
+  D-Pad-Left:
+    onPress: "PREV_CAMERA"
+    onRelease:
+    topic: "camera_control/"
     onShiftPress:
     onShiftRelease:
     value:
-    onShiftValue: 
-  LB:
-    onPress: "ROLL"
-    onRelease: "ROLL"
-    topic: "axes/"
-    onShiftPress: "ROLL"
-    onShiftRelease: "ROLL"
-    value: -30000
-    onShiftValue: -15000
-  RB:
-    onPress: "ROLL"
-    onRelease: "ROLL"
-    topic: "axes/"
-    onShiftPress: "ROLL"
-    onShiftRelease: "ROLL"
-    value: 30000
-    onShiftValue: 15000
-  D-Pad-Up:
-    onPress: "DEPTH_REFERENCE_OFFSET"
-    onRelease: 
-    topic: "state_commands/"
-    onShiftPress: "DEPTH_REFERENCE_OFFSET"
-    onShiftRelease:
-    value: 2
-    onShiftValue: 10
-  D-Pad-Down:
-    onPress: "DEPTH_REFERENCE_OFFSET"
-    onRelease:
-    topic: "state_commands/"
-    onShiftPress: "DEPTH_REFERENCE_OFFSET"
-    onShiftRelease:
-    value: -2
-    onShiftValue: -10
-  D-Pad-Left:
-    onPress: "SHIFT"
-    onRelease: "noSHIFT"
-    topic:
-    onShiftPress: "SHIFT"
-    onShiftRelease: "noSHIFT"
-    value:
     onShiftValue:
   D-Pad-Right:
-    onPress: "CHANGE_CONTROLLER_STATUS"
+    onPress: "NEXT_CAMERA"
     onRelease:
-    topic: "state_commands/"
+    topic: "camera_control/"
     onShiftPress:
     onShiftRelease:
     value:
     onShiftValue:
   UPLOAD:
-    onPress: "ABLE_ANGLE_CTL"
+    onPress: "TORQUE_WRIST_TOGGLE"
     onRelease:
-    topic: "state_commands/"
-    onShiftPress: "DISABLE_ANGLE_CTL"
+    topic: "arm_commands/"
+    onShiftPress:
     onShiftRelease:
     value:
     onShiftValue:

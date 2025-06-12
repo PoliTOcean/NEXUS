@@ -26,6 +26,22 @@
 }
 
 
+/* Hide Arrows From Input Number */
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
+
+/* Custom global definitions */
+
 :root { 
     --space-cadet: #252754ff;
     --white: #FFFFFFff;
@@ -57,9 +73,6 @@ html, body {
     background-color: #101214;
 }
 
-video {
-    width: 400px;
-}
 
 .toolbar {
     display: flex;

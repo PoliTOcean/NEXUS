@@ -1,0 +1,65 @@
+camera1: {
+        type = "rtp"
+        id = 1
+        description = "main"
+        video = true
+        videoport = 5001
+        videopt = 100
+        videocodec= "h264"
+        videortpmap=  "H264/90000"
+        videofmtp= "profile-level-id=42e01f;packetization-mode=1"
+	metadata= "{\"fisheye\": false, \"fisheyeSettings\": {\"fov\": {\"x\": 0, \"y\": 0}, \"lens\": {\"a\": 0.5, \"b\": 0.75, \"Fx\": 0.12, \"Fy\": 0.22, \"scale\": 0.8}}}"
+}
+camera2: {
+        type = "rtp"
+        id = 2
+        description = "right"
+        video = true
+        videoport = 5002
+        videopt = 100
+        videocodec= "h264"
+        videortpmap=  "H264/90000"
+        videofmtp= "profile-level-id=42e01f;packetization-mode=1"
+	metadata= "{\"fisheye\": false, \"fisheyeSettings\": {\"fov\": {\"x\": 0, \"y\": 0}, \"lens\": {\"a\": 0.5, \"b\": 0.75, \"Fx\": 0.12, \"Fy\": 0.22, \"scale\": 0.8}}}"
+}
+camera3: {
+        type = "rtp"
+        id = 3
+        description = "top"
+        video = true
+        videoport = 5003
+        videopt = 100
+        videocodec= "h264"
+        videortpmap=  "H264/90000"
+        videofmtp= "profile-level-id=42e01f;packetization-mode=1"
+	metadata= "{\"fisheye\": true, \"fisheyeSettings\": {\"fov\": {\"x\": 0, \"y\": 0}, \"lens\": {\"a\": 0.5, \"b\": 0.75, \"Fx\": 0.12, \"Fy\": 0.22, \"scale\": 0.8}}}"
+}
+camera4: {
+        type = "rtp"
+        id = 4
+        description = "bottom"
+        video = true
+        videoport = 5004
+        videopt = 100
+        videocodec= "h264"
+        videortpmap=  "H264/90000"
+        videofmtp= "profile-level-id=42e01f;packetization-mode=1"
+	metadata= "{\"fisheye\": true, \"fisheyeSettings\": {\"fov\": {\"x\": 0, \"y\": 0}, \"lens\": {\"a\": 0.5, \"b\": 0.75, \"Fx\": 0.12, \"Fy\": 0.22, \"scale\": 0.8}}}"
+}
+camera5: {
+        type = "rtp"
+        id = 5
+        description = "arm"
+        video = true
+        videoport = 5005
+        videopt = 100
+        videocodec= "h264"
+        videortpmap=  "H264/90000"
+        videofmtp= "profile-level-id=42e01f;packetization-mode=1"
+	metadata= "{\"fisheye\": false, \"fisheyeSettings\": {\"fov\": {\"x\": 0, \"y\": 0}, \"lens\": {\"a\": 0.5, \"b\": 0.75, \"Fx\": 0.12, \"Fy\": 0.22, \"scale\": 0.8}}}"
+}
+
+
+
+
+
