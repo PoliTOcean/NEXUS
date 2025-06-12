@@ -5,8 +5,10 @@ let nReport = 1;
 let mux = 1;
 let manualMuxLock = false;
 let listening = 0;
+let isImmersionActive = false;
 
 async function startFloat() {
+    console.log("Starting float communication");
     return await getRequest("/FLOAT/start");
 }
 
@@ -72,12 +74,16 @@ async function listeningFLOAT() {
     if (sts["text"] != "LOADING") {
         publishReport(sts);
         listening = 0;
+        // Reset immersion status when listening completes
         immersion.classList.remove("immersion");
+        isImmersionActive = false;
         listen.classList.remove("listening");
         manualMuxLock = false;
         mux = 1;
+        console.log("Listening completed, reset immersion and listening status");
     }
-    console.log(sts);
+    console.log("Listening status:", sts);
+    return sts;
 }
 
 // This function handles the status coming from ESP-B
@@ -93,7 +99,14 @@ async function handleStatus(status) {
 
     
     if (!status.status) status = await startFloat();
-    console.log(status);
+    console.log("Status received:", status);
+    
+    // If we're not in immersion mode and the immersion class is active, remove it
+    if (!isImmersionActive && immersion.classList.contains("immersion")) {
+        immersion.classList.remove("immersion");
+        console.log("Manually reset immersion status");
+    }
+    
     sts = status.text.split("|");
 
     function disableFunction() {
@@ -104,7 +117,10 @@ async function handleStatus(status) {
     }
 
     for (let i = 0; i < sts.length; i++) {
-        switch (sts[i].trim()) {
+        const currentStatus = sts[i].trim();
+        console.log(`Processing status part: "${currentStatus}"`);
+        
+        switch (currentStatus) {
             case "CONNECTED":
                 serial.classList.add("on");
                 ready.classList.add("on");                
@@ -114,6 +130,8 @@ async function handleStatus(status) {
                 manualMuxLock = true;
                 mux = 0;
                 immersion.classList.add("immersion");
+                isImmersionActive = true;
+                console.log("Immersion activated");
                 break;
             case "CONNECTED_W_DATA":
                 for (let i = 0; i < drop.length; i++) drop[i].classList.remove("clickable");
@@ -121,15 +139,38 @@ async function handleStatus(status) {
                 mux = 0;
                 listen.classList.add("listening");
                 listening = 1;
-                listeningFLOAT();
+                listeningFLOAT().then(result => {
+                    if (result.text === "FINISHED") {
+                        // Make sure immersion is reset
+                        immersion.classList.remove("immersion");
+                        isImmersionActive = false;
+                    }
+                });
+                break;
             case "DATA_ABORTED":
-                break
+                // Reset states when data is aborted
+                listen.classList.remove("listening");
+                immersion.classList.remove("immersion");
+                isImmersionActive = false;
+                if (!manualMuxLock) mux = 1;
+                break;
+            case "STOP_DATA":
+                // Reset states when data stops
+                listen.classList.remove("listening");
+                immersion.classList.remove("immersion");
+                isImmersionActive = false;
+                if (!manualMuxLock) mux = 1;
+                break;
             case "NO USB":
                 serial.classList.remove("on");
                 ready.classList.remove("on");
                 conn.classList.remove("on");
                 disableFunction();
                 mux = 0;
+                // Reset immersion if no USB
+                immersion.classList.remove("immersion");
+                isImmersionActive = false;
+                break;
             case "AUTO_MODE_NO":
                 auto_mode.classList.remove("on");
                 break;
@@ -147,6 +188,9 @@ async function handleStatus(status) {
             case "CONN_LOST":
                 conn.classList.remove("on");
                 disableFunction();
+                // Reset immersion if connection lost
+                immersion.classList.remove("immersion");
+                isImmersionActive = false;
                 break;
             case "STATUS_ERROR":
                 console.error("SOMETHING WENT WRONG");
@@ -172,9 +216,13 @@ async function handleStatus(status) {
                     const rssiMatch = line.match(/RSSI:\s*(-?\d+)/);
                     if (rssiMatch) {
                         const rssiElement = document.querySelector(".rssi_level");
-                        const rssiValue = parseInzt(rssiMatch[1]);
-                        if (rssiElement) {
-                            rssiElement.textContent = `${rssiValue} dBm`;
+                        try {
+                            const rssiValue = parseInt(rssiMatch[1]);
+                            if (rssiElement) {
+                                rssiElement.textContent = `${rssiValue} dBm`;
+                            }
+                        } catch (e) {
+                            console.error("Error parsing RSSI value:", e);
                         }
                     }
                 }
@@ -192,6 +240,7 @@ async function statusFLOAT(msg) {
     }
 
     // Otherwise, get float status or the package 
+    console.log(`Requesting float status with message: ${msg}`);
     let data = await getRequest(`/FLOAT/status?msg=${msg}`);
     switch (msg) {
         case "STATUS":
@@ -201,7 +250,7 @@ async function statusFLOAT(msg) {
             if (mux == 1) { 
                 publishPackage(data);
             }
-            //else alert("NOT READY FOR PACKAGE");
+            else console.log("NOT READY FOR PACKAGE - MUX is locked");
             break
     }
 }
@@ -212,22 +261,29 @@ let msgs = ["GO", "SWITCH_AUTO_MODE", "TRY_UPLOAD", "BALANCE", "CLEAR_SD", "HOME
 async function msg(e, msg_id) {
     // Handle mux
     if (!mux) {
-        console.log("NOT READY FOR MSG");
+        console.log("NOT READY FOR MSG - MUX is locked");
         return;
     }
     // Lock
     mux = 0;
+    
+    const message = msgs[msg_id];
+    console.log(`Sending message: ${message}`);
 
     // send msg
-    const data = await fetch(`FLOAT/msg?msg=${msgs[msg_id]}`);
+    const data = await fetch(`FLOAT/msg?msg=${message}`);
 
-    if (data.status == 201) mux = 1;
-    else alert("Is USB cable connected?")
+    if (data.status == 201) {
+        console.log(`Message ${message} sent successfully`);
+        mux = 1;
+    }
+    else {
+        console.error(`Failed to send message ${message}`);
+        alert("Is USB cable connected?");
+    }
 }
 
-
 // Switch between Advanced and Basic operations
-// TODO We have to fix that
 function switchDiv(){
     const div1 = document.getElementById('basicFloat');
     const div2 = document.getElementById('advancedFloat');
