@@ -46,19 +46,31 @@ def float_msg():
             return jsonify(data), 400
 
     try:
-        result = send(s, msg_param) # Use msg_param which contains the full command string
-        if not result:
-            raise Exception("Failed to send message")
+        if msg_param == 'SEND_PACKAGE':
+            # For SEND_PACKAGE, msg_status returns the package data in 'text'
+            result_struct = msg_status(s, msg_param)
+            data['status'] = result_struct.get('status', False) # Default to False if status key is missing
+            data['text'] = result_struct.get('text', 'Error retrieving package') # Default error text
+            if not data['status']: # If msg_status indicated an error
+                 return jsonify(data), 400 # Or appropriate error code
+            print(f"[FLOAT_SERVER] Package data retrieved: {data['text']}")
+        else:
+            # For other commands, send() just confirms if the command was sent
+            result_success = send(s, msg_param) 
+            if not result_success:
+                raise Exception("Failed to send message")
+            data['status'] = True
+            data['text'] = 'SUCCESS' # Generic success for non-data-returning commands
+        
+        print(f"[FLOAT_SERVER] Command '{msg_param}' processed successfully.")
+        return jsonify(data), 201 # Use 200 OK for successful GET that returns data, 201 for creation (less applicable here)
+
     except Exception as e:
-        print(f"[FLOAT_SERVER] Error sending message: {str(e)}")
+        print(f"[FLOAT_SERVER] Error processing message '{msg_param}': {str(e)}")
         print(traceback.format_exc())
         data['status'] = False
-        data['text'] = "SERIAL INTERRUPTED"
+        data['text'] = "SERIAL INTERRUPTED OR COMMAND FAILED"
         return jsonify(data), 400
-    data['status'] = True
-    data['text'] = 'SUCCESS'
-    print(f"[FLOAT_SERVER] Message sent successfully: {msg_param}")
-    return jsonify(data), 201
     
 
 @app.route('/FLOAT/start')

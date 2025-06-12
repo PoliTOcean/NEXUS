@@ -185,102 +185,112 @@ def handle_upload_data(s: Serial):
     
     thread_active = True
     
-    img_data = {
-        'text': "LOADING",
-        'status': 1,
-        'data': "",
-    }
-    
-    print("[FLOAT] Starting data upload sequence")
-    s.write(b"LISTENING\n")
-    print("[FLOAT] Sent LISTENING command")
-    
-    times = []
-    depth = []
-    pressure = []
-    cn = ''
-    error_count = 0
-    max_errors = 10  # Allow a reasonable number of errors before giving up
-    
-    # Convert times from string datetime to milliseconds if necessary, or ensure they are numeric
-    processed_times = []
-
-    while True:
-        try:
-            line_data = s.readline().strip()
-            if not line_data:
-                error_count += 1
-                if error_count > max_errors:
-                    print("[FLOAT] Too many empty lines, stopping data collection")
-                    break
-                continue
-                
-            if line_data == b'STOP_DATA':
-                print("[FLOAT] Received STOP_DATA command")
-                break
-                
-            decoded = line_data.decode()
-            print(f"[FLOAT] Received data: {decoded}")
-            
-            # Skip data corruption marker lines
-            if "DATA CORRUPTED FOR ERROR HANDLING" in decoded:
-                print("[FLOAT] Skipping corrupted data marker")
-                continue
-                
-            try:
-                float_data = json.loads(decoded)
-                depth_val = float(float_data.get('depth', 0))
-                time_val = int(float_data.get('mseconds', 0)) # ESPA sends mseconds
-                pressure_val = float_data.get('pressure', '0')
-                
-                depth.append(depth_val)
-                processed_times.append(time_val) # Store as numeric milliseconds
-                pressure.append(pressure_val)
-                if cn == '':
-                    cn = float_data.get("company_number", "Unknown")
-                
-                print(f"[FLOAT] Parsed data point: time={time_val}, depth={depth_val}")
-            except (json.JSONDecodeError, KeyError, ValueError) as e:
-                print(f"[FLOAT] Data parsing error: {str(e)} - Line: {decoded}")
-                error_count += 1
-                if error_count > max_errors:
-                    print("[FLOAT] Too many parsing errors, stopping data collection")
-                    break
-                continue
-        except (SerialException, TimeoutError) as e:
-            print(f"[FLOAT] Serial error during data collection: {str(e)}")
-            break
-        except Exception as e:
-            print(f"[FLOAT] Unexpected error during data collection: {str(e)}")
-            error_count += 1
-            if error_count > max_errors:
-                break
-            continue
-    
-    print("[FLOAT] Data collection complete")
-    # Replace original times with processed_times for plotting
-    if processed_times:
-        json_complete = {"times": processed_times, "depth": depth, "pressure": pressure, "company_number": cn}
-        try:
-            plot_depth_img = plot_pressure_time(json_complete, 'depth', 'Depth (m)')
-            plot_pressure_img = plot_pressure_time(json_complete, 'pressure', 'Pressure (Pa)')
-            data_plots = [plot_depth_img, plot_pressure_img]
-        except Exception as e:
-            print(f"[FLOAT] Error generating plots: {str(e)}")
-            data_plots = "NO_DATA"
-    else:
-        data_plots = "NO_DATA"
-        
-    img_data = {
-        'text': "FINISHED",
-        'status': 1,
-        'data': {
-            'img': data_plots,
-            'raw': {"times": processed_times, "depth": depth, "pressure": pressure, "company_number": cn} if processed_times and depth else {}
+    try:
+        img_data = {
+            'text': "LOADING",
+            'status': 1,
+            'data': "",
         }
-    }
-    print("[FLOAT] Thread finished")
-    thread_active = False
+        
+        print("[FLOAT] Starting data upload sequence (listening for data from ESP)")
+        # s.write(b"LISTENING\n") # REMOVED: ESPA should already be sending data after initial LISTENING cmd
+        # print("[FLOAT] Sent LISTENING command") # REMOVED
+        
+        times = []
+        depth = []
+        pressure = []
+        cn = ''
+        error_count = 0
+        max_errors = 10  # Allow a reasonable number of errors before giving up
+        
+        # Convert times from string datetime to milliseconds if necessary, or ensure they are numeric
+        processed_times = []
+
+        while True:
+            try:
+                line_data = s.readline().strip()
+                if not line_data:
+                    error_count += 1
+                    if error_count > max_errors:
+                        print("[FLOAT] Too many empty lines, stopping data collection")
+                        break
+                    continue
+                    
+                if line_data == b'STOP_DATA':
+                    print("[FLOAT] Received STOP_DATA command")
+                    break
+                    
+                decoded = line_data.decode()
+                print(f"[FLOAT] Received data: {decoded}")
+                
+                # Skip data corruption marker lines
+                if "DATA CORRUPTED FOR ERROR HANDLING" in decoded:
+                    print("[FLOAT] Skipping corrupted data marker")
+                    continue
+                    
+                try:
+                    float_data = json.loads(decoded)
+                    depth_val = float(float_data.get('depth', 0))
+                    time_val = int(float_data.get('mseconds', 0)) # ESPA sends mseconds
+                    pressure_val = float_data.get('pressure', '0')
+                    
+                    depth.append(depth_val)
+                    processed_times.append(time_val) # Store as numeric milliseconds
+                    pressure.append(pressure_val)
+                    if cn == '':
+                        cn = float_data.get("company_number", "Unknown")
+                    
+                    print(f"[FLOAT] Parsed data point: time={time_val}, depth={depth_val}")
+                except (json.JSONDecodeError, KeyError, ValueError) as e:
+                    print(f"[FLOAT] Data parsing error: {str(e)} - Line: '{decoded}'") # Log the problematic line
+                    error_count += 1
+                    if error_count > max_errors:
+                        print("[FLOAT] Too many parsing errors, stopping data collection")
+                        break
+                    continue
+            except (SerialException, TimeoutError) as e:
+                print(f"[FLOAT] Serial error during data collection: {str(e)}")
+                break
+            except Exception as e:
+                print(f"[FLOAT] Unexpected error during data collection: {str(e)}")
+                error_count += 1
+                if error_count > max_errors:
+                    break
+                continue
+    
+        print("[FLOAT] Data collection complete")
+        # Replace original times with processed_times for plotting
+        if processed_times:
+            json_complete = {"times": processed_times, "depth": depth, "pressure": pressure, "company_number": cn}
+            try:
+                plot_depth_img = plot_pressure_time(json_complete, 'depth', 'Depth (m)')
+                plot_pressure_img = plot_pressure_time(json_complete, 'pressure', 'Pressure (Pa)')
+                data_plots = [plot_depth_img, plot_pressure_img]
+            except Exception as e:
+                print(f"[FLOAT] Error generating plots: {str(e)}")
+                data_plots = "NO_DATA"
+        else:
+            data_plots = "NO_DATA"
+            
+        img_data = {
+            'text': "FINISHED",
+            'status': 1,
+            'data': {
+                'img': data_plots,
+                'raw': {"times": processed_times, "depth": depth, "pressure": pressure, "company_number": cn} if processed_times and depth else {}
+            }
+        }
+        print("[FLOAT] Thread finished")
+    except Exception as e:
+        print(f"[FLOAT] Error in handle_upload_data: {str(e)}")
+        img_data = {
+            'text': "ERROR",
+            'status': 0,
+            'data': str(e),
+        }
+    finally:
+        thread_active = False
+        print("[FLOAT] handle_upload_data finally block: thread_active set to False")
 
 
 
