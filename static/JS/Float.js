@@ -274,7 +274,7 @@ function displayProfileData(profileData) {
     rawDataEl.textContent = ""; 
     plotContainerEl.innerHTML = ""; 
 
-    if (profileData && profileData.raw && profileData.raw.times && Array.isArray(profileData.raw.times)) {
+    if (profileData && profileData.raw && profileData.raw.times && Array.isArray(profileData.raw.times) && profileData.raw.times.length > 0) {
         let formattedRawData = "Timestamp (ms) | Depth (m) | Pressure (Pa)\n";
         formattedRawData += "--------------------------------------------\n";
         for (let i = 0; i < profileData.raw.times.length; i++) {
@@ -308,6 +308,9 @@ function displayProfileData(profileData) {
         }
     } else {
         rawDataEl.textContent = "No raw data points received or data is malformed.";
+        if (profileData && profileData.error_message) {
+            rawDataEl.textContent += `\nError: ${profileData.error_message}`;
+        }
         plotContainerEl.textContent = "No plot data available.";
     }
 }
@@ -318,14 +321,62 @@ function displayReceivedPackage(packageDataText) {
         logToFloatSerial("Package content display element not found.");
         return;
     }
+    packageContentEl.innerHTML = ''; // Clear previous content
+
     try {
         const jsonData = JSON.parse(packageDataText);
-        packageContentEl.textContent = JSON.stringify(jsonData, null, 2);
-        logToFloatSerial("Displayed new package.");
+        logToFloatSerial("Parsed package JSON successfully for fancy display.");
+
+        const keyOrder = ['company_number', 'mseconds', 'times', 'depth', 'pressure', 'temperature']; // Preferred order
+
+        // Display in preferred order
+        keyOrder.forEach(key => {
+            if (jsonData.hasOwnProperty(key)) {
+                renderPackageItem(packageContentEl, key, jsonData[key]);
+                delete jsonData[key]; // Remove from jsonData to avoid re-rendering
+            }
+        });
+
+        // Display any remaining keys
+        for (const key in jsonData) {
+            if (jsonData.hasOwnProperty(key)) {
+                renderPackageItem(packageContentEl, key, jsonData[key]);
+            }
+        }
+
     } catch (e) {
-        packageContentEl.textContent = packageDataText; 
-        logToFloatSerial(`Displayed raw package (JSON parse failed): ${packageDataText}`);
+        // If parsing fails, display raw text as before
+        const rawTextNode = document.createElement('pre');
+        rawTextNode.textContent = packageDataText;
+        packageContentEl.appendChild(rawTextNode);
+        logToFloatSerial(`Displayed raw package (JSON parse failed for '${packageDataText}'): ${e}`);
     }
+}
+
+function renderPackageItem(parentElement, key, value) {
+    const itemDiv = document.createElement('div');
+    itemDiv.classList.add('package-item');
+
+    const keySpan = document.createElement('span');
+    keySpan.classList.add('package-key');
+    // Make keys more readable
+    let displayKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    keySpan.textContent = `${displayKey}: `;
+    itemDiv.appendChild(keySpan);
+
+    const valueSpan = document.createElement('span');
+    valueSpan.classList.add('package-value');
+    
+    let displayValue = value;
+    if (key === 'depth') displayValue = `${value} m`;
+    else if (key === 'pressure') displayValue = `${value} Pa`;
+    else if (key === 'temperature') displayValue = `${value} °C`;
+    else if (key === 'mseconds' || key === 'times') displayValue = `${value} ms`;
+
+
+    valueSpan.textContent = displayValue;
+    itemDiv.appendChild(valueSpan);
+    parentElement.appendChild(itemDiv);
 }
 
 // --- INITIALIZATION ---
@@ -340,34 +391,4 @@ async function attemptFloatSerialConnection() {
             return;
         }
         const data = await response.json();
-        if (data.status) {
-            logToFloatSerial(`Float connection successful: ${data.text}`);
-            parseAndDisplayStatus(data.text); // Update UI with initial status
-        } else {
-            logToFloatSerial(`Failed to connect to float: ${data.text}`);
-            parseAndDisplayStatus(data.text); // Display error like "NO USB"
-        }
-    } catch (error) {
-        logToFloatSerial(`Network error during initial float connection: ${error}`);
-        parseAndDisplayStatus("NO USB"); // Simulate a disconnect
-    }
-}
-
-async function initializeFloatPage() {
-    logToFloatSerial("Initializing Float Page Logic...");
-    
-    // Attempt to load float config if available via info object
-    if (typeof info !== "undefined" && info && info.float_config) {
-        FLOAT_TARGET_DEPTH = info.float_config.target_depth || 2.5;
-        FLOAT_MAX_ERROR = info.float_config.max_error || 0.45;
-        logToFloatSerial(`Loaded float config: Target Depth=${FLOAT_TARGET_DEPTH}, Max Error=${FLOAT_MAX_ERROR}`);
-    } else {
-        logToFloatSerial(`Using default float config or info.float_config not found: Target Depth=${FLOAT_TARGET_DEPTH}, Max Error=${FLOAT_MAX_ERROR}`);
-    }
-    
-    // Attempt initial serial connection
-    await attemptFloatSerialConnection();
-    
-    // Start polling for status updates
-    setInterval(pollFloatStatus, 3000); // Poll status every 3 seconds
-}
+        if

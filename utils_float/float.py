@@ -102,7 +102,7 @@ def msg_status(s: Serial, msg: str):
                 }
             time.sleep(0.01)
             
-        line = s.readline().strip().decode()
+        line = s.readline().strip().decode('utf-8', errors='replace') # Added errors='replace'
         print(f"[FLOAT] Received: {line}")
         
         # For STATUS, the response can be multi-part
@@ -189,12 +189,10 @@ def handle_upload_data(s: Serial):
         img_data = {
             'text': "LOADING",
             'status': 1,
-            'data': "",
+            'data': "", # Initially empty, will be populated
         }
         
         print("[FLOAT] Starting data upload sequence (listening for data from ESP)")
-        # s.write(b"LISTENING\n") # REMOVED: ESPA should already be sending data after initial LISTENING cmd
-        # print("[FLOAT] Sent LISTENING command") # REMOVED
         
         times = []
         depth = []
@@ -220,7 +218,7 @@ def handle_upload_data(s: Serial):
                     print("[FLOAT] Received STOP_DATA command")
                     break
                     
-                decoded = line_data.decode()
+                decoded = line_data.decode('utf-8', errors='replace') # Added errors='replace'
                 print(f"[FLOAT] Received data: {decoded}")
                 
                 # Skip data corruption marker lines
@@ -269,15 +267,17 @@ def handle_upload_data(s: Serial):
             except Exception as e:
                 print(f"[FLOAT] Error generating plots: {str(e)}")
                 data_plots = "NO_DATA"
+            raw_data_payload = {"times": processed_times, "depth": depth, "pressure": pressure, "company_number": cn} if processed_times and depth else {}
         else:
             data_plots = "NO_DATA"
+            raw_data_payload = {}
             
         img_data = {
             'text': "FINISHED",
             'status': 1,
             'data': {
                 'img': data_plots,
-                'raw': {"times": processed_times, "depth": depth, "pressure": pressure, "company_number": cn} if processed_times and depth else {}
+                'raw': raw_data_payload
             }
         }
         print("[FLOAT] Thread finished")
@@ -286,7 +286,7 @@ def handle_upload_data(s: Serial):
         img_data = {
             'text': "ERROR",
             'status': 0,
-            'data': str(e),
+            'data': {"error_message": str(e), "img": "NO_DATA", "raw": {}}, # Consistent data structure
         }
     finally:
         thread_active = False

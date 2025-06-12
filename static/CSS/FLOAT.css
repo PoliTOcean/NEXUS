@@ -252,7 +252,34 @@ h2 {
     flex-basis: 60%;
     gap: 10px;
     max-height: 100%;
+    min-height: 0; /* Ensure flex children can shrink properly */
 }
+
+.float-package-display {
+    flex-shrink: 0; /* Prevent this from shrinking when content is small */
+    max-height: 35%; /* Or a fixed pixel value, e.g., 250px */
+    overflow-y: auto; /* Add scroll if content exceeds max-height */
+}
+
+.float-profile-data-display {
+    flex-grow: 1; /* Allow this to take up remaining vertical space */
+    display: flex;
+    flex-direction: column; /* Stack title, plot, raw data */
+    min-height: 0; /* Important for flex children that might overflow */
+}
+
+#profile-plot-container {
+    flex-shrink: 0; /* Don't shrink plot container itself */
+    overflow-y: auto; /* Scroll for plots if they overflow */
+    max-height: 50%; /* Example: limit plot area height */
+}
+
+#profile-data-raw {
+    flex-grow: 1; /* Allow raw data pre to take available space in its parent */
+    min-height: 0; /* Essential for overflow-y to work in a flex child */
+    /* max-height is already set, overflow-y is already set */
+}
+
 
 .float-status-panel, .float-commands-panel, .float-package-display, .float-profile-data-display, .float-raw-serial-debug, .float-data-fetch-panel {
     background-color: #1D2125;
@@ -367,11 +394,31 @@ h2 {
     background-color: #101214;
     padding: 10px;
     border-radius: 4px;
-    max-height: 200px; /* Adjust as needed */
+    /* max-height for #profile-data-raw is fine, #float-package-content height is managed by its parent .float-package-display */
     overflow-y: auto;
     font-family: monospace;
     font-size: 0.85em;
 }
+
+/* Styles for "fancy" JSON display */
+#float-package-content {
+    font-size: 1.0em; /* Slightly larger characters for package */
+    white-space: normal; /* Override pre-wrap if not using <pre> */
+}
+
+.package-item {
+    margin-bottom: 6px;
+    line-height: 1.4;
+}
+.package-key {
+    font-weight: bold;
+    color: #87CEEB; /* Sky blue for keys */
+    margin-right: 5px;
+}
+.package-value {
+    color: #E6E6FA; /* Lavender for values */
+}
+
 #profile-data-raw {
     max-height: 300px; /* More space for profile data */
 }
