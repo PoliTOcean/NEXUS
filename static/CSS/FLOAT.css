@@ -227,3 +227,270 @@ h2 {
     font-size: 1.5em;
 }
 
+.float-main-container {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    height: calc(100% - 160px); /* Adjusted for potentially taller debug box */
+    gap: 10px;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+.float-controls-status-col {
+    display: flex;
+    flex-direction: column;
+    flex-basis: 40%; /* Or adjust as needed if content overflows without scroll */
+    gap: 10px;
+    max-height: 100%;
+    /* overflow-y: auto; */ /* Removed to make it non-scrollable */
+}
+
+.float-data-display-col {
+    display: flex;
+    flex-direction: column;
+    flex-basis: 60%;
+    gap: 10px;
+    max-height: 100%;
+    min-height: 0; /* Ensure flex children can shrink properly */
+}
+
+.float-package-display {
+    flex-shrink: 0; /* Prevent this from shrinking when content is small */
+    max-height: 35%; /* Or a fixed pixel value, e.g., 250px */
+    overflow-y: auto; /* Add scroll if content exceeds max-height */
+}
+
+.float-profile-data-display {
+    flex-grow: 1; /* Allow this to take up remaining vertical space */
+    display: flex;
+    flex-direction: column; /* Stack title, plot, raw data */
+    min-height: 0; /* Important for flex children that might overflow */
+}
+
+#profile-plot-container {
+    flex-shrink: 0; /* Don't shrink plot container itself */
+    overflow-y: auto; /* Scroll for plots if they overflow */
+    max-height: 50%; /* Example: limit plot area height */
+}
+
+#profile-data-raw {
+    flex-grow: 1; /* Allow raw data pre to take available space in its parent */
+    min-height: 0; /* Essential for overflow-y to work in a flex child */
+    /* max-height is already set, overflow-y is already set */
+}
+
+
+.float-status-panel, .float-commands-panel, .float-package-display, .float-profile-data-display, .float-raw-serial-debug, .float-data-fetch-panel, .float-status-panel {
+    background-color: #1D2125;
+    color: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-sizing: border-box;
+}
+
+.float-status-panel .title, .float-commands-panel .title, 
+.float-package-display .title, .float-profile-data-display .title,
+.float-raw-serial-debug .title, .float-data-fetch-panel .title {
+    font-size: 1.2em;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #333;
+    padding-bottom: 5px;
+}
+
+.status-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 8px;
+}
+
+.status-item {
+    background-color: #282E33;
+    padding: 8px;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+
+.status-label {
+    font-weight: bold;
+}
+
+.status-indicator {
+    padding: 2px 6px;
+    border-radius: 3px;
+    background-color: #AE2E24; /* OFF default */
+    color: white;
+    margin-left: 5px;
+}
+
+.status-indicator.on {
+    background-color: #216E4E; /* ON */
+}
+
+.commands-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.float-button {
+    background-color: #0055CC;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9em;
+    text-align: center;
+}
+
+.float-button:hover {
+    background-color: #0044AA;
+}
+
+.float-button:disabled {
+    background-color: #555;
+    cursor: not-allowed;
+}
+
+.param-command {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+    align-items: center;
+}
+
+.param-command input[type="number"] {
+    flex-grow: 1;
+    padding: 8px;
+    background-color: #282E33;
+    border: 1px solid #444;
+    color: white;
+    border-radius: 4px;
+    width: 70px; /* Set a fixed width for PID inputs */
+    max-width: 70px; /* Ensure it doesn't grow beyond this */
+}
+
+.ack-status-area {
+    margin-top: 15px;
+    padding: 8px;
+    background-color: #282E33;
+    border-radius: 4px;
+    text-align: center;
+}
+
+.ack-status-area .ack-success {
+    color: #3cb371; /* MediumSeaGreen */
+}
+.ack-status-area .ack-fail {
+    color: #cd5c5c; /* IndianRed */
+}
+
+
+#float-package-content, #profile-data-raw {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    background-color: #101214;
+    padding: 10px;
+    border-radius: 4px;
+    /* max-height for #profile-data-raw is fine, #float-package-content height is managed by its parent .float-package-display */
+    overflow-y: auto;
+    font-family: monospace;
+    font-size: 0.85em;
+}
+
+/* Styles for "fancy" JSON display */
+#float-package-content {
+    font-size: 1.0em; /* Slightly larger characters for package */
+    white-space: normal; /* Override pre-wrap if not using <pre> */
+}
+
+.package-item {
+    margin-bottom: 6px;
+    line-height: 1.4;
+}
+.package-key {
+    font-weight: bold;
+    color: #87CEEB; /* Sky blue for keys */
+    margin-right: 5px;
+}
+.package-value {
+    color: #E6E6FA; /* Lavender for values */
+}
+
+#profile-data-raw {
+    max-height: 300px; /* More space for profile data */
+}
+
+
+#profile-plot-container {
+    margin-bottom: 10px;
+    text-align: center; /* Center images */
+}
+#profile-plot-container img {
+    max-width: 100%;
+    height: auto;
+    margin-bottom: 10px;
+    border: 1px solid #333;
+}
+
+
+.float-raw-serial-debug {
+    position: fixed; /* Or absolute if .wrapper is relative */
+    bottom: 10px;
+    right: 10px;
+    width: calc(100% - 20px); /* Full width minus padding */
+    max-width: 750px; /* Increased max-width */
+    height: 150px; /* Increased height by one line (approx 20px) */
+    z-index: 100;
+}
+
+#float-serial-debug-output {
+    width: 100%;
+    height: calc(100% - 35px); /* Adjust based on title height and padding */
+    background-color: #101214;
+    color: #ccc;
+    border: 1px solid #333;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 0.8em;
+    padding: 5px;
+    box-sizing: border-box;
+    resize: none;
+}
+
+/* Ensure .box_float specific to float page doesn't conflict if reused */
+.FLOAT .box_float { 
+    /* any float-page specific overrides for box_float */
+}
+
+.float-data-fetch-panel #profile-data-status {
+    margin-top: 10px;
+    font-style: italic;
+}
+
+/* Style the fetch button like the debug toggle button */
+#fetch-profile-data-button {
+    background-color: #0055CC;
+    color: #fff;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9em;
+    text-align: center;
+}
+
+#fetch-profile-data-button:hover {
+    background-color: #0044AA;
+}
+
+/* Modified styles for the data fetch panel to accommodate only the fetch button */
+.float-data-fetch-panel {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start; /* Align to start without the debug button */
+    gap: 10px;
+}

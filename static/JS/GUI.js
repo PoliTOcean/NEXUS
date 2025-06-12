@@ -107,6 +107,11 @@ window.onload = async () => {
     // Initialize MQTT after info is fully loaded
     initializeMQTT();
 
+    // Initialize Float page specific logic if it exists
+    if (typeof initializeFloatPage === "function") {
+        initializeFloatPage();
+    }
+
 
     stsObj = info["statuses"].reduce((obj, key) => {
         obj[key] = false;
@@ -118,13 +123,17 @@ window.onload = async () => {
     }
 
     // Set the initial page
-    page_now = "home";
+    page_now = "home"; // Or your default page, e.g., "ROV"
+    // Ensure the default page is shown
+    if (document.getElementsByClassName(page_now)[0]) {
+        document.getElementsByClassName(page_now)[0].classList.remove("hide");
+    }
+
 
     console.log(info)
 
     // Start routines
     let refresh = 2000;
-    setInterval(() => statusFLOAT("STATUS"), refresh);
     setInterval(statusController, refresh);
     setInterval(keep_alive_server, refresh + 1000);
 
