@@ -122,10 +122,17 @@ def msg_status(s: Serial, msg: str):
                         'status': 1
                     }
                 time.sleep(0.01)
-                
-            line = s.readline().strip().decode('utf-8', errors='replace') # Added errors='replace'
-            print(f"[FLOAT] Received: {line}")
             
+            line = s.readline().strip().decode('utf-8', errors='replace')
+            print(f"[FLOAT] Received: {line}")
+
+            # Add debug: print what is being returned
+            if not line:
+                print(f"[FLOAT] WARNING: Received empty response to {msg}")
+                return {
+                    'text': f"NO_RESPONSE_ON_{msg}",
+                    'status': 0
+                }
             # For STATUS, the response can be multi-part
             # e.g., "CONNECTED | AUTO_MODE_YES | CONN_OK | BATTERY: 12345 | RSSI: -50"
             # We return the raw string, frontend will parse.
@@ -163,6 +170,7 @@ def msg_status(s: Serial, msg: str):
                         'status': 1
                     }
 
+            print(f"[FLOAT] Returning status to frontend: {line}")
             return {
                 'text': line,
                 'status': 1
