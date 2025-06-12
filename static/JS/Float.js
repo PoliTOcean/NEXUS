@@ -1,432 +1,349 @@
-const BATTERY_MAX_VALUE = 12600;
-const BATTERY_MIN_VALUE = 11500;
+let FLOAT_TARGET_DEPTH = 2.5; // Default, will be overridden if config loaded
+let FLOAT_MAX_ERROR = 0.45;  // Default
 
-let nReport = 1;
-let mux = 1;
-let manualMuxLock = false;
-let listening = 0;
-let isImmersionActive = false;
+let floatSerialLog = "";
+const MAX_LOG_LENGTH = 5000; // Max characters for the debug log
 
-async function startFloat() {
-    console.log("Starting float communication");
-    return await getRequest("/FLOAT/start");
-}
-
-
-function publishReport(data) {
-    const tab = document.getElementsByClassName("g1")[0];
-    let img_el = [document.createElement('img'), document.createElement('img')];
-    img_el.forEach((i) => i.classList.add("img_style"))
-    let div = document.createElement('div');
-    let h1 = document.createElement('h1');
-    let h2 = [document.createElement('h2'), document.createElement('h2')];
-    let p = document.createElement('p');
-    h1.innerText = `REPORT #${nReport++}`;
-    div.classList.add('report');
-    p.classList.add('raw');
-    console.log(data.data)
-    let {raw, img} = data.data;
-    if (img != "NO_DATA") {
-        p.innerHTML = "";
-        for (let i = 0; i < raw.times.length; i++) {
-            p.innerHTML += `${raw.company_number}&emsp;${raw.times[i]}&emsp;${raw.pressure[i]} Pa&emsp;${raw.depth[i]} m<br/>`;
-        }
-        img_el[0].src = "data:image/jpeg;charset=utf-8;base64," + img[0];
-        img_el[1].src = "data:image/jpeg;charset=utf-8;base64," + img[1];
-        div.append(h1);
-        h2[0].innerHTML = `Data received:`
-        div.append(h2[0]);
-        div.append(p);
-        h2[1].innerHTML = "Plots:"
-        div.append(h2[1]);
-        div.append(img_el[0]);
-        div.append(img_el[1]);
-        tab.appendChild(div);
-    }
-    else {
-        div.append(h1);
-        p.innerText = `NO DATA`;
-        tab.appendChild(div);
-    }
-}
-
-function publishPackage(status) {
-    try {
-        console.log("Publishing package data:", status);
-        const tab = document.getElementsByClassName("g1")[0];
-        let div = document.createElement('div');
-        let h1 = document.createElement('h1');
-        let p = document.createElement('p');
-        h1.innerHTML = "PACKAGE";
-        
-        // Check if the text is already an object or needs parsing
-        let raw = status.text;
-        if (typeof raw === 'string') {
-            try {
-                raw = JSON.parse(raw);
-                console.log("Parsed package data:", raw);
-            } catch (e) {
-                console.error("Error parsing package data:", e, raw);
-                p.innerHTML = `Error parsing data: ${raw}`;
-                div.classList.add('report');
-                p.classList.add('raw');
-                div.append(h1);
-                div.append(p);
-                tab.appendChild(div);
-                return;
-            }
-        }
-        
-        // Format all keys and values nicely for display
-        const companyName = raw.company_number || raw.company_number || 'Unknown';
-        const time = raw.mseconds || raw.times || 0;
-        const pressure = raw.pressure || 0;
-        const depth = raw.depth || 0;
-        
-        // Create a formatted JSON representation
-        const formattedJson = JSON.stringify(raw, null, 2)
-            .replace(/[{},]/g, '') // Remove braces and commas
-            .replace(/"/g, '') // Remove quotes
-            .replace(/\n\s\s/g, '\n'); // Clean up indentation
-        
-        // Display a clean table-like format
-        p.innerHTML = `<strong>Company:</strong> ${companyName}<br>` +
-                      `<strong>Time:</strong> ${time} ms<br>` +
-                      `<strong>Pressure:</strong> ${pressure} Pa<br>` +
-                      `<strong>Depth:</strong> ${depth} m<br>` +
-                      `<hr><pre>${formattedJson}</pre>`;
-        
-        div.classList.add('report');
-        p.classList.add('raw');
-        div.append(h1);
-        div.append(p);
-        
-        // Insert at the beginning of the container for newest-first order
-        if (tab.firstChild) {
-            tab.insertBefore(div, tab.firstChild);
+// --- UTILITY FUNCTIONS ---
+function updateAckStatus(message, success) {
+    const ackStatusEl = document.getElementById('float-ack-status');
+    if (ackStatusEl) {
+        ackStatusEl.textContent = message;
+        if (success === true) {
+            ackStatusEl.className = 'ack-success';
+        } else if (success === false) {
+            ackStatusEl.className = 'ack-fail';
         } else {
-            tab.appendChild(div);
+            ackStatusEl.className = ''; // Neutral
         }
-        
-        // Limit the number of displayed packages to prevent memory issues
-        const maxPackages = 10;
-        const packages = tab.getElementsByClassName('report');
-        if (packages.length > maxPackages) {
-            tab.removeChild(packages[packages.length - 1]);
-        }
-    } catch (e) {
-        console.error("Error in publishPackage:", e);
+    }
+    logToFloatSerial(`ACK Status: ${message}`);
+}
+
+function logToFloatSerial(text) {
+    const timestamp = new Date().toLocaleTimeString();
+    floatSerialLog += `[${timestamp}] ${text}\n`;
+    if (floatSerialLog.length > MAX_LOG_LENGTH) {
+        floatSerialLog = floatSerialLog.substring(floatSerialLog.length - MAX_LOG_LENGTH);
+    }
+    const debugOutputEl = document.getElementById('float-serial-debug-output');
+    if (debugOutputEl) {
+        debugOutputEl.value = floatSerialLog;
+        debugOutputEl.scrollTop = debugOutputEl.scrollHeight; // Auto-scroll
     }
 }
 
-
-async function listeningFLOAT() {
-    const immersion = document.getElementsByClassName("status IMMERSION")[0];
-    const listen = document.getElementsByClassName("status LISTENING")[0];
-    sts = await getRequest("/FLOAT/listen");
-    if (sts["text"] != "LOADING") {
-        publishReport(sts);
-        listening = 0;
-        // Reset immersion status when listening completes
-        immersion.classList.remove("immersion");
-        isImmersionActive = false;
-        listen.classList.remove("listening");
-        manualMuxLock = false;
-        mux = 1;
-        console.log("Listening completed, reset immersion and listening status");
-    }
-    console.log("Listening status:", sts);
-    return sts;
-}
-
-// This function handles the status coming from ESP-B
-async function handleStatus(status) {
-    // Get all the statuses symbol in the Float page
-    const drop = document.getElementsByClassName("status DROP");
-    const serial = document.querySelector(".status.SERIAL");
-    const ready = document.querySelector(".status.READY");
-    const immersion = document.querySelector(".status.IMMERSION");
-    const listen = document.querySelector(".status.LISTENING");
-    const auto_mode = document.querySelector(".status.AUTO_MODE");
-    const conn = document.querySelector(".status.CONN");
-
-    
-    if (!status.status) status = await startFloat();
-    console.log("Status received:", status);
-    
-    // If we're not in immersion mode and the immersion class is active, remove it
-    if (!isImmersionActive && immersion.classList.contains("immersion")) {
-        immersion.classList.remove("immersion");
-        console.log("Manually reset immersion status");
-    }
-    
-    sts = status.text.split("|");
-    
-    // Check if this status update contains CONNECTED but not EXECUTING_CMD
-    // This means we've transitioned from execution to connected state
-    const hasConnected = sts.some(s => s.trim() === "CONNECTED");
-    const hasExecuting = sts.some(s => s.trim() === "EXECUTING_CMD");
-    
-    // If we see CONNECTED without EXECUTING_CMD, and immersion was active, reset it
-    if (hasConnected && !hasExecuting && isImmersionActive) {
-        immersion.classList.remove("immersion");
-        isImmersionActive = false;
-        if (!manualMuxLock) mux = 1;
-        console.log("Resetting immersion state: CONNECTED received while in immersion mode");
-    }
-
-    function disableFunction() {
-        for (let i = 0; i < drop.length; i++) {        
-            drop[i].classList.remove("clickable");
-            drop[i].classList.add("disabled");
+async function sendFloatCommandToServer(command) {
+    logToFloatSerial(`Sending command: ${command}`);
+    updateAckStatus(`Sending ${command}...`, null);
+    try {
+        const response = await fetch(`/FLOAT/msg?msg=${encodeURIComponent(command)}`);
+        const data = await response.json();
+        if (response.ok && data.status) {
+            updateAckStatus(`${command} ACK received.`, true);
+            logToFloatSerial(`${command} successful: ${data.text}`);
+            return data;
+        } else {
+            updateAckStatus(`${command} FAILED. ${data.text || response.statusText}`, false);
+            logToFloatSerial(`${command} failed: ${data.text || response.statusText}`);
+            return null;
         }
-    }
-
-    for (let i = 0; i < sts.length; i++) {
-        const currentStatus = sts[i].trim();
-        console.log(`Processing status part: "${currentStatus}"`);
-        
-        switch (currentStatus) {
-            case "CONNECTED":
-                serial.classList.add("on");
-                ready.classList.add("on");
-                // Reset immersion when we get a clean CONNECTED state
-                if (isImmersionActive) {
-                    immersion.classList.remove("immersion");
-                    isImmersionActive = false;
-                    console.log("Immersion reset on CONNECTED state");
-                    if (!manualMuxLock) mux = 1;
-                }               
-                break;
-            case "EXECUTING_CMD":
-                for (let i = 0; i < drop.length; i++) drop[i].classList.remove("clickable");
-                manualMuxLock = true;
-                mux = 0;
-                immersion.classList.add("immersion");
-                isImmersionActive = true;
-                console.log("Immersion activated");
-                break;
-            case "CONNECTED_W_DATA":
-                for (let i = 0; i < drop.length; i++) drop[i].classList.remove("clickable");
-                manualMuxLock = true;
-                mux = 0;
-                listen.classList.add("listening");
-                listening = 1;
-                listeningFLOAT().then(result => {
-                    if (result.text === "FINISHED") {
-                        // Make sure immersion is reset
-                        immersion.classList.remove("immersion");
-                        isImmersionActive = false;
-                    }
-                });
-                break;
-            case "DATA_ABORTED":
-                // Reset states when data is aborted
-                listen.classList.remove("listening");
-                immersion.classList.remove("immersion");
-                isImmersionActive = false;
-                if (!manualMuxLock) mux = 1;
-                break;
-            case "STOP_DATA":
-                // Reset states when data stops
-                listen.classList.remove("listening");
-                immersion.classList.remove("immersion");
-                isImmersionActive = false;
-                if (!manualMuxLock) mux = 1;
-                break;
-            case "NO USB":
-                serial.classList.remove("on");
-                ready.classList.remove("on");
-                conn.classList.remove("on");
-                disableFunction();
-                mux = 0;
-                // Reset immersion if no USB
-                immersion.classList.remove("immersion");
-                isImmersionActive = false;
-                break;
-            case "AUTO_MODE_NO":
-                auto_mode.classList.remove("on");
-                break;
-            case "AUTO_MODE_YES":
-                auto_mode.classList.add("on");
-                break;
-            case "CONN_OK":
-                conn.classList.add("on");
-                for (let i = 0; i < drop.length; i++) {
-                    drop[i].classList.add("clickable");
-                    drop[i].classList.remove("disabled");
-                }
-                if (!manualMuxLock) mux = 1;
-                break;
-            case "CONN_LOST":
-                conn.classList.remove("on");
-                disableFunction();
-                // Reset immersion if connection lost
-                immersion.classList.remove("immersion");
-                isImmersionActive = false;
-                break;
-            case "STATUS_ERROR":
-                console.error("SOMETHING WENT WRONG");
-                break;
-            default:
-                // Battery & RSSI
-                const line = sts[i];
-                if (line.includes("BATTERY")) {
-                    const batteryMatch = line.match(/BATTERY:\s*(\d+)/);
-                    if (batteryMatch) {
-                        const batteryElement = document.querySelector(".battery_level");
-                        const batteryValue = parseInt(batteryMatch[1]);
-                        if (batteryElement) {
-                            const percentage = Math.round(
-                                (batteryValue - BATTERY_MIN_VALUE) / 
-                                (BATTERY_MAX_VALUE - BATTERY_MIN_VALUE) * 100
-                            );
-                            batteryElement.textContent = `${percentage}% (${batteryValue} mV)`;
-                        }
-                    }
-                } 
-                else if (line.includes("RSSI")) {
-                    const rssiMatch = line.match(/RSSI:\s*(-?\d+)/);
-                    if (rssiMatch) {
-                        const rssiElement = document.querySelector(".rssi_level");
-                        try {
-                            const rssiValue = parseInt(rssiMatch[1]);
-                            if (rssiElement) {
-                                rssiElement.textContent = `${rssiValue} dBm`;
-                            }
-                        } catch (e) {
-                            console.error("Error parsing RSSI value:", e);
-                        }
-                    }
-                }
-                break;
-        }
+    } catch (error) {
+        updateAckStatus(`${command} FAILED. Network error.`, false);
+        logToFloatSerial(`Network error sending ${command}: ${error}`);
+        return null;
     }
 }
 
-// Routine operation -> every 2 seconds
-async function statusFLOAT(msg) {
-    // If we are in a listening operation
-    if (listening) {
-        listeningFLOAT();
+// --- COMMAND FUNCTIONS ---
+function sendFloatCmd(commandName) {
+    // Special handling for SEND_PACKAGE to display its direct response
+    if (commandName === 'SEND_PACKAGE') {
+        sendFloatCommandToServer(commandName).then(data => {
+            if (data && data.text) {
+                displayReceivedPackage(data.text);
+            }
+        });
+    } else {
+        sendFloatCommandToServer(commandName);
+    }
+}
+
+function sendPidParamsCmd() {
+    const kpEl = document.getElementById('kp-input');
+    const kiEl = document.getElementById('ki-input');
+    const kdEl = document.getElementById('kd-input');
+
+    if (!kpEl || !kiEl || !kdEl) {
+        logToFloatSerial("PID input elements not found.");
+        alert("Error: PID input fields are missing.");
         return;
     }
 
-    // Otherwise, get float status or the package 
-    console.log(`Requesting float status with message: ${msg}`);
+    const kp = kpEl.value;
+    const ki = kiEl.value;
+    const kd = kdEl.value;
+
+    if (kp === "" || ki === "" || kd === "") {
+        alert("Please enter Kp, Ki, and Kd values.");
+        return;
+    }
+    const command = `PARAMS ${kp} ${ki} ${kd}`;
+    sendFloatCommandToServer(command);
+}
+
+function sendTestFreqCmd() {
+    const freqEl = document.getElementById('test-freq-input');
+    if (!freqEl) {
+        logToFloatSerial("Test frequency input element not found.");
+        alert("Error: Test frequency input field is missing.");
+        return;
+    }
+    const freq = freqEl.value;
+    if (freq === "") {
+        alert("Please enter Test Frequency value.");
+        return;
+    }
+    const command = `TEST_FREQ ${freq}`;
+    sendFloatCommandToServer(command);
+}
+
+function sendTestStepsCmd() {
+    const stepsEl = document.getElementById('test-steps-input');
+    if (!stepsEl) {
+        logToFloatSerial("Test steps input element not found.");
+        alert("Error: Test steps input field is missing.");
+        return;
+    }
+    const steps = stepsEl.value;
+    if (steps === "") {
+        alert("Please enter Test Steps value.");
+        return;
+    }
+    const command = `TEST_STEPS ${steps}`;
+    sendFloatCommandToServer(command);
+}
+
+
+// --- STATUS HANDLING ---
+function updateFloatStatusIndicator(elementId, statusText, isOn) {
+    const el = document.getElementById(elementId);
+    if (el) {
+        el.textContent = statusText;
+        if (isOn === true) el.classList.add('on');
+        else if (isOn === false) el.classList.remove('on');
+    } else {
+        logToFloatSerial(`Warning: Status element ID '${elementId}' not found.`);
+    }
+}
+
+function parseAndDisplayStatus(statusString) {
+    logToFloatSerial(`Raw Status: ${statusString}`);
+    const parts = statusString.split('|').map(p => p.trim());
+    let dataAvailable = false;
+
+    parts.forEach(part => {
+        if (part === "CONNECTED") {
+            updateFloatStatusIndicator('float-serial-status', 'CONNECTED', true);
+            updateFloatStatusIndicator('float-ready-status', 'READY', true);
+            updateFloatStatusIndicator('float-executing-status', 'IDLE', false);
+        } else if (part === "CONNECTED_W_DATA") {
+            updateFloatStatusIndicator('float-serial-status', 'CONNECTED', true);
+            updateFloatStatusIndicator('float-ready-status', 'READY', true);
+            updateFloatStatusIndicator('float-data-avail-status', 'YES', true);
+            dataAvailable = true;
+            updateFloatStatusIndicator('float-executing-status', 'IDLE (DATA)', false);
+        } else if (part === "EXECUTING_CMD") {
+            updateFloatStatusIndicator('float-executing-status', 'BUSY', true);
+            updateFloatStatusIndicator('float-data-avail-status', 'NO', false);
+            dataAvailable = false;
+        } else if (part === "AUTO_MODE_YES") {
+            updateFloatStatusIndicator('float-auto-mode-status', 'ON', true);
+        } else if (part === "AUTO_MODE_NO") {
+            updateFloatStatusIndicator('float-auto-mode-status', 'OFF', false);
+        } else if (part === "CONN_OK") {
+            updateFloatStatusIndicator('float-wifi-status', 'OK', true);
+        } else if (part === "CONN_LOST") {
+            updateFloatStatusIndicator('float-wifi-status', 'LOST', false);
+        } else if (part.startsWith("BATTERY:")) {
+            const batteryValue = part.split(':')[1].trim();
+            updateFloatStatusIndicator('float-battery-level', `${batteryValue}mV`, null);
+        } else if (part.startsWith("RSSI:")) {
+            const rssiValue = part.split(':')[1].trim();
+            updateFloatStatusIndicator('float-rssi-level', `${rssiValue}dBm`, null);
+        } else if (part === "NO USB") {
+            updateFloatStatusIndicator('float-serial-status', 'NO USB', false);
+            updateFloatStatusIndicator('float-ready-status', 'OFF', false);
+            updateFloatStatusIndicator('float-wifi-status', 'N/A', null);
+            updateFloatStatusIndicator('float-executing-status', 'N/A', null);
+            updateFloatStatusIndicator('float-data-avail-status', 'N/A', false);
+            dataAvailable = false;
+        } else if (part.startsWith("TIMEOUT_ON_")) {
+            logToFloatSerial(`Warning: ESPB reported timeout on command: ${part}`);
+        }
+    });
+
+    const fetchButton = document.getElementById('fetch-profile-data-button');
+    if (fetchButton) {
+        fetchButton.disabled = !dataAvailable;
+    } else {
+        logToFloatSerial("Warning: Fetch profile data button not found.");
+    }
+    
+    if (!dataAvailable) {
+         updateFloatStatusIndicator('float-data-avail-status', 'NO', false);
+    }
+}
+
+
+async function pollFloatStatus() {
+    // Only poll and update DOM if FLOAT page is active
+    if (typeof page_now !== 'undefined' && page_now !== 'FLOAT') {
+        return;
+    }
+
     try {
-        let data = await getRequest(`/FLOAT/status?msg=${msg}`);
-        console.log(`Response for ${msg}:`, data);
-        
-        // Check if we have valid data before processing
-        if (!data) {
-            console.error("Received empty data from server");
+        const response = await fetch(`/FLOAT/status?msg=STATUS`);
+        if (!response.ok) {
+            logToFloatSerial(`Error polling status: HTTP ${response.status}`);
+            parseAndDisplayStatus("NO USB"); // Simulate a disconnect
             return;
         }
-        
-        switch (msg) {
-            case "STATUS":
-                handleStatus(data);
-                break;
-            case "SEND_PACKAGE":
-                if (mux == 1) { 
-                    if (data.text && data.text !== "INVALID_DATA" && 
-                        data.text !== "TIMEOUT_ON_SEND_PACKAGE") {
-                        publishPackage(data);
-                    } else {
-                        console.warn("Received invalid package data:", data.text);
-                    }
-                }
-                else console.log("NOT READY FOR PACKAGE - MUX is locked");
-                break;
-        }
-    } catch (e) {
-        console.error(`Error in statusFLOAT for ${msg}:`, e);
-    }
-}
-
-// This function sends a message
-let msgs = ["GO", "SWITCH_AUTO_MODE", "TRY_UPLOAD", "BALANCE", "CLEAR_SD", "HOME_MOTOR"]
-async function msg(e, msg_id) {
-    // Handle mux
-    if (!mux) {
-        console.log("NOT READY FOR MSG - MUX is locked");
-        return;
-    }
-    // Lock
-    mux = 0;
-    
-    const message = msgs[msg_id];
-    console.log(`Sending message: ${message}`);
-
-    // send msg - ensure there is a leading slash
-    try {
-        const data = await fetch(`/FLOAT/msg?msg=${encodeURIComponent(message)}`);
-        console.log(`Message ${message} response:`, data);
-
-        if (data.status == 201) {
-            console.log(`Message ${message} sent successfully`);
-            mux = 1;
-        }
-        else {
-            console.error(`Failed to send message ${message}`, data);
-            alert("Is USB cable connected?");
-        }
-    } catch (e) {
-        console.error(`Error sending message ${message}:`, e);
-        alert("Failed to send command. Check your connection.");
-    }
-}
-
-// Switch between Advanced and Basic operations
-function switchDiv(){
-    const div1 = document.getElementById('basicFloat');
-    const div2 = document.getElementById('advancedFloat');
-    const button = document.getElementById('toggleButton');
-    
-    if(div1.style.display === 'none') {
-        button.innerText = 'Advanced';
-        div1.style.display = 'flex';
-        div2.style.display = 'none';
-    }
-    else {
-        button.innerText = 'Basic';
-        div1.style.display = 'none';
-        div2.style.display = 'flex';
-    }
-}
-
-
-// Similar to msg function but with kp,kd,ki args
-async function sendPidParams() {
-    // Read
-    const kp = parseFloat(document.getElementById("kp").value);
-    const kd = parseFloat(document.getElementById("kd").value);
-    const ki = parseFloat(document.getElementById("ki").value);
-
-
-    // Check errors
-    if (isNaN(kp) || isNaN(kd) || isNaN(ki)) {
-        alert("Please enter valid numeric values for Kp, Kd, and Ki.");
-        return;
-    }
-
-    let msg = `PARAMS ${kp} ${kd} ${ki}`;
-    console.log(`Sending PID params: ${msg}`);
-    // First, send PARAMS to ESP-B, mux to 0
-    mux = 0;
-    
-    try {
-        let data = await fetch(`/FLOAT/msg?msg=${encodeURIComponent(msg)}`);
-        if (data.status == 201) {
-            console.log("PID params sent successfully");
-            mux = 1;
+        const data = await response.json();
+        if (data.status) {
+            parseAndDisplayStatus(data.text);
         } else {
-            console.error("Failed to send PID params", data);
-            alert("Is USB cable connected?");
+            logToFloatSerial(`Error polling status: ${data.text || 'Unknown error'}`);
+            parseAndDisplayStatus("NO USB"); // Simulate a disconnect
         }
-    } catch (e) {
-        console.error(`Error sending PID params:`, e);
-        alert("Failed to send PID parameters. Check your connection.");
+    } catch (error) {
+        logToFloatSerial(`Network error polling status: ${error}`);
+        parseAndDisplayStatus("NO USB"); // Simulate a disconnect
     }
+}
+
+// --- DATA FETCHING AND DISPLAY ---
+async function fetchProfileData() {
+    logToFloatSerial("Attempting to fetch profile data...");
+    const fetchButton = document.getElementById('fetch-profile-data-button');
+    if (fetchButton) fetchButton.disabled = true;
+
+    const profileStatusEl = document.getElementById('profile-data-status');
+    if (profileStatusEl) profileStatusEl.textContent = "Sending LISTENING command...";
+
+    const listenCmdSuccessData = await sendFloatCommandToServer('LISTENING');
+    if (!listenCmdSuccessData) {
+        if (profileStatusEl) profileStatusEl.textContent = "Failed to send LISTENING command. Cannot fetch data.";
+        // Re-enable button based on next status poll if appropriate
+        return;
+    }
+    
+    if (profileStatusEl) profileStatusEl.textContent = "Fetching data from backend...";
+    logToFloatSerial("Calling /FLOAT/listen endpoint...");
+
+    try {
+        const response = await fetch(`/FLOAT/listen`);
+        const data = await response.json();
+        logToFloatSerial(`/FLOAT/listen response: Status ${data.status}, Text: ${data.text}`);
+
+        if (response.ok && data.status && data.text === "FINISHED") {
+            if (profileStatusEl) profileStatusEl.textContent = "Data received and processed.";
+            displayProfileData(data.data);
+            updateFloatStatusIndicator('float-data-avail-status', 'FETCHED', null);
+        } else if (data.text === "LOADING") {
+            if (profileStatusEl) profileStatusEl.textContent = "Data transfer in progress... try again shortly if it persists.";
+        } else {
+            if (profileStatusEl) profileStatusEl.textContent = `Error fetching profile data: ${data.text}`;
+            logToFloatSerial(`Error fetching profile data from /FLOAT/listen: ${data.text}`);
+        }
+    } catch (error) {
+        if (profileStatusEl) profileStatusEl.textContent = "Network error fetching profile data.";
+        logToFloatSerial(`Network error on /FLOAT/listen: ${error}`);
+    }
+}
+
+function displayProfileData(profileData) {
+    const rawDataEl = document.getElementById('profile-data-raw');
+    const plotContainerEl = document.getElementById('profile-plot-container');
+    
+    if (!rawDataEl || !plotContainerEl) {
+        logToFloatSerial("Profile data display elements not found.");
+        return;
+    }
+
+    rawDataEl.textContent = ""; 
+    plotContainerEl.innerHTML = ""; 
+
+    if (profileData && profileData.raw && profileData.raw.times && Array.isArray(profileData.raw.times)) {
+        let formattedRawData = "Timestamp (ms) | Depth (m) | Pressure (Pa)\n";
+        formattedRawData += "--------------------------------------------\n";
+        for (let i = 0; i < profileData.raw.times.length; i++) {
+            const time = profileData.raw.times[i];
+            const depth = parseFloat(profileData.raw.depth[i]).toFixed(2);
+            const pressure = parseFloat(profileData.raw.pressure[i]).toFixed(2);
+            
+            let line = `${time} | ${depth} | ${pressure}\n`;
+            if (Math.abs(parseFloat(depth) - FLOAT_TARGET_DEPTH) <= FLOAT_MAX_ERROR) {
+                formattedRawData += `* ${line}`; 
+            } else {
+                formattedRawData += `  ${line}`;
+            }
+        }
+        rawDataEl.textContent = formattedRawData;
+
+        if (profileData.img && profileData.img !== "NO_DATA" && Array.isArray(profileData.img) && profileData.img.length === 2) {
+            const depthImg = document.createElement('img');
+            depthImg.src = "data:image/png;base64," + profileData.img[0];
+            depthImg.alt = "Depth vs Time Plot";
+            depthImg.style.maxWidth = "100%";
+            plotContainerEl.appendChild(depthImg);
+
+            const pressureImg = document.createElement('img');
+            pressureImg.src = "data:image/png;base64," + profileData.img[1];
+            pressureImg.alt = "Pressure vs Time Plot";
+            pressureImg.style.maxWidth = "100%";
+            plotContainerEl.appendChild(pressureImg);
+        } else {
+            plotContainerEl.textContent = "No plot data available or plots missing.";
+        }
+    } else {
+        rawDataEl.textContent = "No raw data points received or data is malformed.";
+        plotContainerEl.textContent = "No plot data available.";
+    }
+}
+
+function displayReceivedPackage(packageDataText) {
+    const packageContentEl = document.getElementById('float-package-content');
+    if (!packageContentEl) {
+        logToFloatSerial("Package content display element not found.");
+        return;
+    }
+    try {
+        const jsonData = JSON.parse(packageDataText);
+        packageContentEl.textContent = JSON.stringify(jsonData, null, 2);
+        logToFloatSerial("Displayed new package.");
+    } catch (e) {
+        packageContentEl.textContent = packageDataText; 
+        logToFloatSerial(`Displayed raw package (JSON parse failed): ${packageDataText}`);
+    }
+}
+
+// --- INITIALIZATION ---
+async function initializeFloatPage() {
+    logToFloatSerial("Initializing Float Page Logic...");
+    
+    // Attempt to load float config if available via info object
+    // Ensure info and info.float_config exist before trying to access sub-properties
+    if (typeof info !== "undefined" && info && info.float_config) {
+        FLOAT_TARGET_DEPTH = info.float_config.target_depth || 2.5;
+        FLOAT_MAX_ERROR = info.float_config.max_error || 0.45;
+        logToFloatSerial(`Loaded float config: Target Depth=${FLOAT_TARGET_DEPTH}, Max Error=${FLOAT_MAX_ERROR}`);
+    } else {
+        logToFloatSerial(`Using default float config or info.float_config not found: Target Depth=${FLOAT_TARGET_DEPTH}, Max Error=${FLOAT_MAX_ERROR}`);
+    }
+    
+    // Fetch initial status
+    await pollFloatStatus();
+    // Start polling
+    setInterval(pollFloatStatus, 3000); // Poll status every 3 seconds
 }
