@@ -13,8 +13,8 @@ import threading
 
 matplotlib.use("Agg")
 
-# Add a global lock for serial port access
-serial_lock = threading.Lock()
+# Add a global reentrant lock for serial port access
+serial_lock = threading.RLock()
 
 # Load configuration for target_depth and max_error
 FLOAT_CONFIG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config/float.json")
