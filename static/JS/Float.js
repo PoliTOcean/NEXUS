@@ -422,8 +422,8 @@ async function attemptFloatSerialConnection() {
 async function initializeFloatPage() {
     logToFloatSerial("Initializing Float Page Logic...");
     
-    FLOAT_TARGET_DEPTH = 2.5;
-    FLOAT_MAX_ERROR =  0.5;
+    FLOAT_TARGET_DEPTH = 2.5; // Default, will be overridden if config loaded
+    FLOAT_MAX_ERROR =  0.5;  // Default
     logToFloatSerial(`Loaded float config: Target Depth=${FLOAT_TARGET_DEPTH}, Max Error=${FLOAT_MAX_ERROR}`);
     
     // Attempt initial serial connection

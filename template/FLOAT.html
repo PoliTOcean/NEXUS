@@ -24,8 +24,8 @@
                     <button class="float-button" onclick="sendFloatCmd('SWITCH_AUTO_MODE')">TOGGLE AUTO</button>
                     <button class="float-button" onclick="sendFloatCmd('SEND_PACKAGE')">SEND PACKAGE</button>
                     <button class="float-button" onclick="sendFloatCmd('TRY_UPLOAD')">OTA UPLOAD</button>
-                    <button class="float-button" onclick="sendFloatCmd('DEBUG')">TOGGLE DEBUG</button>
                     <button class="float-button" onclick="sendFloatCmd('HOME_MOTOR')">HOME MOTOR</button>
+                    <button id="fetch-profile-data-button" class="float-button" onclick="fetchProfileData()" disabled>FETCH STORED DATA</button>
                 </div>
                 <div class="param-command">
                     <input type="number" id="kp-input" placeholder="Kp (e.g. 10.0)">
@@ -44,11 +44,6 @@
                 <div class="ack-status-area">
                     Last Command ACK: <span id="float-ack-status">N/A</span>
                 </div>
-            </div>
-             <div class="float-data-fetch-panel box_float">
-                <div class="title">PROFILE DATA</div>
-                <button id="fetch-profile-data-button" class="float-button" onclick="fetchProfileData()" disabled>FETCH STORED DATA</button>
-                <div id="profile-data-status"></div>
             </div>
         </div>
 

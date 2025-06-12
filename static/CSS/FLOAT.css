@@ -281,7 +281,7 @@ h2 {
 }
 
 
-.float-status-panel, .float-commands-panel, .float-package-display, .float-profile-data-display, .float-raw-serial-debug, .float-data-fetch-panel {
+.float-status-panel, .float-commands-panel, .float-package-display, .float-profile-data-display, .float-raw-serial-debug, .float-data-fetch-panel, .float-status-panel {
     background-color: #1D2125;
     color: white;
     padding: 15px;
@@ -468,4 +468,29 @@ h2 {
 .float-data-fetch-panel #profile-data-status {
     margin-top: 10px;
     font-style: italic;
+}
+
+/* Style the fetch button like the debug toggle button */
+#fetch-profile-data-button {
+    background-color: #0055CC;
+    color: #fff;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9em;
+    text-align: center;
+}
+
+#fetch-profile-data-button:hover {
+    background-color: #0044AA;
+}
+
+/* Modified styles for the data fetch panel to accommodate only the fetch button */
+.float-data-fetch-panel {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start; /* Align to start without the debug button */
+    gap: 10px;
 }

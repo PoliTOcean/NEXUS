@@ -384,3 +384,48 @@ video {
     width: 450px;
     aspect-ratio: 1/1;
 }
+
+.float-data-display-col {
+    flex: 4 1 0; /* Give this 80% of space (4 parts out of 5) */
+    min-width: 0;
+    min-height: 0;
+    width: auto;
+    height: auto;
+    box-sizing: border-box;
+}
+
+.float-package-display.box_float,
+.float-profile-data-display.box_float {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 0;
+    width: auto;
+    height: auto;
+    box-sizing: border-box;
+}
+
+.float-controls-status-col {
+    flex: 1 1 0; /* Give this 20% of space (1 part out of 5) */
+    max-width: 20%; /* Limit to 20% of container width */
+    min-width: 0;
+    min-height: 0;
+    width: auto;
+    height: auto;
+    box-sizing: border-box;
+}
+
+.float-status-panel.box_float,
+.float-commands-panel.box_float {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 0;
+    width: auto;
+    height: auto;
+    box-sizing: border-box;
+    margin-bottom: 10px;
+}
+
+/* Fix duplicate entry */
+.float-status-panel {
+    width: 100%;
+}
