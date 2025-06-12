@@ -422,14 +422,9 @@ async function attemptFloatSerialConnection() {
 async function initializeFloatPage() {
     logToFloatSerial("Initializing Float Page Logic...");
     
-    // Attempt to load float config if available via info object
-    if (typeof info !== "undefined" && info && info.float_config) {
-        FLOAT_TARGET_DEPTH = info.float_config.target_depth || 2.5;
-        FLOAT_MAX_ERROR = info.float_config.max_error || 0.45;
-        logToFloatSerial(`Loaded float config: Target Depth=${FLOAT_TARGET_DEPTH}, Max Error=${FLOAT_MAX_ERROR}`);
-    } else {
-        logToFloatSerial(`Using default float config or info.float_config not found: Target Depth=${FLOAT_TARGET_DEPTH}, Max Error=${FLOAT_MAX_ERROR}`);
-    }
+    FLOAT_TARGET_DEPTH = 2.5;
+    FLOAT_MAX_ERROR =  0.5;
+    logToFloatSerial(`Loaded float config: Target Depth=${FLOAT_TARGET_DEPTH}, Max Error=${FLOAT_MAX_ERROR}`);
     
     // Attempt initial serial connection
     await attemptFloatSerialConnection();
