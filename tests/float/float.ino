@@ -23,6 +23,9 @@ void setup() {
 }
 
 void processInput(char str[MAXS]) {
+  Serial.print("Received command: ");
+  Serial.println(str);
+  
   if (strncmp(str, "PARAMS", 6) == 0) {
     float kp_val, kd_val, ki_val;
     // prova a leggere i 3 float dalla stringa dopo "PARAMS"
@@ -30,19 +33,45 @@ void processInput(char str[MAXS]) {
       Kp = kp_val;
       Kd = kd_val;
       Ki = ki_val;
+      Serial.print("Received PID values: Kp=");
+      Serial.print(Kp);
+      Serial.print(", Ki=");
+      Serial.print(Ki);
+      Serial.print(", Kd=");
+      Serial.println(Kd);
     }
   }
   else if (strcmp(str, "SEND_PACKAGE") == 0) {
-      String jsonString = "{\"company_number\": \"EX_01\",  \"depth\":" + String(30, 3) + 
+      String jsonString = "{\"company_number\": \"EX_01\", \"depth\":" + String(30.5, 3) + 
                           ", \"mseconds\":" + String(10)  +
                           ", \"pressure\":\"" + String(100) + "\" }";
       Serial.println(jsonString);
       return;
   }
-
+  else if (strcmp(str, "SWITCH_AUTO_MODE") == 0) {
+      Serial.println("AUTO_MODE changed");
+      return;
+  }
+  else if (strcmp(str, "TRY_UPLOAD") == 0) {
+      Serial.println("Upload initiated");
+      return;
+  }
+  else if (strcmp(str, "BALANCE") == 0) {
+      Serial.println("Balance operation started");
+      return;
+  }
+  else if (strcmp(str, "CLEAR_SD") == 0) {
+      Serial.println("SD card cleared");
+      return;
+  }
+  else if (strcmp(str, "HOME_MOTOR") == 0) {
+      Serial.println("Motor homed");
+      return;
+  }
   else if (strcmp(str, GO) == 0 && !run) {
     digitalWrite(LED, HIGH);
     run = 1;
+    Serial.println("GO command received");
     return;
   }
   else if (strcmp(str, STATUS) == 0) {
@@ -57,6 +86,7 @@ void processInput(char str[MAXS]) {
   }
   else if (strcmp(str, "LISTENING") == 0) {
     list = 1;
+    Serial.println("LISTENING mode activated");
     return;
   }
   
@@ -106,7 +136,11 @@ void loop() {
                             ", \"mseconds\":" + String(msec)  +
                             ", \"pressure\":\"" + String(pressure) + "\" }";
 
-        Serial.println("DATA CORRUPTED FOR ERROR HANDLING::");
+        // Send only every 5th point a corrupted data for testing
+        if (f % 5 == 0) {
+          Serial.println("DATA CORRUPTED FOR ERROR HANDLING::");
+        }
+        
         Serial.println(jsonString);
 
         f++;

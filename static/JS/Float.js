@@ -51,19 +51,42 @@ function publishReport(data) {
 }
 
 function publishPackage(status) {
-    raw = status['text'];
-    console.log(raw);
-    const tab = document.getElementsByClassName("g1")[0];
-    let div = document.createElement('div');
-    let h1 = document.createElement('h1');
-    let p = document.createElement('p');
-    h1.innerHTML = "PACKAGE";
-    p.innerHTML += `${raw.company_name}&emsp;${raw.times}&emsp;${raw.pressure} Pa&emsp;${raw.depth} m<br/>`;
-    div.classList.add('report');
-    p.classList.add('raw');
-    div.append(h1);
-    div.append(p);
-    tab.appendChild(div);
+    try {
+        console.log("Publishing package data:", status);
+        const tab = document.getElementsByClassName("g1")[0];
+        let div = document.createElement('div');
+        let h1 = document.createElement('h1');
+        let p = document.createElement('p');
+        h1.innerHTML = "PACKAGE";
+        
+        // Check if the text is already an object or needs parsing
+        let raw = status.text;
+        if (typeof raw === 'string') {
+            try {
+                raw = JSON.parse(raw);
+                console.log("Parsed package data:", raw);
+            } catch (e) {
+                console.error("Error parsing package data:", e, raw);
+                p.innerHTML = `Error parsing data: ${raw}`;
+                div.classList.add('report');
+                p.classList.add('raw');
+                div.append(h1);
+                div.append(p);
+                tab.appendChild(div);
+                return;
+            }
+        }
+        
+        // Now display the data
+        p.innerHTML = `${raw.company_name || 'Unknown'}&emsp;${raw.mseconds || raw.times || 0}&emsp;${raw.pressure || 0} Pa&emsp;${raw.depth || 0} m<br/>`;
+        div.classList.add('report');
+        p.classList.add('raw');
+        div.append(h1);
+        div.append(p);
+        tab.appendChild(div);
+    } catch (e) {
+        console.error("Error in publishPackage:", e);
+    }
 }
 
 
@@ -261,20 +284,25 @@ async function statusFLOAT(msg) {
 
     // Otherwise, get float status or the package 
     console.log(`Requesting float status with message: ${msg}`);
-    let data = await getRequest(`/FLOAT/status?msg=${msg}`);
-    switch (msg) {
-        case "STATUS":
-            handleStatus(data);
-            break
-        case "SEND_PACKAGE":
-            if (mux == 1) { 
-                publishPackage(data);
-            }
-            else console.log("NOT READY FOR PACKAGE - MUX is locked");
-            break
+    try {
+        let data = await getRequest(`/FLOAT/status?msg=${msg}`);
+        console.log(`Response for ${msg}:`, data);
+        
+        switch (msg) {
+            case "STATUS":
+                handleStatus(data);
+                break;
+            case "SEND_PACKAGE":
+                if (mux == 1) { 
+                    publishPackage(data);
+                }
+                else console.log("NOT READY FOR PACKAGE - MUX is locked");
+                break;
+        }
+    } catch (e) {
+        console.error(`Error in statusFLOAT for ${msg}:`, e);
     }
 }
-
 
 // This function sends a message
 let msgs = ["GO", "SWITCH_AUTO_MODE", "TRY_UPLOAD", "BALANCE", "CLEAR_SD", "HOME_MOTOR"]
@@ -290,16 +318,22 @@ async function msg(e, msg_id) {
     const message = msgs[msg_id];
     console.log(`Sending message: ${message}`);
 
-    // send msg
-    const data = await fetch(`FLOAT/msg?msg=${message}`);
+    // send msg - ensure there is a leading slash
+    try {
+        const data = await fetch(`/FLOAT/msg?msg=${encodeURIComponent(message)}`);
+        console.log(`Message ${message} response:`, data);
 
-    if (data.status == 201) {
-        console.log(`Message ${message} sent successfully`);
-        mux = 1;
-    }
-    else {
-        console.error(`Failed to send message ${message}`);
-        alert("Is USB cable connected?");
+        if (data.status == 201) {
+            console.log(`Message ${message} sent successfully`);
+            mux = 1;
+        }
+        else {
+            console.error(`Failed to send message ${message}`, data);
+            alert("Is USB cable connected?");
+        }
+    } catch (e) {
+        console.error(`Error sending message ${message}:`, e);
+        alert("Failed to send command. Check your connection.");
     }
 }
 
@@ -337,9 +371,21 @@ async function sendPidParams() {
     }
 
     let msg = `PARAMS ${kp} ${kd} ${ki}`;
+    console.log(`Sending PID params: ${msg}`);
     // First, send PARAMS to ESP-B, mux to 0
     mux = 0;
-    let data = await fetch(`FLOAT/msg?msg=${encodeURIComponent(msg)}`);
-    if (data.status == 201) console.log("PARAMS status sent");
-    else console.error("Is USB cable connected?");
+    
+    try {
+        let data = await fetch(`/FLOAT/msg?msg=${encodeURIComponent(msg)}`);
+        if (data.status == 201) {
+            console.log("PID params sent successfully");
+            mux = 1;
+        } else {
+            console.error("Failed to send PID params", data);
+            alert("Is USB cable connected?");
+        }
+    } catch (e) {
+        console.error(`Error sending PID params:`, e);
+        alert("Failed to send PID parameters. Check your connection.");
+    }
 }

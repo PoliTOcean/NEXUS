@@ -81,21 +81,42 @@ def msg_status(s: Serial, msg: str):
         s.reset_input_buffer()
         s.write(f'{msg}\n'.encode('utf-8'))
         time.sleep(0.03)
+        
+        # Wait for a response with timeout
+        start_time = time.time()
+        while s.in_waiting == 0:
+            if time.time() - start_time > 1.0:  # 1 second timeout
+                print(f"[FLOAT] Timeout waiting for response to {msg}")
+                if msg == 'SEND_PACKAGE':
+                    return {
+                        'text': '{"company_name":"Timeout","times":0,"pressure":"0","depth":0}',
+                        'status': 1
+                    }
+                return {
+                    'text': f"TIMEOUT_ON_{msg}",
+                    'status': 1
+                }
+            time.sleep(0.01)
+            
         line = s.readline().strip().decode()
         print(f"[FLOAT] Received: {line}")
         
         if msg == 'SEND_PACKAGE':
             try:
-                float_data = json.loads(line)
-                times = int(float_data.get('mseconds', 0))
-                depth = float(float_data.get('depth', 0.0))
-                pressure = float_data.get('pressure', '0')
-                cn = float_data.get('company_number', 'Unknown')
-                line = {"times": times, "depth": depth, "pressure": pressure, "company_name": cn}
-                print(f"[FLOAT] Parsed package: {line}")
+                # Try to parse as JSON directly
+                json_obj = json.loads(line)
+                # The Arduino sends a properly formatted JSON string, so we'll pass it through
+                print(f"[FLOAT] Valid JSON package: {json_obj}")
+                return {
+                    'text': line,  # Return the raw JSON string
+                    'status': 1
+                }
             except (json.JSONDecodeError, KeyError, ValueError) as e:
                 print(f"[FLOAT] Error parsing package: {str(e)}")
-                line = "INVALID_DATA"
+                return {
+                    'text': '{"company_name":"Error","times":0,"pressure":"0","depth":0}',
+                    'status': 1
+                }
 
         return {
             'text': line,
@@ -266,6 +287,15 @@ def send(s: Serial, msg: str):
         s.reset_output_buffer()
         s.reset_input_buffer()
         s.write(f'{msg}\n'.encode('utf-8'))
+        
+        # Add a small delay to ensure command is sent
+        time.sleep(0.05)
+        
+        # Read any immediate response (optional)
+        if s.in_waiting > 0:
+            response = s.readline().strip().decode()
+            print(f"[FLOAT] Immediate response to {msg}: {response}")
+            
         return True
     except Exception as e:
         print(f"[FLOAT] Error sending command: {str(e)}")
