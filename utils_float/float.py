@@ -13,30 +13,34 @@ import threading
 
 matplotlib.use("Agg")
 
+# Load configuration for target_depth and max_error
+FLOAT_CONFIG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config/float.json")
+with open(FLOAT_CONFIG_PATH) as f:
+    float_config = json.load(f)
+TARGET_DEPTH = float_config.get("target_depth", 2.5)
+MAX_ERROR = float_config.get("max_error", 0.45)
+
+
 def plot_pressure_time(data, arg, ylabel):
-    depth = data[arg]
-    time = data['times']
+    y_values = data[arg]
+    time_ms = data['times'] # Assuming times are in milliseconds from ESPA
 
-    is_datetime = False
-    try:
-        time = [datetime.strptime(t, '%Y-%m-%dT%H:%M:%SZ') for t in time]
-        is_datetime = True
-    except Exception:
-        time = [float(t) for t in time]
+    # Convert time from milliseconds to seconds for the plot
+    time_seconds = [t / 1000.0 for t in time_ms]
 
-    plt.figure()
-    plt.plot(time, depth, linestyle='-', marker='o')
+    plt.figure(figsize=(10, 6))
+    plt.plot(time_seconds, y_values, linestyle='-', marker='o', label=ylabel)
+    
+    if arg == 'depth':
+        plt.axhline(y=TARGET_DEPTH, color='r', linestyle='--', label=f'Target Depth ({TARGET_DEPTH}m)')
+        plt.axhline(y=TARGET_DEPTH + MAX_ERROR, color='orange', linestyle=':', label=f'Target + Error ({TARGET_DEPTH + MAX_ERROR:.2f}m)')
+        plt.axhline(y=TARGET_DEPTH - MAX_ERROR, color='orange', linestyle=':', label=f'Target - Error ({TARGET_DEPTH - MAX_ERROR:.2f}m)')
+        plt.legend()
+
     plt.ylabel(ylabel)
-    plt.grid()
-
-    if is_datetime:
-        plt.xlabel('Time (UTC)')
-        plt.gcf().autofmt_xdate()
-        myFmt = mdates.DateFormatter('%Y-%m-%d %H:%M:%S')
-        plt.gca().xaxis.set_major_formatter(myFmt)
-        plt.gca().xaxis.set_major_locator(mdates.AutoDateLocator())
-    else:
-        plt.xlabel('Time (ms)')
+    plt.xlabel('Time (seconds)')
+    plt.grid(True)
+    plt.title(f'{ylabel} vs. Time')
 
     buffer = BytesIO()
     plt.savefig(buffer, format='png')
@@ -100,6 +104,10 @@ def msg_status(s: Serial, msg: str):
             
         line = s.readline().strip().decode()
         print(f"[FLOAT] Received: {line}")
+        
+        # For STATUS, the response can be multi-part
+        # e.g., "CONNECTED | AUTO_MODE_YES | CONN_OK | BATTERY: 12345 | RSSI: -50"
+        # We return the raw string, frontend will parse.
         
         if msg == 'SEND_PACKAGE':
             try:
@@ -194,6 +202,9 @@ def handle_upload_data(s: Serial):
     error_count = 0
     max_errors = 10  # Allow a reasonable number of errors before giving up
     
+    # Convert times from string datetime to milliseconds if necessary, or ensure they are numeric
+    processed_times = []
+
     while True:
         try:
             line_data = s.readline().strip()
@@ -219,11 +230,11 @@ def handle_upload_data(s: Serial):
             try:
                 float_data = json.loads(decoded)
                 depth_val = float(float_data.get('depth', 0))
-                time_val = int(float_data.get('mseconds', 0))
+                time_val = int(float_data.get('mseconds', 0)) # ESPA sends mseconds
                 pressure_val = float_data.get('pressure', '0')
                 
                 depth.append(depth_val)
-                times.append(time_val)
+                processed_times.append(time_val) # Store as numeric milliseconds
                 pressure.append(pressure_val)
                 if cn == '':
                     cn = float_data.get("company_number", "Unknown")
@@ -247,29 +258,25 @@ def handle_upload_data(s: Serial):
             continue
     
     print("[FLOAT] Data collection complete")
-    try:
-        s.write(b"DATA_RECEIVED\n")
-        print("[FLOAT] Sent DATA_RECEIVED confirmation")
-    except Exception as e:
-        print(f"[FLOAT] Error sending confirmation: {str(e)}")
-    
-    if times and depth:
-        json_complete = {"times": times, "depth": depth, "pressure": pressure, "company_number": cn}
+    # Replace original times with processed_times for plotting
+    if processed_times:
+        json_complete = {"times": processed_times, "depth": depth, "pressure": pressure, "company_number": cn}
         try:
-            data = [plot_pressure_time(json_complete, 'depth', 'Depth (m)'), 
-                   plot_pressure_time(json_complete, 'pressure', 'Pressure (Pa)')]
+            plot_depth_img = plot_pressure_time(json_complete, 'depth', 'Depth (m)')
+            plot_pressure_img = plot_pressure_time(json_complete, 'pressure', 'Pressure (Pa)')
+            data_plots = [plot_depth_img, plot_pressure_img]
         except Exception as e:
             print(f"[FLOAT] Error generating plots: {str(e)}")
-            data = "NO_DATA"
+            data_plots = "NO_DATA"
     else:
-        data = "NO_DATA"
+        data_plots = "NO_DATA"
         
     img_data = {
         'text': "FINISHED",
         'status': 1,
         'data': {
-            'img': data,
-            'raw': {"times": times, "depth": depth, "pressure": pressure, "company_number": cn} if times and depth else {}
+            'img': data_plots,
+            'raw': {"times": processed_times, "depth": depth, "pressure": pressure, "company_number": cn} if processed_times and depth else {}
         }
     }
     print("[FLOAT] Thread finished")

@@ -16,9 +16,37 @@ def float_msg():
         data['status'] = False
         data['text'] = "SERIAL NOT OPENED"
         return jsonify(data), 400
-    msg = request.args.get('msg')
+    msg_param = request.args.get('msg')
+    
+    # Handle commands with parameters
+    if msg_param.startswith("PARAMS"):
+        parts = msg_param.split()
+        if len(parts) == 4: # PARAMS Kp Kd Ki
+            # msg will be "PARAMS Kp_val Kd_val Ki_val"
+            pass # msg is already correctly formatted as msg_param
+        else:
+            data['status'] = False
+            data['text'] = "INVALID PARAMS FORMAT"
+            return jsonify(data), 400
+    elif msg_param.startswith("TEST_FREQ"):
+        parts = msg_param.split()
+        if len(parts) == 2: # TEST_FREQ freq_val
+            pass # msg is already correctly formatted as msg_param
+        else:
+            data['status'] = False
+            data['text'] = "INVALID TEST_FREQ FORMAT"
+            return jsonify(data), 400
+    elif msg_param.startswith("TEST_STEPS"):
+        parts = msg_param.split()
+        if len(parts) == 2: # TEST_STEPS steps_val
+            pass # msg is already correctly formatted as msg_param
+        else:
+            data['status'] = False
+            data['text'] = "INVALID TEST_STEPS FORMAT"
+            return jsonify(data), 400
+
     try:
-        result = send(s, msg)
+        result = send(s, msg_param) # Use msg_param which contains the full command string
         if not result:
             raise Exception("Failed to send message")
     except Exception as e:
@@ -29,7 +57,7 @@ def float_msg():
         return jsonify(data), 400
     data['status'] = True
     data['text'] = 'SUCCESS'
-    print(f"[FLOAT_SERVER] Message sent successfully: {msg}")
+    print(f"[FLOAT_SERVER] Message sent successfully: {msg_param}")
     return jsonify(data), 201
     
 
