@@ -57,22 +57,39 @@ def start_communication(s: Serial):
     # But if you arrived here it means that serial does not reply anymore
     with serial_lock:
         if (s.is_open):
+            print("[FLOAT] Serial port already open, closing before reconnecting.")
             s.close()  
         # Try to open serial communication      
         with open(os.path.dirname(os.path.abspath(__file__)) + "/config/float.json") as jmaps:
             conf = json.load(jmaps)
             s.baudrate = conf['baudrate']
             for i in range(0, 5):
+                port_candidate = f"{conf['port']}{i}"
                 try:
-                    s.port = f"{conf['port']}{i}"
+                    print(f"[FLOAT] Attempting connection on {port_candidate}")
+                    s.port = port_candidate
                     s.open()
-                    print(f"[FLOAT] Attempting connection on {s.port}")
+                    print(f"[FLOAT] Port {port_candidate} opened successfully.")
                     val = msg_status(s, 'STATUS')
                     if val['status'] == 1:
                         print(f"[FLOAT] Successfully connected on {s.port}")
-                    return val
+                        return val
+                    else:
+                        print(f"[FLOAT] STATUS command failed on {s.port}: {val}")
+                        s.close()
                 except SerialException as e:
-                    print(f"[FLOAT] Connection failed on {s.port}: {str(e)}")
+                    print(f"[FLOAT] Connection failed on {port_candidate}: {str(e)}")
+                    try:
+                        s.close()
+                    except Exception as close_e:
+                        print(f"[FLOAT] Error closing port after failure: {close_e}")
+                    continue
+                except Exception as e:
+                    print(f"[FLOAT] Unexpected error on {port_candidate}: {str(e)}")
+                    try:
+                        s.close()
+                    except Exception as close_e:
+                        print(f"[FLOAT] Error closing port after unexpected error: {close_e}")
                     continue
             print("[FLOAT] No available ports found")
             return {
