@@ -38,11 +38,29 @@ class MQTTClient():
         else:
             print("[MQTT] Hostname not set.")
     
+        if self.__status != MQTTStatus.Connected:
+            print(f"[MQTT] Attempting to connect to {self.__hostname}:{self.__port}...")
+            self.__status = MQTTStatus.Connecting
+            try:
+                self.__client.connect_async(self.__hostname, port=self.__port, keepalive=self.__keepAlive)
+                # loop_start handles reconnections in the background (also if host is unreachable)
+                self.__client.loop_start()
+            except (OSError, Exception) as e:
+                print(f"[MQTT] Connection initiation failed: {e}")
+                self.__status = MQTTStatus.Disconnected
+                # loop_start() wasn't called, so no auto-reconnect yet
+
     def disconnect(self):
         if self.__client:
             self.__client.loop_stop() # Stop the network loop
             self.__client.disconnect()
             # __on_disconnect will be called, which sets status to Disconnected
+        if self.__status != MQTTStatus.Disconnected:
+            print("[MQTT] Disconnecting...")
+            # Stop the network loop thread first
+            self.__client.loop_stop()
+            # Perform the disconnect
+            self.__client.disconnect()
 
     def subscribe(self, topic, callback):
         if self.__status == MQTTStatus.Connected:
@@ -75,11 +93,28 @@ class MQTTClient():
             # For simplicity, if on_connect is called with rc != 0, it means a connect attempt failed.
             self.__status = MQTTStatus.Disconnected
     
+        connack_str = mqtt.connack_string(rc)
+        if rc == 0:
+            print(f"[MQTT] Connected successfully: {connack_str}")
+            self.__status = MQTTStatus.Connected
+            print("[MQTT] Resubscribing to topics...")
+            # Resubscribe upon connection/reconnection
+            for topic in list(self.__callbacks.keys()): # Iterate over a copy of keys
+                self.subscribe(topic, self.__callbacks[topic]) # Use subscribe method to handle potential errors
+        else:
+            print(f"[MQTT] Connection failed: {connack_str}. Will retry automatically.")
+            # Keep status as Connecting or set to Disconnected? Disconnected is clearer.
+            self.__status = MQTTStatus.Disconnected
+            # loop_start() handles the retry mechanism
+
     def __on_disconnect(self, client, userdata, rc):
         # Set status to disconnected immediately.
         # If a reconnect attempt (explicit or background) succeeds, __on_connect will set it back to Connected.
         self.__status = MQTTStatus.Disconnected # Corrected: use __status
 
+        # Set status first
+        original_status = self.__status
+        self.__status = MQTTStatus.Disconnected
         if rc != 0:
             print(f"[MQTT] Unexpected disconnection. Error code: {rc}.")
             # The client's loop (started by loop_start()) should automatically attempt to reconnect.
@@ -98,6 +133,14 @@ class MQTTClient():
         else:
             print("[MQTT] Disconnected cleanly.")
    
+            # Unexpected disconnection
+            print(f"[MQTT] Unexpected disconnection (rc={rc}). Will attempt to reconnect automatically.")
+            # loop_start() handles the reconnection attempts. Do not call reconnect() here.
+        else:
+            # Planned disconnection (e.g., by calling disconnect())
+            print("[MQTT] Disconnected normally.")
+            # loop should have been stopped by disconnect() method
+
     def __on_message(self, mqttc, obj, msg):
         mstr = msg.payload.decode("utf-8")
         if msg.topic in self.__callbacks:
