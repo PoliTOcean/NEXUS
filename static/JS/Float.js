@@ -108,6 +108,19 @@ async function handleStatus(status) {
     }
     
     sts = status.text.split("|");
+    
+    // Check if this status update contains CONNECTED but not EXECUTING_CMD
+    // This means we've transitioned from execution to connected state
+    const hasConnected = sts.some(s => s.trim() === "CONNECTED");
+    const hasExecuting = sts.some(s => s.trim() === "EXECUTING_CMD");
+    
+    // If we see CONNECTED without EXECUTING_CMD, and immersion was active, reset it
+    if (hasConnected && !hasExecuting && isImmersionActive) {
+        immersion.classList.remove("immersion");
+        isImmersionActive = false;
+        if (!manualMuxLock) mux = 1;
+        console.log("Resetting immersion state: CONNECTED received while in immersion mode");
+    }
 
     function disableFunction() {
         for (let i = 0; i < drop.length; i++) {        
@@ -123,7 +136,14 @@ async function handleStatus(status) {
         switch (currentStatus) {
             case "CONNECTED":
                 serial.classList.add("on");
-                ready.classList.add("on");                
+                ready.classList.add("on");
+                // Reset immersion when we get a clean CONNECTED state
+                if (isImmersionActive) {
+                    immersion.classList.remove("immersion");
+                    isImmersionActive = false;
+                    console.log("Immersion reset on CONNECTED state");
+                    if (!manualMuxLock) mux = 1;
+                }               
                 break;
             case "EXECUTING_CMD":
                 for (let i = 0; i < drop.length; i++) drop[i].classList.remove("clickable");
