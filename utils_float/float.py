@@ -21,7 +21,7 @@ FLOAT_CONFIG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "co
 with open(FLOAT_CONFIG_PATH) as f:
     float_config = json.load(f)
 TARGET_DEPTH = float_config.get("target_depth", 2.5)
-MAX_ERROR = float_config.get("max_error", 0.45)
+MAX_ERROR = float_config.get("max_error", 0.5)
 
 
 def plot_pressure_time(data, arg, ylabel):
@@ -260,7 +260,7 @@ def handle_upload_data(s: Serial):
                         float_data = json.loads(decoded)
                         depth_val = float(float_data.get('depth', 0))
                         time_val = int(float_data.get('mseconds', 0)) # ESPA sends mseconds
-                        pressure_val = float_data.get('pressure', '0')
+                        pressure_val = float(float_data.get('pressure', '0'))
                         
                         depth.append(depth_val)
                         processed_times.append(time_val) # Store as numeric milliseconds

@@ -279,17 +279,31 @@ async function fetchProfileData() {
 
 function displayProfileData(profileData) {
     const rawDataEl = document.getElementById('profile-data-raw');
-    const plotContainerEl = document.getElementById('profile-plot-container');
+    const dataContainerEl = document.getElementById('profile-data-container');
     
-    if (!rawDataEl || !plotContainerEl) {
+    if (!rawDataEl || !dataContainerEl) {
         logToFloatSerial("Profile data display elements not found.");
         return;
     }
 
-    rawDataEl.textContent = ""; 
-    plotContainerEl.innerHTML = ""; 
+    // Clear existing content
+    dataContainerEl.innerHTML = "";
 
     if (profileData && profileData.raw && profileData.raw.times && Array.isArray(profileData.raw.times) && profileData.raw.times.length > 0) {
+        // Add plots first if available
+        if (profileData.img && profileData.img !== "NO_DATA" && Array.isArray(profileData.img) && profileData.img.length === 2) {
+            const depthImg = document.createElement('img');
+            depthImg.src = "data:image/png;base64," + profileData.img[0];
+            depthImg.alt = "Depth vs Time Plot";
+            dataContainerEl.appendChild(depthImg);
+
+            const pressureImg = document.createElement('img');
+            pressureImg.src = "data:image/png;base64," + profileData.img[1];
+            pressureImg.alt = "Pressure vs Time Plot";
+            dataContainerEl.appendChild(pressureImg);
+        }
+
+        // Add raw data below plots
         let formattedRawData = "Timestamp (ms) | Depth (m) | Pressure (Pa)\n";
         formattedRawData += "--------------------------------------------\n";
         for (let i = 0; i < profileData.raw.times.length; i++) {
@@ -304,29 +318,19 @@ function displayProfileData(profileData) {
                 formattedRawData += `  ${line}`;
             }
         }
-        rawDataEl.textContent = formattedRawData;
-
-        if (profileData.img && profileData.img !== "NO_DATA" && Array.isArray(profileData.img) && profileData.img.length === 2) {
-            const depthImg = document.createElement('img');
-            depthImg.src = "data:image/png;base64," + profileData.img[0];
-            depthImg.alt = "Depth vs Time Plot";
-            depthImg.style.maxWidth = "100%";
-            plotContainerEl.appendChild(depthImg);
-
-            const pressureImg = document.createElement('img');
-            pressureImg.src = "data:image/png;base64," + profileData.img[1];
-            pressureImg.alt = "Pressure vs Time Plot";
-            pressureImg.style.maxWidth = "100%";
-            plotContainerEl.appendChild(pressureImg);
-        } else {
-            plotContainerEl.textContent = "No plot data available or plots missing.";
-        }
+        
+        const rawDataPre = document.createElement('pre');
+        rawDataPre.id = 'profile-data-raw';
+        rawDataPre.textContent = formattedRawData;
+        dataContainerEl.appendChild(rawDataPre);
     } else {
-        rawDataEl.textContent = "No raw data points received or data is malformed.";
+        const rawDataPre = document.createElement('pre');
+        rawDataPre.id = 'profile-data-raw';
+        rawDataPre.textContent = "No raw data points received or data is malformed.";
         if (profileData && profileData.error_message) {
-            rawDataEl.textContent += `\nError: ${profileData.error_message}`;
+            rawDataPre.textContent += `\nError: ${profileData.error_message}`;
         }
-        plotContainerEl.textContent = "No plot data available.";
+        dataContainerEl.appendChild(rawDataPre);
     }
 }
 

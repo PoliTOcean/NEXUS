@@ -264,22 +264,36 @@ h2 {
 .float-profile-data-display {
     flex-grow: 1; /* Allow this to take up remaining vertical space */
     display: flex;
-    flex-direction: column; /* Stack title, plot, raw data */
+    flex-direction: column; /* Stack title, merged data container */
     min-height: 0; /* Important for flex children that might overflow */
 }
 
-#profile-plot-container {
-    flex-shrink: 0; /* Don't shrink plot container itself */
-    overflow-y: auto; /* Scroll for plots if they overflow */
-    max-height: 50%; /* Example: limit plot area height */
+#profile-data-container {
+    flex-grow: 1; /* Allow container to take available space */
+    overflow-y: auto; /* Scroll for all content if it overflows */
+    min-height: 0; /* Essential for overflow-y to work in a flex child */
+    background-color: #101214;
+    padding: 10px;
+    border-radius: 4px;
+}
+
+#profile-data-container img {
+    max-width: 100%;
+    height: auto;
+    margin-bottom: 15px;
+    border: 1px solid #333;
+    display: block;
 }
 
 #profile-data-raw {
-    flex-grow: 1; /* Allow raw data pre to take available space in its parent */
-    min-height: 0; /* Essential for overflow-y to work in a flex child */
-    /* max-height is already set, overflow-y is already set */
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-family: monospace;
+    font-size: 0.85em;
+    margin: 0;
+    padding: 0;
+    background: transparent;
 }
-
 
 .float-status-panel, .float-commands-panel, .float-package-display, .float-profile-data-display, .float-raw-serial-debug, .float-data-fetch-panel, .float-status-panel {
     background-color: #1D2125;

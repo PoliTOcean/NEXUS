@@ -6,22 +6,23 @@
 
 video {
     width: 100%;
-    height: 100%;
-    aspect-ratio: 16/9;
-}  
+    height: auto;
+    max-height: 100%;
+    object-fit: contain;
+} 
 
 .wrapper {
-    display: block;
-    position: relative;
-    width: 100%;
-    height: 100%;
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
 }
 
 .main_row {
     display: flex;
     width: 100%;
-    height: 100%;
-    position: relative;
+    height: 100vh;
+    overflow: hidden;
 }
 
 /* .camera_column {
@@ -35,11 +36,10 @@ video {
 } */
 
 .camera_column {
+    flex: 1;
+    min-width: 0;
     display: flex;
     flex-direction: column;
-    flex: 1;
-    width: 100%;
-    align-items: center;
     justify-content: center;
 }
 
@@ -53,16 +53,18 @@ video {
 } */
 
 .utilty_column_overlay {
+    position: relative;   /* NON absolute */
+    width: 320px;
+    flex-shrink: 0;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 300px;
-    padding: 10px;
     gap: 10px;
-    z-index: 10;
+    padding: 10px;
+}
+
+.camera_column, .utilty_column_overlay {
+    min-height: 0;
+    min-width: 0;
 }
 
 .row {
@@ -92,15 +94,9 @@ video {
 }
 
 .camera_buttons_overlay_left {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100px;
-    padding: 10px;
-    gap: 10px;
+    top: 10px;
+    left: 10px;
     z-index: 10;
 }
 
@@ -139,13 +135,10 @@ video {
 
 .camera_row {
     display: flex;
-    flex-direction: row;
+    flex-wrap: wrap; 
     justify-content: center;
-    width: 100%;
-    align-items: center;
-    gap: 0;
+    gap: 10px;
 }
-
 
 .label {
     padding: 3px 3px 3px 3px;
@@ -394,7 +387,15 @@ video {
     box-sizing: border-box;
 }
 
-.float-package-display.box_float,
+.float-package-display.box_float {
+    flex: 0.32 1 0;
+    min-width: 0;
+    min-height: 0;
+    width: auto;
+    height: auto;
+    box-sizing: border-box;
+}
+
 .float-profile-data-display.box_float {
     flex: 1 1 0;
     min-width: 0;

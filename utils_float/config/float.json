@@ -2,5 +2,5 @@
     "baudrate": 115200,
     "port": "/dev/ttyUSB",
     "target_depth": 2.5,
-    "max_error": 0.45
+    "max_error": 0.5
 }

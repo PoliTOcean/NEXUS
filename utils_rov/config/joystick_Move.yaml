@@ -130,16 +130,16 @@ buttons:
 axes:
     LSB-X:
       command: "Y"
-      deadzone: 2000
+      deadzone: 1500
     LSB-Y: 
       command: "X"
-      deadzone: 2000
+      deadzone: 1500
     RSB-X: 
       command: "YAW"
-      deadzone: 2000
+      deadzone: 1500
     RSB-Y: 
       command: "PITCH"
-      deadzone: 2000
+      deadzone: 1500
     LT:
       command: "Z"
       deadzone: 500
