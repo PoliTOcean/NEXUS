@@ -10,8 +10,33 @@
                     "/status",
                     "/debug_state_commands"
                 ]
-            }
-           
+            },
+            "cameras": [
+                {
+                    "id": 1,
+                    "name": "Front",
+                    "description": "Debug front camera",
+                    "aspectRatio": "16/9"
+                },
+                {
+                    "id": 2,
+                    "name": "Bottom",
+                    "description": "Debug bottom camera",
+                    "aspectRatio": "4/3"
+                },
+                {
+                    "id": 3,
+                    "name": "Rear",
+                    "description": "Debug rear camera",
+                    "aspectRatio": "16/9"
+                },
+                {
+                    "id": 4,
+                    "name": "arm",
+                    "description": "Debug rear camera",
+                    "aspectRatio": "16/9"
+                }
+            ]
         },
         "production": {
             "janus": {
@@ -24,8 +49,11 @@
                     "/state_commands"
                 ]
             }
-           
         }
     },
-    "statuses": ["JOYSTICK", "ARMED", "PID"]
+    "statuses": [
+        "JOYSTICK",
+        "ARMED",
+        "PID"
+    ]
 }

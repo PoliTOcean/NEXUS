@@ -1,0 +1,237 @@
+"use client"
+
+import * as React from "react"
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts"
+
+import type { ChartConfig } from "@politocean/ui/components/chart"
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@politocean/ui/components/chart"
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@politocean/ui/components/card"
+import { Label } from "@politocean/ui/components/label"
+import { ScrollArea } from "@politocean/ui/components/scroll-area"
+import { Switch } from "@politocean/ui/components/switch"
+import { EmptyState } from "@politocean/ui/components/primitives/empty-state"
+import { cn } from "@politocean/ui/lib/utils"
+
+export type FloatProfilePoint = {
+  timestamp: string | number
+  depth?: string | number | null | undefined
+  pressure: string | number | null | undefined
+}
+
+export type FloatProfileChartProps = {
+  title?: React.ReactNode
+  description?: React.ReactNode
+  data: FloatProfilePoint[]
+  depthUnit?: React.ReactNode
+  pressureUnit?: React.ReactNode
+  className?: string
+  chartClassName?: string
+  defaultRawView?: boolean
+}
+
+const chartConfig = {
+  depth: {
+    label: "Depth",
+    color: "var(--chart-2)",
+  },
+  pressure: {
+    label: "Pressure",
+    color: "var(--chart-3)",
+  },
+} satisfies ChartConfig
+
+function toNumber(value: FloatProfilePoint["pressure"]) {
+  if (value === null || value === undefined || value === "") return null
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+function formatTimestamp(value: string | number) {
+  if (typeof value === "number") return String(value)
+  return value.length > 12 ? value.slice(0, 12) : value
+}
+
+function formatPressure(value: number | null, unit: React.ReactNode) {
+  const formatted = value === null ? "N/A" : value.toFixed(2)
+  return unit ? `${formatted} ${unit}` : formatted
+}
+
+export function FloatProfileChart({
+  title = "Float Profile",
+  description = "Depth and pressure over timestamp",
+  data,
+  depthUnit = "m",
+  pressureUnit = "Pa",
+  className,
+  chartClassName,
+  defaultRawView = false,
+}: FloatProfileChartProps) {
+  const [rawView, setRawView] = React.useState(defaultRawView)
+  const chartData = React.useMemo(
+    () =>
+      data.map((point) => ({
+        timestamp: point.timestamp,
+        depth: toNumber(point.depth),
+        pressure: toNumber(point.pressure),
+      })),
+    [data]
+  )
+
+  const hasData = chartData.some(
+    (point) => point.depth !== null || point.pressure !== null
+  )
+
+  return (
+    <Card className={cn("min-h-0 rounded-md", className)}>
+      <CardHeader className="shrink-0">
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
+        <CardAction className="flex items-center gap-2">
+          <Label htmlFor="pressure-profile-raw-view" className="text-xs">
+            Raw chart
+          </Label>
+          <Switch
+            id="pressure-profile-raw-view"
+            size="sm"
+            checked={rawView}
+            onCheckedChange={setRawView}
+          />
+        </CardAction>
+      </CardHeader>
+      <CardContent className="min-h-0 flex-1">
+        {!hasData ? (
+          <EmptyState title="No profile data" />
+        ) : rawView ? (
+          <ScrollArea className="h-full min-h-[220px] rounded-md border bg-muted/30">
+            <table className="w-full table-fixed text-left text-xs">
+              <thead className="sticky top-0 bg-background/95 text-muted-foreground">
+                <tr className="border-b">
+                  <th className="px-3 py-2 font-medium">Timestamp</th>
+                  <th className="px-3 py-2 font-medium">Depth</th>
+                  <th className="px-3 py-2 font-medium">Pressure</th>
+                </tr>
+              </thead>
+              <tbody>
+                {chartData.map((point, index) => (
+                  <tr key={`${point.timestamp}-${index}`} className="border-b last:border-0">
+                    <td className="px-3 py-2 font-mono tabular-nums">
+                      {point.timestamp}
+                    </td>
+                    <td className="px-3 py-2 font-mono tabular-nums">
+                      {formatPressure(point.depth, depthUnit)}
+                    </td>
+                    <td className="px-3 py-2 font-mono tabular-nums">
+                      {formatPressure(point.pressure, pressureUnit)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </ScrollArea>
+        ) : (
+          <div className="flex h-full min-h-[220px] flex-col gap-3">
+            <div className="shrink-0 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+              <div className="flex items-center gap-1.5">
+                <span className="size-2 rounded-sm bg-[var(--chart-2)]" />
+                <span>Depth ({depthUnit})</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="size-2 rounded-sm bg-[var(--chart-3)]" />
+                <span>Pressure ({pressureUnit})</span>
+              </div>
+            </div>
+            <ChartContainer
+              config={chartConfig}
+              className={cn("min-h-0 flex-1 w-full", chartClassName)}
+            >
+              <AreaChart
+                accessibilityLayer
+                data={chartData}
+                margin={{ left: 8, right: 12, top: 8, bottom: 4 }}
+              >
+                <defs>
+                  <linearGradient id="depthFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop
+                      offset="5%"
+                      stopColor="var(--color-depth)"
+                      stopOpacity={0.26}
+                    />
+                    <stop
+                      offset="95%"
+                      stopColor="var(--color-depth)"
+                      stopOpacity={0.03}
+                    />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid vertical={false} />
+                <XAxis
+                  dataKey="timestamp"
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                  minTickGap={24}
+                  tickFormatter={formatTimestamp}
+                />
+                <YAxis
+                  yAxisId="depth"
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                  width={48}
+                />
+                <YAxis
+                  yAxisId="pressure"
+                  orientation="right"
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                  width={58}
+                />
+                <ChartTooltip
+                  cursor={false}
+                  content={<ChartTooltipContent indicator="line" />}
+                />
+                <Area
+                  yAxisId="depth"
+                  dataKey="depth"
+                  type="natural"
+                  fill="url(#depthFill)"
+                  stroke="var(--color-depth)"
+                  strokeWidth={2}
+                  connectNulls
+                />
+                <Area
+                  yAxisId="pressure"
+                  dataKey="pressure"
+                  type="natural"
+                  fill="transparent"
+                  stroke="var(--color-pressure)"
+                  strokeWidth={2.5}
+                  strokeDasharray="5 3"
+                  connectNulls
+                />
+              </AreaChart>
+            </ChartContainer>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+export {
+  FloatProfileChart as PressureProfileChart,
+  type FloatProfileChartProps as PressureProfileChartProps,
+  type FloatProfilePoint as PressureProfilePoint,
+}

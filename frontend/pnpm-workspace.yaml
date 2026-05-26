@@ -1,0 +1,4 @@
+packages:
+  - "apps/eva"
+  - "apps/float"
+  - "packages/*"
