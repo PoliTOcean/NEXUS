@@ -4,8 +4,11 @@ import logging
 import platform
 import argparse
 import os
+from dotenv import load_dotenv
 
 from utils_rov import mapping_viz
+
+load_dotenv()
 
 
 
@@ -32,14 +35,16 @@ if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description="Run the NEXUS application.")
     parser.add_argument("--mode", choices=["debug", "production"], required=True, help="Mode to run the application in.")
+    parser.add_argument("--port", type=int, default=int(os.environ.get("NEXUS_PORT", "8000")), help="Port to run the application on.")
     args = parser.parse_args()
 
     app.config["MODE"] = args.mode
+    port = args.port
     
     # NORMAL
     if "Darwin" in platform.platform() or "macOS" in platform.platform():
         app.run(
-            port=5000,
+            port=port,
         )
     else:
         FlaskUI(
@@ -48,7 +53,7 @@ if __name__ == "__main__":
             fullscreen= False,
             server_kwargs={
                 "app": app,
-                "port": 5000,
+                "port": port,
                 "host" : "0.0.0.0",
                 "threaded": True,
             },

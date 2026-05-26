@@ -1,0 +1,21 @@
+@layer base {
+  html,
+  body,
+  #root {
+    min-height: 100svh;
+  }
+
+  body {
+    overflow: hidden;
+  }
+}
+
+@layer utilities {
+  .eva-camera-scanlines {
+    background-image: linear-gradient(
+      rgba(255, 255, 255, 0.06) 1px,
+      transparent 1px
+    );
+    background-size: 100% 18px;
+  }
+}

@@ -98,4 +98,4 @@ while True:
     
     client.publish("status/", json.dumps(payload))
     
-    time.sleep(0.1)  # Sleep for 100ms to control the frequency of the messages
+    time.sleep(1.0)  # Sleep for 1000ms to control the frequency of the messages

@@ -10,3 +10,12 @@ log/
 core
 /tests/janus-gateway
 utils_rov/xbox_controller_map.svg
+.DS_Store
+**/.DS_Store
+frontend/node_modules/
+frontend/.pnpm-store/
+frontend/.turbo/
+frontend/**/dist/
+frontend_dist/
+.env
+!.env.example

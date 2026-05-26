@@ -21,23 +21,27 @@ FLOAT_CONFIG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "co
 with open(FLOAT_CONFIG_PATH) as f:
     float_config = json.load(f)
 TARGET_DEPTH = float_config.get("target_depth", 2.5)
-MAX_ERROR = float_config.get("max_error", 0.5)
+MAX_ERROR = float_config.get("max_error", 0.33)
+SHALLOW_TARGET_DEPTH = float_config.get("shallow_target_depth", 0.40)
 
 
 def plot_pressure_time(data, arg, ylabel):
     y_values = data[arg]
-    time_ms = data['times'] # Assuming times are in milliseconds from ESPA
+    time_ms = data['times']
 
-    # Convert time from milliseconds to seconds for the plot
+    # Backend normalizes firmware time_s/mseconds to milliseconds.
     time_seconds = [t / 1000.0 for t in time_ms]
 
     plt.figure(figsize=(10, 6))
     plt.plot(time_seconds, y_values, linestyle='-', marker='o', label=ylabel)
     
     if arg == 'depth':
-        plt.axhline(y=TARGET_DEPTH, color='r', linestyle='--', label=f'Target Depth ({TARGET_DEPTH}m)')
-        plt.axhline(y=TARGET_DEPTH + MAX_ERROR, color='orange', linestyle=':', label=f'Target + Error ({TARGET_DEPTH + MAX_ERROR:.2f}m)')
-        plt.axhline(y=TARGET_DEPTH - MAX_ERROR, color='orange', linestyle=':', label=f'Target - Error ({TARGET_DEPTH - MAX_ERROR:.2f}m)')
+        plt.axhline(y=TARGET_DEPTH, color='r', linestyle='--', label=f'Deep target ({TARGET_DEPTH}m)')
+        plt.axhline(y=TARGET_DEPTH + MAX_ERROR, color='orange', linestyle=':', label=f'Deep + Error ({TARGET_DEPTH + MAX_ERROR:.2f}m)')
+        plt.axhline(y=TARGET_DEPTH - MAX_ERROR, color='orange', linestyle=':', label=f'Deep - Error ({TARGET_DEPTH - MAX_ERROR:.2f}m)')
+        plt.axhline(y=SHALLOW_TARGET_DEPTH, color='g', linestyle='--', label=f'Shallow target ({SHALLOW_TARGET_DEPTH}m)')
+        plt.axhline(y=SHALLOW_TARGET_DEPTH + MAX_ERROR, color='lime', linestyle=':', label=f'Shallow + Error ({SHALLOW_TARGET_DEPTH + MAX_ERROR:.2f}m)')
+        plt.axhline(y=SHALLOW_TARGET_DEPTH - MAX_ERROR, color='lime', linestyle=':', label=f'Shallow - Error ({SHALLOW_TARGET_DEPTH - MAX_ERROR:.2f}m)')
         plt.legend()
 
     plt.ylabel(ylabel)
@@ -98,6 +102,32 @@ def start_communication(s: Serial):
             }
      
 
+def _is_debug_serial_line(line: str):
+    return (
+        line.startswith("Received command:")
+        or line.startswith("Received PID values:")
+        or line.startswith("DATA CORRUPTED FOR ERROR HANDLING")
+    )
+
+
+def _read_protocol_line(s: Serial, msg: str, timeout: float = 1.0):
+    start_time = time.time()
+    while time.time() - start_time <= timeout:
+        if s.in_waiting == 0:
+            time.sleep(0.01)
+            continue
+
+        line = s.readline().strip().decode("utf-8", errors="replace")
+        print(f"[FLOAT] Received: {line}")
+        if line and not _is_debug_serial_line(line):
+            return line
+
+        if line:
+            print(f"[FLOAT] Skipping debug serial line for {msg}: {line}")
+
+    return ""
+
+
 def msg_status(s: Serial, msg: str):
     with serial_lock:
         try:
@@ -107,24 +137,19 @@ def msg_status(s: Serial, msg: str):
             s.write(f'{msg}\n'.encode('utf-8'))
             time.sleep(0.03)
             
-            # Wait for a response with timeout
-            start_time = time.time()
-            while s.in_waiting == 0:
-                if time.time() - start_time > 1.0:  # 1 second timeout
-                    print(f"[FLOAT] Timeout waiting for response to {msg}")
-                    if msg == 'SEND_PACKAGE':
-                        return {
-                            'text': '{"company_number":"Timeout","times":0,"pressure":"0","depth":0}',
-                            'status': 1
-                        }
-                    return {
-                        'text': f"TIMEOUT_ON_{msg}",
-                        'status': 1
-                    }
-                time.sleep(0.01)
-            
-            line = s.readline().strip().decode('utf-8', errors='replace')
-            print(f"[FLOAT] Received: {line}")
+            line = _read_protocol_line(s, msg)
+            if not line and msg == 'SEND_PACKAGE':
+                print(f"[FLOAT] Timeout waiting for response to {msg}")
+                return {
+                    'text': '{"company_number":"Timeout","time_s":0,"pressure_kpa":0,"depth_m":0}',
+                    'status': 1
+                }
+            if not line:
+                print(f"[FLOAT] Timeout waiting for response to {msg}")
+                return {
+                    'text': f"TIMEOUT_ON_{msg}",
+                    'status': 1
+                }
 
             # Add debug: print what is being returned
             if not line:
@@ -146,14 +171,14 @@ def msg_status(s: Serial, msg: str):
                     if 'company_number' not in json_obj and 'company_number' not in json_obj:
                         json_obj['company_number'] = 'Unknown'
                     
-                    if 'mseconds' not in json_obj and 'times' not in json_obj:
-                        json_obj['mseconds'] = 0
-                        
-                    if 'depth' not in json_obj:
-                        json_obj['depth'] = 0.0
-                        
-                    if 'pressure' not in json_obj:
-                        json_obj['pressure'] = '0'
+                    if 'time_s' not in json_obj and 'mseconds' not in json_obj and 'times' not in json_obj:
+                        json_obj['time_s'] = 0
+
+                    if 'depth_m' not in json_obj and 'depth' not in json_obj:
+                        json_obj['depth_m'] = 0.0
+
+                    if 'pressure_kpa' not in json_obj and 'pressure' not in json_obj:
+                        json_obj['pressure_kpa'] = 0.0
                     
                     # Convert back to a properly formatted JSON string
                     formatted_json = json.dumps(json_obj)
@@ -166,7 +191,7 @@ def msg_status(s: Serial, msg: str):
                 except (json.JSONDecodeError, KeyError, ValueError) as e:
                     print(f"[FLOAT] Error parsing package: {str(e)}")
                     return {
-                        'text': '{"company_number":"Error","mseconds":0,"pressure":"0","depth":0}',
+                        'text': '{"company_number":"Error","time_s":0,"pressure_kpa":0,"depth_m":0}',
                         'status': 1
                     }
 
@@ -226,6 +251,9 @@ def handle_upload_data(s: Serial):
         times = []
         depth = []
         pressure = []
+        profile_ids = []
+        phases = []
+        sensor_depth = []
         cn = ''
         error_count = 0
         max_errors = 10  # Allow a reasonable number of errors before giving up
@@ -258,17 +286,26 @@ def handle_upload_data(s: Serial):
                         
                     try:
                         float_data = json.loads(decoded)
-                        depth_val = float(float_data.get('depth', 0))
-                        time_val = int(float_data.get('mseconds', 0)) # ESPA sends mseconds
-                        pressure_val = float(float_data.get('pressure', '0'))
-                        
+                        depth_val = float(float_data.get('depth_m', float_data.get('depth', 0)))
+
+                        if 'time_s' in float_data:
+                            time_val = int(round(float(float_data.get('time_s', 0)) * 1000))
+                        else:
+                            time_val = int(float_data.get('mseconds', float_data.get('times', 0)))
+
+                        pressure_raw = float(float_data.get('pressure_kpa', float_data.get('pressure', 0)))
+                        pressure_val = pressure_raw / 1000.0 if pressure_raw > 2000 else pressure_raw
+
                         depth.append(depth_val)
-                        processed_times.append(time_val) # Store as numeric milliseconds
+                        processed_times.append(time_val)
                         pressure.append(pressure_val)
+                        profile_ids.append(float_data.get('profile_id'))
+                        phases.append(float_data.get('phase', ''))
+                        sensor_depth.append(float_data.get('sensor_depth_m'))
                         if cn == '':
                             cn = float_data.get("company_number", "Unknown")
-                        
-                        print(f"[FLOAT] Parsed data point: time={time_val}, depth={depth_val}")
+
+                        print(f"[FLOAT] Parsed data point: time_ms={time_val}, depth_m={depth_val}, pressure_kpa={pressure_val}")
                     except (json.JSONDecodeError, KeyError, ValueError) as e:
                         print(f"[FLOAT] Data parsing error: {str(e)} - Line: '{decoded}'") # Log the problematic line
                         error_count += 1
@@ -289,15 +326,27 @@ def handle_upload_data(s: Serial):
         print("[FLOAT] Data collection complete")
         # Replace original times with processed_times for plotting
         if processed_times:
-            json_complete = {"times": processed_times, "depth": depth, "pressure": pressure, "company_number": cn}
+            time_s = [t / 1000.0 for t in processed_times]
+            json_complete = {
+                "times": processed_times,
+                "time_s": time_s,
+                "depth": depth,
+                "depth_m": depth,
+                "pressure": pressure,
+                "pressure_kpa": pressure,
+                "profile_id": profile_ids,
+                "phase": phases,
+                "sensor_depth_m": sensor_depth,
+                "company_number": cn,
+            }
             try:
                 plot_depth_img = plot_pressure_time(json_complete, 'depth', 'Depth (m)')
-                plot_pressure_img = plot_pressure_time(json_complete, 'pressure', 'Pressure (Pa)')
+                plot_pressure_img = plot_pressure_time(json_complete, 'pressure', 'Pressure (kPa)')
                 data_plots = [plot_depth_img, plot_pressure_img]
             except Exception as e:
                 print(f"[FLOAT] Error generating plots: {str(e)}")
                 data_plots = "NO_DATA"
-            raw_data_payload = {"times": processed_times, "depth": depth, "pressure": pressure, "company_number": cn} if processed_times and depth else {}
+            raw_data_payload = json_complete if processed_times and depth else {}
         else:
             data_plots = "NO_DATA"
             raw_data_payload = {}

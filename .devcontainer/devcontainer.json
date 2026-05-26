@@ -1,40 +1,59 @@
-// For format details, see https://aka.ms/devcontainer.json. For config options, see the
-// README at: https://github.com/devcontainers/templates/tree/main/src/cpp
+// See https://containers.dev for the full devcontainer schema.
 {
-	"name": "nodejs & javascript",
-	"build": {
-		"dockerfile": "Dockerfile"
-	},
-    "runArgs": [
-        "--network=host",
-        "--add-host=host.docker.internal:host-gateway"
-    ],
-
-	// Features to add to the dev container. More info: https://containers.dev/features.
-	// "features": {},
-
-	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	"forwardPorts": [
-		1883, // MQTT broker
-		5000, // Flask
-		9000, // MQTT websocket
-		8088, // Janus
-		8188  // Janus websocket
-		],
-	"postCreateCommand": "chmod +x ./install.sh && ./install.sh && sudo cp .devcontainer/mosquitto /etc/init.d && sudo service mosquitto start",
-    "customizations": {
-        "vscode": {
-            "extensions": [
-                "ms-python.python",
-				"dbaeumer.vscode-eslint"
-            ],
-			"settings": {
-				"terminal.integrated.env.linux": {
-					"VIRTUAL_ENV": "${workspaceFolder}/venv",
-					"PATH": "${workspaceFolder}/venv/bin:${env:PATH}"
-				},
-				"python.pythonPath": "${workspaceFolder}/venv/bin/python"
-			}
-        }
+  "name": "NEXUS Mission Station",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "remoteUser": "node",
+  "runArgs": [
+    "--network=host",
+    "--add-host=host.docker.internal:host-gateway"
+  ],
+  "containerEnv": {
+    "NEXUS_PORT": "8000",
+    "MPLCONFIGDIR": "/tmp/matplotlib"
+  },
+  "forwardPorts": [8000, 5000, 1883, 9000, 8088, 8188],
+  "portsAttributes": {
+    "8000": {
+      "label": "NEXUS Flask",
+      "onAutoForward": "notify"
+    },
+    "5000": {
+      "label": "Flask alternate"
+    },
+    "1883": {
+      "label": "MQTT TCP"
+    },
+    "9000": {
+      "label": "MQTT WebSocket"
+    },
+    "8088": {
+      "label": "Janus HTTP"
+    },
+    "8188": {
+      "label": "Janus WebSocket"
     }
+  },
+  "postCreateCommand": "bash .devcontainer/setup.sh",
+  "postStartCommand": "bash .devcontainer/start-services.sh",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "${workspaceFolder}/venv/bin/python",
+        "terminal.integrated.env.linux": {
+          "VIRTUAL_ENV": "${workspaceFolder}/venv",
+          "PATH": "${workspaceFolder}/venv/bin:${env:PATH}",
+          "NEXUS_PORT": "8000"
+        }
+      }
+    }
+  }
 }
