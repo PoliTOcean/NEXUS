@@ -253,7 +253,7 @@ Default local backend port is `8000`. This avoids the common macOS AirPlay Recei
 ### One-command Setup
 
 ```bash
-cd /Users/filippo/Documents/politocean/NEXUS
+cd path/to/NEXUS
 ./install.sh
 ```
 
