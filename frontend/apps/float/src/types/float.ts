@@ -41,6 +41,8 @@ export type FloatProfileRawData = {
   depth_m?: Array<number | string>
   pressure?: Array<number | string>
   pressure_kpa?: Array<number | string>
+  syringe_u?: Array<number | string | null | undefined>
+  syringe_position_u?: Array<number | string | null | undefined>
   profile_id?: Array<number | string | null | undefined>
   phase?: Array<string | null | undefined>
   sensor_depth_m?: Array<number | string | null | undefined>
@@ -58,6 +60,59 @@ export type NexusFloatListenResponse = {
   status: boolean | number
   data: FloatProfileData | ""
   text: string
+}
+
+export type FloatRuntimeProfile = {
+  profile_count: number
+  deep_target_m: number
+  shallow_top_m: number
+  shallow_bottom_m?: number
+  depth_tolerance_m: number
+  hold_s: number
+  pid_timeout_s: number
+  ascent_timeout_s: number
+  surface_offset_m: number
+  pool_depth_m?: number
+  bottom_clearance_m?: number
+}
+
+export type NexusFloatProfileResponse = {
+  code?: string
+  status: boolean | number
+  text: string
+  data: FloatRuntimeProfile
+}
+
+export type FloatRuntimePidConfig = {
+  kp: number
+  ki: number
+  kd: number
+  period_ms: number
+  alpha_d: number
+  integral_limit: number
+  min_retarget_frac: number
+  u_neutral: number
+}
+
+export type FloatRuntimeBalanceConfig = {
+  hold_ms: number
+  stop_delta_kpa: number
+  stop_samples: number
+  sample_period_ms: number
+}
+
+export type FloatRuntimeMotorConfig = {
+  max_speed: number
+  max_accel: number
+  homing_speed: number
+  test_speed: number
+}
+
+export type NexusFloatConfigResponse<TData> = {
+  code?: string
+  status: boolean | number
+  text: string
+  data: TData
 }
 
 export type FloatPackageState = {
@@ -85,4 +140,12 @@ export type FloatMissionState = {
   logs: LogItem[]
   packageData: FloatPackageState | null
   profile: FloatProfileState
+  runtimeProfile: FloatRuntimeProfile | null
+  runtimeProfileStatus: string
+  runtimePidConfig: FloatRuntimePidConfig | null
+  runtimePidConfigStatus: string
+  runtimeBalanceConfig: FloatRuntimeBalanceConfig | null
+  runtimeBalanceConfigStatus: string
+  runtimeMotorConfig: FloatRuntimeMotorConfig | null
+  runtimeMotorConfigStatus: string
 }

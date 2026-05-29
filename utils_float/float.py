@@ -106,6 +106,11 @@ def _is_debug_serial_line(line: str):
     return (
         line.startswith("Received command:")
         or line.startswith("Received PID values:")
+        or line.startswith("Surface target offset set")
+        or line.startswith("Profile config")
+        or line.startswith("PID config")
+        or line.startswith("Balance config")
+        or line.startswith("Motor config")
         or line.startswith("DATA CORRUPTED FOR ERROR HANDLING")
     )
 
@@ -254,6 +259,7 @@ def handle_upload_data(s: Serial):
         profile_ids = []
         phases = []
         sensor_depth = []
+        syringe_u = []
         cn = ''
         error_count = 0
         max_errors = 10  # Allow a reasonable number of errors before giving up
@@ -302,10 +308,11 @@ def handle_upload_data(s: Serial):
                         profile_ids.append(float_data.get('profile_id'))
                         phases.append(float_data.get('phase', ''))
                         sensor_depth.append(float_data.get('sensor_depth_m'))
+                        syringe_u.append(float_data.get('syringe_u', float_data.get('syringe_position_u')))
                         if cn == '':
                             cn = float_data.get("company_number", "Unknown")
 
-                        print(f"[FLOAT] Parsed data point: time_ms={time_val}, depth_m={depth_val}, pressure_kpa={pressure_val}")
+                        print(f"[FLOAT] Parsed data point: time_ms={time_val}, depth_m={depth_val}, pressure_kpa={pressure_val}, syringe_u={syringe_u[-1]}")
                     except (json.JSONDecodeError, KeyError, ValueError) as e:
                         print(f"[FLOAT] Data parsing error: {str(e)} - Line: '{decoded}'") # Log the problematic line
                         error_count += 1
@@ -337,12 +344,14 @@ def handle_upload_data(s: Serial):
                 "profile_id": profile_ids,
                 "phase": phases,
                 "sensor_depth_m": sensor_depth,
+                "syringe_u": syringe_u,
                 "company_number": cn,
             }
             try:
                 plot_depth_img = plot_pressure_time(json_complete, 'depth', 'Depth (m)')
                 plot_pressure_img = plot_pressure_time(json_complete, 'pressure', 'Pressure (kPa)')
-                data_plots = [plot_depth_img, plot_pressure_img]
+                plot_syringe_img = plot_pressure_time(json_complete, 'syringe_u', 'Syringe position (u)')
+                data_plots = [plot_depth_img, plot_pressure_img, plot_syringe_img]
             except Exception as e:
                 print(f"[FLOAT] Error generating plots: {str(e)}")
                 data_plots = "NO_DATA"

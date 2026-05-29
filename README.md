@@ -28,7 +28,7 @@ NEXUS is the mission-station software used to operate PoliTOcean systems from a 
 
 - a **Flask backend** for hardware-facing services and HTTP APIs;
 - an **EVA frontend** for ROV telemetry, cameras, controller state, and mission control;
-- a **FLOAT frontend** for serial connection, commands, profile data, packages, and logs;
+- a **FLOAT frontend** for serial connection, commands, runtime profile/configuration, profile data, packages, and logs;
 - test utilities for MQTT, Janus/WebRTC, and mission telemetry simulation.
 
 The current repository is a monorepo. The old static Flask UI has been kept in `legacy_frontend/` for rollback, while the active React/Vite UI lives in `frontend/` and is served by Flask after build.
@@ -38,7 +38,7 @@ The current repository is a monorepo. The old static Flask UI has been kept in `
 | Area | Responsibility |
 |:-----|:---------------|
 | EVA ROV | Read telemetry from MQTT, display controller status, switch cameras, render Janus or debug streams. |
-| FLOAT | Open/check serial communication, send commands to the FLOAT bridge, fetch profile data, show packages/logs. |
+| FLOAT | Open/check serial communication, configure runtime profile/PID/balance/motor settings, send commands to the FLOAT bridge, fetch stored profile data, show packages/logs. |
 | Backend | Expose stable HTTP routes, manage controller startup, talk to serial devices, provide runtime configuration. |
 | Frontend | Provide operator-grade interfaces for EVA and FLOAT without embedding hardware logic in the browser. |
 
@@ -234,7 +234,7 @@ Default local backend port is `8000`. This avoids the common macOS AirPlay Recei
 | `/CAMERAS` | redirect | Compatibility redirect to `/eva/`. |
 | `/info` | Flask API | Runtime mode, MQTT, Janus, camera metadata, status list. |
 | `/CONTROLLER/start_status` | Flask API | Starts/checks the ROV controller thread and joystick state. |
-| `/FLOAT/*` | Flask API | FLOAT serial connection, commands, status, profile data. |
+| `/FLOAT/*` | Flask API | FLOAT serial connection, commands, status, runtime configuration, profile data. |
 
 --------------------------------------------------------------------------
 
@@ -431,23 +431,19 @@ Expected response shape:
 {"code":"FLOAT","status":false,"text":"SERIAL NOT OPENED"}
 ```
 
-This confirms Flask and the FLOAT API route are reachable. Full FLOAT command tests require the ESPB bridge or test firmware.
+This confirms Flask and the FLOAT API route are reachable. Full FLOAT command/config/profile tests require the ESPB bridge connected to ESPA.
 
-### FLOAT Hardware/Test Firmware
+### FLOAT Hardware / Bench Setup
 
-The test notes currently expect flashing:
+The current FLOAT workflow expects the real ESPB serial bridge connected to NEXUS and ESPA running the FLOAT firmware. The historical `tests/float/float.ino` sketch is only a lightweight simulator for old UI smoke tests and does not implement the full runtime profile/config contract.
 
-```text
-tests/float/float.ino
-```
-
-to an ESP32 used as a FLOAT-side simulator/bridge. Once connected, open:
+Once the bridge is connected, open:
 
 ```text
 http://127.0.0.1:8000/float/
 ```
 
-and use the UI to run `START`, `STATUS`, command, package, and profile workflows.
+and use the UI to run `START`, `STATUS`, runtime settings, command, package, and stored-profile workflows.
 
 --------------------------------------------------------------------------
 
@@ -502,8 +498,12 @@ Important `status/` fields consumed by EVA include:
 |:-------|:-----|:------|:--------|
 | `GET` | `/FLOAT/start` | `modules/float.py` | Opens/checks serial communication. |
 | `GET` | `/FLOAT/status?msg=STATUS` | `modules/float.py` | Polls FLOAT status text. |
-| `GET` | `/FLOAT/msg?msg=<command>` | `modules/float.py` | Sends a FLOAT command. |
-| `GET` | `/FLOAT/listen` | `modules/float.py` | Reads profile data after `LISTENING`. |
+| `GET` | `/FLOAT/msg?msg=<command>` | `modules/float.py` | Sends a FLOAT command and returns success only after the expected ESPA ACK, except `LISTENING` which starts the data stream. |
+| `GET` | `/FLOAT/listen` | `modules/float.py` | Reads stored profile data after `LISTENING`; returns raw arrays and generated plots. |
+| `GET` / `POST` | `/FLOAT/profile` | `modules/float.py` | Gets/sets persisted mission profile values used by `GO`. |
+| `GET` / `POST` | `/FLOAT/pid-config` | `modules/float.py` | Gets/sets persisted PID runtime configuration. |
+| `GET` / `POST` | `/FLOAT/balance-config` | `modules/float.py` | Gets/sets persisted balance routine configuration. |
+| `GET` / `POST` | `/FLOAT/motor-config` | `modules/float.py` | Gets/sets persisted motor speed/acceleration configuration. |
 
 ### FLOAT Command Flow
 
@@ -526,27 +526,46 @@ sequenceDiagram
     end
 
     UI->>Flask: GET /FLOAT/msg?msg=GO
-    Flask->>Serial: send("GO")
-    Serial-->>Flask: ACK/result
+    Flask->>Serial: msg_status("GO")
+    Serial-->>Flask: GO_RECVD
+    Flask-->>UI: success JSON only if ACK matches
+
+    UI->>Flask: GET /FLOAT/msg?msg=LISTENING
+    Flask->>Serial: send("LISTENING")
+    Serial-->>Flask: stored packet stream starts
     Flask-->>UI: JSON response
+
+    loop until FINISHED
+        UI->>Flask: GET /FLOAT/listen
+        Flask->>Serial: read stored JSON packets until STOP_DATA
+        Flask-->>UI: profile raw data + plots
+    end
 ```
 
 Common FLOAT commands from the UI:
 
+One-shot commands such as `GO`, `BALANCE`, `CLEAR_SD`, `HOME_MOTOR`, `STOP`, and `TEST_STEPS` are acknowledged by ESPA before NEXUS reports success. For example, `BALANCE` must return `CMD3_RECVD`; a serial write without that ACK is reported as a failed command.
+
 | Command | Purpose |
 |:--------|:--------|
-| `GO` | Run the mission profile. |
+| `GO` | Run the currently configured runtime mission profile. |
 | `BALANCE` | Run balance routine. |
 | `CLEAR_SD` | Clear stored profile/log data on the FLOAT side. |
 | `SWITCH_AUTO_MODE` | Toggle autonomous mode. |
-| `SEND_PACKAGE` | Request the current data package. |
+| `SEND_PACKAGE` | Request the current live data package, including pressure/depth/syringe position. |
 | `TRY_UPLOAD` | Trigger OTA/upload flow. |
 | `HOME_MOTOR` | Home the motor system. |
 | `STOP` | Emergency stop. |
-| `PARAMS <kp> <ki> <kd>` | Update PID parameters. |
-| `TEST_FREQ <frequency>` | Configure test frequency. |
 | `TEST_STEPS <steps>` | Run test steps. |
-| `LISTENING` | Prepare backend/profile data transfer. |
+| `PID_CONFIG_SET <kp> <ki> <kd> <period_ms> <alpha_d> <integral_limit> <min_retarget_frac> <u_neutral>` | Update persisted PID config. |
+| `PID_CONFIG_GET` | Read PID config JSON. |
+| `PROFILE_SET <count> <deep> <shallow_top> <tol> <hold> <pid_timeout> <ascent_timeout> <surface_offset>` | Update persisted mission profile. |
+| `PROFILE_GET` | Read mission profile JSON. |
+| `BALANCE_CONFIG_SET <hold_ms> <stop_delta_kpa> <stop_samples> <sample_period_ms>` | Update persisted balance config. |
+| `BALANCE_CONFIG_GET` | Read balance config JSON. |
+| `MOTOR_CONFIG_SET <max_speed> <max_accel> <homing_speed> <test_speed>` | Update persisted motor config. |
+| `MOTOR_CONFIG_GET` | Read motor config JSON. |
+| `LISTENING` | Trigger stored profile data transfer after the FLOAT has surfaced/recovered. |
 
 Known status tokens parsed by the UI:
 
@@ -560,6 +579,8 @@ Known status tokens parsed by the UI:
 - `NO USB`
 - `DISCONNECTED`
 - `TIMEOUT_ON_<command>`
+
+Profile fetch payloads expose `raw.times` / `raw.time_s`, `depth_m`, `pressure_kpa`, `syringe_u`, `profile_id`, `phase`, `sensor_depth_m`, and `company_number`. The React chart renders depth, pressure, and normalized syringe position over time; the legacy UI also accepts a third generated plot when present.
 
 --------------------------------------------------------------------------
 

@@ -2,15 +2,27 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import type { CommandItem, LogItem, StatusItem, UiStatus } from "@politocean/ui/types"
 
 import {
+  getFloatBalanceConfig,
+  getFloatMotorConfig,
+  getFloatPidConfig,
+  getFloatProfile,
   getFloatStatus,
   listenFloatProfile,
   sendFloatCommand,
+  setFloatBalanceConfig,
+  setFloatMotorConfig,
+  setFloatPidConfig,
+  setFloatProfile,
   startFloat,
 } from "@/lib/nexus-client"
 import type {
   FloatConnectionState,
   FloatMissionState,
   FloatPackageState,
+  FloatRuntimeBalanceConfig,
+  FloatRuntimeMotorConfig,
+  FloatRuntimePidConfig,
+  FloatRuntimeProfile,
   FloatStatusKey,
   FloatStatusState,
   NexusFloatResponse,
@@ -21,6 +33,45 @@ const FLOAT_MAX_ERROR = 0.33
 const MAX_LOG_CHARS = 5000
 const PROFILE_POLL_ATTEMPTS = 40
 const PROFILE_POLL_DELAY_MS = 250
+
+const DEFAULT_RUNTIME_PROFILE: FloatRuntimeProfile = {
+  profile_count: 2,
+  deep_target_m: 2.5,
+  shallow_top_m: 0.4,
+  shallow_bottom_m: 0.91,
+  depth_tolerance_m: 0.33,
+  hold_s: 30,
+  pid_timeout_s: 180,
+  ascent_timeout_s: 120,
+  surface_offset_m: 0.1,
+  pool_depth_m: 0.7,
+  bottom_clearance_m: 0.07,
+}
+
+const DEFAULT_RUNTIME_PID_CONFIG: FloatRuntimePidConfig = {
+  kp: 0.17,
+  ki: 0,
+  kd: 0.13,
+  period_ms: 50,
+  alpha_d: 0.25,
+  integral_limit: 5,
+  min_retarget_frac: 0.001,
+  u_neutral: 0.011,
+}
+
+const DEFAULT_RUNTIME_BALANCE_CONFIG: FloatRuntimeBalanceConfig = {
+  hold_ms: 5000,
+  stop_delta_kpa: 5,
+  stop_samples: 3,
+  sample_period_ms: 50,
+}
+
+const DEFAULT_RUNTIME_MOTOR_CONFIG: FloatRuntimeMotorConfig = {
+  max_speed: 1800,
+  max_accel: 1800,
+  homing_speed: 1800,
+  test_speed: 1800,
+}
 
 const COMMANDS = [
   { id: "GO", label: "GO", description: "2 profiles" },
@@ -218,6 +269,96 @@ function sleep(ms: number) {
   return new Promise((resolve) => window.setTimeout(resolve, ms))
 }
 
+function validateRuntimeProfile(profile: FloatRuntimeProfile) {
+  const shallowBottom = profile.shallow_top_m + 0.51
+
+  if (profile.profile_count < 1 || profile.profile_count > 10) {
+    return "Profile count must be between 1 and 10."
+  }
+  if (profile.deep_target_m < 0 || profile.deep_target_m > 5) {
+    return "Deep target must be between 0 and 5 m."
+  }
+  if (profile.shallow_top_m < 0 || profile.shallow_top_m > 5) {
+    return "Shallow top target must be between 0 and 5 m."
+  }
+  if (profile.depth_tolerance_m < 0.005 || profile.depth_tolerance_m > 1) {
+    return "Depth tolerance must be between 0.005 and 1 m."
+  }
+  if (profile.hold_s < 1 || profile.hold_s > 600) {
+    return "Hold time must be between 1 and 600 s."
+  }
+  if (profile.pid_timeout_s < 5 || profile.pid_timeout_s > 900) {
+    return "PID timeout must be between 5 and 900 s."
+  }
+  if (profile.ascent_timeout_s < 5 || profile.ascent_timeout_s > 900) {
+    return "Ascent timeout must be between 5 and 900 s."
+  }
+  if (profile.surface_offset_m < 0) {
+    return "Surface offset must be 0 or greater."
+  }
+  if (shallowBottom >= profile.deep_target_m) {
+    return "Shallow bottom target must be lower than the deep target."
+  }
+
+  return null
+}
+
+function validateRuntimePidConfig(config: FloatRuntimePidConfig) {
+  for (const [field, value] of Object.entries({
+    kp: config.kp,
+    ki: config.ki,
+    kd: config.kd,
+  })) {
+    if (!Number.isFinite(value)) return `${field} must be finite.`
+  }
+  if (config.period_ms < 20 || config.period_ms > 500) {
+    return "PID period must be between 20 and 500 ms."
+  }
+  if (config.alpha_d < 0.05 || config.alpha_d > 1) {
+    return "Derivative alpha must be between 0.05 and 1."
+  }
+  if (!Number.isFinite(config.integral_limit) || config.integral_limit <= 0) {
+    return "Integral limit must be greater than 0."
+  }
+  if (!Number.isFinite(config.min_retarget_frac) || config.min_retarget_frac < 0) {
+    return "Min retarget fraction must be 0 or greater."
+  }
+  if (!Number.isFinite(config.u_neutral) || config.u_neutral < 0) {
+    return "Neutral output must be 0 or greater."
+  }
+  return null
+}
+
+function validateRuntimeBalanceConfig(config: FloatRuntimeBalanceConfig) {
+  if (config.hold_ms < 0 || config.hold_ms > 60000) {
+    return "Balance hold must be between 0 and 60000 ms."
+  }
+  if (config.stop_delta_kpa < 0.1 || config.stop_delta_kpa > 50) {
+    return "Stop delta must be between 0.1 and 50 kPa."
+  }
+  if (config.stop_samples < 1 || config.stop_samples > 20) {
+    return "Stop samples must be between 1 and 20."
+  }
+  if (config.sample_period_ms < 20 || config.sample_period_ms > 1000) {
+    return "Sample period must be between 20 and 1000 ms."
+  }
+  return null
+}
+
+function validateRuntimeMotorConfig(config: FloatRuntimeMotorConfig) {
+  for (const [field, value] of Object.entries({
+    max_speed: config.max_speed,
+    homing_speed: config.homing_speed,
+    test_speed: config.test_speed,
+  })) {
+    if (value < 10 || value > 5000) return `${field} must be between 10 and 5000.`
+  }
+  if (config.max_accel < 10 || config.max_accel > 10000) {
+    return "Max acceleration must be between 10 and 10000."
+  }
+  return null
+}
+
 export function isDepthNearTarget(depth: number) {
   return Math.abs(depth - FLOAT_TARGET_DEPTH) <= FLOAT_MAX_ERROR
 }
@@ -231,6 +372,22 @@ export function useFloatMissionState() {
   const [busyCommand, setBusyCommand] = useState<string | null>(null)
   const [logs, setLogs] = useState<LogItem[]>([])
   const [packageData, setPackageData] = useState<FloatPackageState | null>(null)
+  const [runtimeProfile, setRuntimeProfile] =
+    useState<FloatRuntimeProfile | null>(null)
+  const [runtimeProfileStatus, setRuntimeProfileStatus] =
+    useState("Profile not loaded yet.")
+  const [runtimePidConfig, setRuntimePidConfig] =
+    useState<FloatRuntimePidConfig | null>(null)
+  const [runtimePidConfigStatus, setRuntimePidConfigStatus] =
+    useState("PID config not loaded yet.")
+  const [runtimeBalanceConfig, setRuntimeBalanceConfig] =
+    useState<FloatRuntimeBalanceConfig | null>(null)
+  const [runtimeBalanceConfigStatus, setRuntimeBalanceConfigStatus] =
+    useState("Balance config not loaded yet.")
+  const [runtimeMotorConfig, setRuntimeMotorConfig] =
+    useState<FloatRuntimeMotorConfig | null>(null)
+  const [runtimeMotorConfigStatus, setRuntimeMotorConfigStatus] =
+    useState("Motor config not loaded yet.")
   const [profile, setProfile] = useState<FloatMissionState["profile"]>({
     statusText: "No profile data fetched yet.",
     data: null,
@@ -302,6 +459,254 @@ export function useFloatMissionState() {
     [addLog, applyStatusText]
   )
 
+  const refreshRuntimeProfile = useCallback(
+    async (signal?: AbortSignal) => {
+      try {
+        const response = await getFloatProfile(signal)
+        setRuntimeProfile(response.data ?? DEFAULT_RUNTIME_PROFILE)
+
+        if (isSuccessStatus(response)) {
+          setRuntimeProfileStatus("Loaded profile from ESPA.")
+          addLog("Runtime profile loaded from ESPA.", "success")
+        } else {
+          setRuntimeProfileStatus("Loaded cached profile; ESPA did not answer.")
+          addLog(`Runtime profile cache loaded: ${response.text}`, "warning")
+        }
+      } catch (error) {
+        if (signal?.aborted) return
+        const message = error instanceof Error ? error.message : String(error)
+        setRuntimeProfile(DEFAULT_RUNTIME_PROFILE)
+        setRuntimeProfileStatus("Could not load profile; using UI defaults.")
+        addLog(`Runtime profile load failed: ${message}`, "error")
+      }
+    },
+    [addLog]
+  )
+
+  const applyRuntimeProfile = useCallback(
+    async (nextProfile: FloatRuntimeProfile) => {
+      const validationError = validateRuntimeProfile(nextProfile)
+      if (validationError) {
+        setRuntimeProfileStatus(validationError)
+        addLog(`Profile not sent: ${validationError}`, "warning")
+        return false
+      }
+
+      setBusyCommand("PROFILE_SET")
+      setRuntimeProfileStatus("Sending profile to ESPA...")
+      addLog("Sending runtime profile to ESPA...")
+
+      try {
+        const response = await setFloatProfile({
+          ...nextProfile,
+          shallow_bottom_m: nextProfile.shallow_top_m + 0.51,
+        })
+
+        if (!isSuccessStatus(response)) {
+          setRuntimeProfileStatus(response.text)
+          addLog(`Runtime profile rejected: ${response.text}`, "error")
+          return false
+        }
+
+        setRuntimeProfile(response.data)
+        setRuntimeProfileStatus("Profile applied and saved on ESPA.")
+        addLog("Runtime profile applied and saved on ESPA.", "success")
+        return true
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error)
+        setRuntimeProfileStatus(message)
+        addLog(`Runtime profile apply failed: ${message}`, "error")
+        return false
+      } finally {
+        setBusyCommand(null)
+      }
+    },
+    [addLog]
+  )
+
+  const refreshRuntimePidConfig = useCallback(
+    async (signal?: AbortSignal) => {
+      try {
+        const response = await getFloatPidConfig(signal)
+        setRuntimePidConfig(response.data ?? DEFAULT_RUNTIME_PID_CONFIG)
+
+        if (isSuccessStatus(response)) {
+          setRuntimePidConfigStatus("Loaded PID config from ESPA.")
+          addLog("Runtime PID config loaded from ESPA.", "success")
+        } else {
+          setRuntimePidConfigStatus("Loaded cached PID config.")
+          addLog(`Runtime PID config cache loaded: ${response.text}`, "warning")
+        }
+      } catch (error) {
+        if (signal?.aborted) return
+        const message = error instanceof Error ? error.message : String(error)
+        setRuntimePidConfig(DEFAULT_RUNTIME_PID_CONFIG)
+        setRuntimePidConfigStatus("Could not load PID config; using UI defaults.")
+        addLog(`Runtime PID config load failed: ${message}`, "error")
+      }
+    },
+    [addLog]
+  )
+
+  const applyRuntimePidConfig = useCallback(
+    async (nextConfig: FloatRuntimePidConfig) => {
+      const validationError = validateRuntimePidConfig(nextConfig)
+      if (validationError) {
+        setRuntimePidConfigStatus(validationError)
+        addLog(`PID config not sent: ${validationError}`, "warning")
+        return false
+      }
+
+      setBusyCommand("PID_CONFIG_SET")
+      setRuntimePidConfigStatus("Sending PID config to ESPA...")
+      addLog("Sending runtime PID config to ESPA...")
+
+      try {
+        const response = await setFloatPidConfig(nextConfig)
+        if (!isSuccessStatus(response)) {
+          setRuntimePidConfigStatus(response.text)
+          addLog(`Runtime PID config rejected: ${response.text}`, "error")
+          return false
+        }
+
+        setRuntimePidConfig(response.data)
+        setRuntimePidConfigStatus("PID config applied and saved on ESPA.")
+        addLog("Runtime PID config applied and saved on ESPA.", "success")
+        return true
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error)
+        setRuntimePidConfigStatus(message)
+        addLog(`Runtime PID config apply failed: ${message}`, "error")
+        return false
+      } finally {
+        setBusyCommand(null)
+      }
+    },
+    [addLog]
+  )
+
+  const refreshRuntimeBalanceConfig = useCallback(
+    async (signal?: AbortSignal) => {
+      try {
+        const response = await getFloatBalanceConfig(signal)
+        setRuntimeBalanceConfig(response.data ?? DEFAULT_RUNTIME_BALANCE_CONFIG)
+
+        if (isSuccessStatus(response)) {
+          setRuntimeBalanceConfigStatus("Loaded balance config from ESPA.")
+          addLog("Runtime balance config loaded from ESPA.", "success")
+        } else {
+          setRuntimeBalanceConfigStatus("Loaded cached balance config.")
+          addLog(`Runtime balance config cache loaded: ${response.text}`, "warning")
+        }
+      } catch (error) {
+        if (signal?.aborted) return
+        const message = error instanceof Error ? error.message : String(error)
+        setRuntimeBalanceConfig(DEFAULT_RUNTIME_BALANCE_CONFIG)
+        setRuntimeBalanceConfigStatus("Could not load balance config; using UI defaults.")
+        addLog(`Runtime balance config load failed: ${message}`, "error")
+      }
+    },
+    [addLog]
+  )
+
+  const applyRuntimeBalanceConfig = useCallback(
+    async (nextConfig: FloatRuntimeBalanceConfig) => {
+      const validationError = validateRuntimeBalanceConfig(nextConfig)
+      if (validationError) {
+        setRuntimeBalanceConfigStatus(validationError)
+        addLog(`Balance config not sent: ${validationError}`, "warning")
+        return false
+      }
+
+      setBusyCommand("BALANCE_CONFIG_SET")
+      setRuntimeBalanceConfigStatus("Sending balance config to ESPA...")
+      addLog("Sending runtime balance config to ESPA...")
+
+      try {
+        const response = await setFloatBalanceConfig(nextConfig)
+        if (!isSuccessStatus(response)) {
+          setRuntimeBalanceConfigStatus(response.text)
+          addLog(`Runtime balance config rejected: ${response.text}`, "error")
+          return false
+        }
+
+        setRuntimeBalanceConfig(response.data)
+        setRuntimeBalanceConfigStatus("Balance config applied and saved on ESPA.")
+        addLog("Runtime balance config applied and saved on ESPA.", "success")
+        return true
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error)
+        setRuntimeBalanceConfigStatus(message)
+        addLog(`Runtime balance config apply failed: ${message}`, "error")
+        return false
+      } finally {
+        setBusyCommand(null)
+      }
+    },
+    [addLog]
+  )
+
+  const refreshRuntimeMotorConfig = useCallback(
+    async (signal?: AbortSignal) => {
+      try {
+        const response = await getFloatMotorConfig(signal)
+        setRuntimeMotorConfig(response.data ?? DEFAULT_RUNTIME_MOTOR_CONFIG)
+
+        if (isSuccessStatus(response)) {
+          setRuntimeMotorConfigStatus("Loaded motor config from ESPA.")
+          addLog("Runtime motor config loaded from ESPA.", "success")
+        } else {
+          setRuntimeMotorConfigStatus("Loaded cached motor config.")
+          addLog(`Runtime motor config cache loaded: ${response.text}`, "warning")
+        }
+      } catch (error) {
+        if (signal?.aborted) return
+        const message = error instanceof Error ? error.message : String(error)
+        setRuntimeMotorConfig(DEFAULT_RUNTIME_MOTOR_CONFIG)
+        setRuntimeMotorConfigStatus("Could not load motor config; using UI defaults.")
+        addLog(`Runtime motor config load failed: ${message}`, "error")
+      }
+    },
+    [addLog]
+  )
+
+  const applyRuntimeMotorConfig = useCallback(
+    async (nextConfig: FloatRuntimeMotorConfig) => {
+      const validationError = validateRuntimeMotorConfig(nextConfig)
+      if (validationError) {
+        setRuntimeMotorConfigStatus(validationError)
+        addLog(`Motor config not sent: ${validationError}`, "warning")
+        return false
+      }
+
+      setBusyCommand("MOTOR_CONFIG_SET")
+      setRuntimeMotorConfigStatus("Sending motor config to ESPA...")
+      addLog("Sending runtime motor config to ESPA...")
+
+      try {
+        const response = await setFloatMotorConfig(nextConfig)
+        if (!isSuccessStatus(response)) {
+          setRuntimeMotorConfigStatus(response.text)
+          addLog(`Runtime motor config rejected: ${response.text}`, "error")
+          return false
+        }
+
+        setRuntimeMotorConfig(response.data)
+        setRuntimeMotorConfigStatus("Motor config applied and saved on ESPA.")
+        addLog("Runtime motor config applied and saved on ESPA.", "success")
+        return true
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error)
+        setRuntimeMotorConfigStatus(message)
+        addLog(`Runtime motor config apply failed: ${message}`, "error")
+        return false
+      } finally {
+        setBusyCommand(null)
+      }
+    },
+    [addLog]
+  )
+
   useEffect(() => {
     const controller = new AbortController()
 
@@ -320,11 +725,19 @@ export function useFloatMissionState() {
         if (isSuccessStatus(response)) {
           addLog(`Float connection successful: ${response.text}`, "success")
           applyStatusText(response.text)
+          void refreshRuntimeProfile(controller.signal)
+          void refreshRuntimePidConfig(controller.signal)
+          void refreshRuntimeBalanceConfig(controller.signal)
+          void refreshRuntimeMotorConfig(controller.signal)
           return
         }
 
         addLog(`Failed to connect to float: ${response.text}`, "error")
         applyStatusText(response.text)
+        void refreshRuntimeProfile(controller.signal)
+        void refreshRuntimePidConfig(controller.signal)
+        void refreshRuntimeBalanceConfig(controller.signal)
+        void refreshRuntimeMotorConfig(controller.signal)
       } catch (error) {
         if (controller.signal.aborted) return
         const message = error instanceof Error ? error.message : String(error)
@@ -333,6 +746,10 @@ export function useFloatMissionState() {
           updateConnection(currentConnections, "backend", "error", "Offline")
         )
         applyStatusText("NO USB")
+        void refreshRuntimeProfile(controller.signal)
+        void refreshRuntimePidConfig(controller.signal)
+        void refreshRuntimeBalanceConfig(controller.signal)
+        void refreshRuntimeMotorConfig(controller.signal)
       }
     }
 
@@ -345,7 +762,15 @@ export function useFloatMissionState() {
       controller.abort()
       window.clearInterval(intervalId)
     }
-  }, [addLog, applyStatusText, pollStatus])
+  }, [
+    addLog,
+    applyStatusText,
+    pollStatus,
+    refreshRuntimeBalanceConfig,
+    refreshRuntimeMotorConfig,
+    refreshRuntimePidConfig,
+    refreshRuntimeProfile,
+  ])
 
   const runCommand = useCallback(
     async (command: string) => {
@@ -381,30 +806,6 @@ export function useFloatMissionState() {
       }
     },
     [addLog]
-  )
-
-  const sendPidParams = useCallback(
-    (kp: string, ki: string, kd: string) => {
-      if (!kp || !ki || !kd) {
-        addLog("PID command skipped: Kp, Ki, and Kd are required.", "warning")
-        return
-      }
-
-      void runCommand(`PARAMS ${kp} ${ki} ${kd}`)
-    },
-    [addLog, runCommand]
-  )
-
-  const sendTestFrequency = useCallback(
-    (frequency: string) => {
-      if (!frequency) {
-        addLog("Test frequency command skipped: value is required.", "warning")
-        return
-      }
-
-      void runCommand(`TEST_FREQ ${frequency}`)
-    },
-    [addLog, runCommand]
   )
 
   const sendTestSteps = useCallback(
@@ -535,6 +936,14 @@ export function useFloatMissionState() {
       logs,
       packageData,
       profile,
+      runtimeProfile,
+      runtimeProfileStatus,
+      runtimePidConfig,
+      runtimePidConfigStatus,
+      runtimeBalanceConfig,
+      runtimeBalanceConfigStatus,
+      runtimeMotorConfig,
+      runtimeMotorConfigStatus,
     }),
     [
       busyCommand,
@@ -544,18 +953,32 @@ export function useFloatMissionState() {
       logs,
       packageData,
       profile,
+      runtimeBalanceConfig,
+      runtimeBalanceConfigStatus,
+      runtimeMotorConfig,
+      runtimeMotorConfigStatus,
+      runtimePidConfig,
+      runtimePidConfigStatus,
+      runtimeProfile,
+      runtimeProfileStatus,
       status,
       statusItems,
     ]
   )
 
   return {
+    applyRuntimeBalanceConfig,
+    applyRuntimeMotorConfig,
+    applyRuntimePidConfig,
+    applyRuntimeProfile,
     commands,
     fetchProfileData,
+    refreshRuntimeBalanceConfig,
+    refreshRuntimeMotorConfig,
+    refreshRuntimePidConfig,
+    refreshRuntimeProfile,
     isFetchingProfile: busyCommand === "FETCH_PROFILE",
     isBusy: busyCommand !== null,
-    sendPidParams,
-    sendTestFrequency,
     sendTestSteps,
     state,
   }

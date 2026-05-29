@@ -291,7 +291,7 @@ function displayProfileData(profileData) {
 
     if (profileData && profileData.raw && profileData.raw.times && Array.isArray(profileData.raw.times) && profileData.raw.times.length > 0) {
         // Add plots first if available
-        if (profileData.img && profileData.img !== "NO_DATA" && Array.isArray(profileData.img) && profileData.img.length === 2) {
+        if (profileData.img && profileData.img !== "NO_DATA" && Array.isArray(profileData.img) && profileData.img.length >= 2) {
             const depthImg = document.createElement('img');
             depthImg.src = "data:image/png;base64," + profileData.img[0];
             depthImg.alt = "Depth vs Time Plot";
@@ -301,17 +301,26 @@ function displayProfileData(profileData) {
             pressureImg.src = "data:image/png;base64," + profileData.img[1];
             pressureImg.alt = "Pressure vs Time Plot";
             dataContainerEl.appendChild(pressureImg);
+
+            if (profileData.img.length >= 3) {
+                const syringeImg = document.createElement('img');
+                syringeImg.src = "data:image/png;base64," + profileData.img[2];
+                syringeImg.alt = "Syringe Position vs Time Plot";
+                dataContainerEl.appendChild(syringeImg);
+            }
         }
 
         // Add raw data below plots
-        let formattedRawData = "Timestamp (ms) | Depth (m) | Pressure (Pa)\n";
-        formattedRawData += "--------------------------------------------\n";
+        let formattedRawData = "Timestamp (ms) | Depth (m) | Pressure (kPa) | Syringe u\n";
+        formattedRawData += "---------------------------------------------------------\n";
         for (let i = 0; i < profileData.raw.times.length; i++) {
             const time = profileData.raw.times[i];
             const depth = parseFloat(profileData.raw.depth[i]).toFixed(2);
             const pressure = parseFloat(profileData.raw.pressure[i]).toFixed(2);
+            const syringeRaw = profileData.raw.syringe_u?.[i] ?? profileData.raw.syringe_position_u?.[i];
+            const syringe = syringeRaw === undefined || syringeRaw === null ? "N/A" : parseFloat(syringeRaw).toFixed(3);
             
-            let line = `${time} | ${depth} | ${pressure}\n`;
+            let line = `${time} | ${depth} | ${pressure} | ${syringe}\n`;
             if (Math.abs(parseFloat(depth) - FLOAT_TARGET_DEPTH) <= FLOAT_MAX_ERROR) {
                 formattedRawData += `* ${line}`; 
             } else {

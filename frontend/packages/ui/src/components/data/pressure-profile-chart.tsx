@@ -27,6 +27,7 @@ export type FloatProfilePoint = {
   timestamp: string | number
   depth?: string | number | null | undefined
   pressure: string | number | null | undefined
+  syringe?: string | number | null | undefined
 }
 
 export type FloatProfileChartProps = {
@@ -48,6 +49,10 @@ const chartConfig = {
   pressure: {
     label: "Pressure",
     color: "var(--chart-3)",
+  },
+  syringe: {
+    label: "Syringe",
+    color: "var(--chart-4)",
   },
 } satisfies ChartConfig
 
@@ -84,12 +89,14 @@ export function FloatProfileChart({
         timestamp: point.timestamp,
         depth: toNumber(point.depth),
         pressure: toNumber(point.pressure),
+        syringe: toNumber(point.syringe),
       })),
     [data]
   )
 
   const hasData = chartData.some(
-    (point) => point.depth !== null || point.pressure !== null
+    (point) =>
+      point.depth !== null || point.pressure !== null || point.syringe !== null
   )
 
   return (
@@ -120,6 +127,7 @@ export function FloatProfileChart({
                   <th className="px-3 py-2 font-medium">Timestamp</th>
                   <th className="px-3 py-2 font-medium">Depth</th>
                   <th className="px-3 py-2 font-medium">Pressure</th>
+                  <th className="px-3 py-2 font-medium">Syringe</th>
                 </tr>
               </thead>
               <tbody>
@@ -133,6 +141,9 @@ export function FloatProfileChart({
                     </td>
                     <td className="px-3 py-2 font-mono tabular-nums">
                       {formatPressure(point.pressure, pressureUnit)}
+                    </td>
+                    <td className="px-3 py-2 font-mono tabular-nums">
+                      {formatPressure(point.syringe, "u")}
                     </td>
                   </tr>
                 ))}
@@ -149,6 +160,10 @@ export function FloatProfileChart({
               <div className="flex items-center gap-1.5">
                 <span className="size-2 rounded-sm bg-[var(--chart-3)]" />
                 <span>Pressure ({pressureUnit})</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="size-2 rounded-sm bg-[var(--chart-4)]" />
+                <span>Syringe (u)</span>
               </div>
             </div>
             <ChartContainer
@@ -198,6 +213,7 @@ export function FloatProfileChart({
                   tickMargin={8}
                   width={58}
                 />
+                <YAxis yAxisId="syringe" domain={[0, 1]} hide />
                 <ChartTooltip
                   cursor={false}
                   content={<ChartTooltipContent indicator="line" />}
@@ -219,6 +235,15 @@ export function FloatProfileChart({
                   stroke="var(--color-pressure)"
                   strokeWidth={2.5}
                   strokeDasharray="5 3"
+                  connectNulls
+                />
+                <Area
+                  yAxisId="syringe"
+                  dataKey="syringe"
+                  type="natural"
+                  fill="transparent"
+                  stroke="var(--color-syringe)"
+                  strokeWidth={2}
                   connectNulls
                 />
               </AreaChart>

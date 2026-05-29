@@ -31,4 +31,4 @@ make test
 
 ## Test FLOAT page
 
-Flash the `/float/float.ino` script to the ESP32.
+For current end-to-end FLOAT testing, flash the real `Float_2025` firmware to ESPA/ESPB and connect the ESPB serial bridge to NEXUS. The legacy `/float/float.ino` sketch is only a minimal simulator for old page smoke tests and does not cover runtime profile/PID/balance/motor configuration or stored profile replay.
