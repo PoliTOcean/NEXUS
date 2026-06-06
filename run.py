@@ -66,11 +66,20 @@ if __name__ == "__main__":
 
     app.config["MODE"] = args.mode
     port = args.port
-    
-    # NORMAL
-    if "Darwin" in platform.platform() or "macOS" in platform.platform():
+
+    is_macos = "Darwin" in platform.platform() or "macOS" in platform.platform()
+    browser_path = get_browser_path()
+
+    # FlaskUI opens a Chromium-family browser in app mode. On macOS we bypass it,
+    # and when no supported browser is found we fall back to a plain Flask server
+    # (the UI is still reachable in any browser at http://localhost:<port>).
+    if is_macos or browser_path is None:
+        if browser_path is None and not is_macos:
+            print(f"[NEXUS] No Chrome/Chromium/Edge found. Open http://localhost:{port} in a browser.")
         app.run(
+            host="0.0.0.0",
             port=port,
+            threaded=True,
         )
     else:
         FlaskUI(
@@ -83,6 +92,6 @@ if __name__ == "__main__":
                 "host" : "0.0.0.0",
                 "threaded": True,
             },
-            browser_path= get_browser_path()
+            browser_path= browser_path
         ).run()
 
