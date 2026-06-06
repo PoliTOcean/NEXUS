@@ -1,4 +1,5 @@
 from serial import Serial, SerialException
+from serial.tools import list_ports
 import json
 import time
 import matplotlib.pyplot as plt
@@ -56,50 +57,87 @@ def plot_pressure_time(data, arg, ylabel):
     plt.close()
     return base64_img
     
+def _candidate_ports(preferred):
+    """Ordered list of serial device paths to probe.
+
+    The preferred port (the config hint) is tried first for a fast reconnect,
+    followed by every port the OS currently enumerates. Linux reassigns
+    /dev/ttyUSB* between devices, so we cannot rely on a fixed path.
+    """
+    candidates = []
+    if preferred:
+        candidates.append(preferred)
+    for port_info in list_ports.comports():
+        if port_info.device not in candidates:
+            candidates.append(port_info.device)
+    return candidates
+
+
+def _persist_float_port(port):
+    """Save the detected port back to the config so it's the first hint next time."""
+    try:
+        with open(FLOAT_CONFIG_PATH) as f:
+            conf = json.load(f)
+        if conf.get('port') == port:
+            return
+        conf['port'] = port
+        with open(FLOAT_CONFIG_PATH, 'w') as f:
+            json.dump(conf, f, indent=4)
+            f.write("\n")
+        print(f"[FLOAT] Persisted detected port {port} to config")
+    except Exception as e:
+        print(f"[FLOAT] Could not persist detected port: {e}")
+
+
 def start_communication(s: Serial):
     # This property is buggy, it does not understand if the serial is interrupted
     # But if you arrived here it means that serial does not reply anymore
     with serial_lock:
         if (s.is_open):
             print("[FLOAT] Serial port already open, closing before reconnecting.")
-            s.close()  
-        # Try to open serial communication      
-        with open(os.path.dirname(os.path.abspath(__file__)) + "/config/float.json") as jmaps:
+            s.close()
+        # Read config, then scan candidate ports validating each with a STATUS
+        # handshake. Only the FLOAT ESPB bridge replies correctly, so this is
+        # robust to ttyUSB swaps.
+        with open(FLOAT_CONFIG_PATH) as jmaps:
             conf = json.load(jmaps)
-            s.baudrate = conf['baudrate']
-            for i in range(0, 5):
-                port_candidate = f"{conf['port']}{i}"
+        s.baudrate = conf['baudrate']
+        preferred = conf.get('port')
+
+        for port_candidate in _candidate_ports(preferred):
+            try:
+                print(f"[FLOAT] Attempting connection on {port_candidate}")
+                s.port = port_candidate
+                s.open()
+                print(f"[FLOAT] Port {port_candidate} opened, sending STATUS handshake.")
+                val = msg_status(s, 'STATUS')
+                if val['status'] == 1:
+                    print(f"[FLOAT] Successfully connected on {s.port}")
+                    _persist_float_port(port_candidate)
+                    return val
+                print(f"[FLOAT] STATUS handshake failed on {port_candidate}: {val}")
+                if s.is_open:
+                    s.close()
+            except SerialException as e:
+                print(f"[FLOAT] Connection failed on {port_candidate}: {str(e)}")
                 try:
-                    print(f"[FLOAT] Attempting connection on {port_candidate}")
-                    s.port = port_candidate
-                    s.open()
-                    print(f"[FLOAT] Port {port_candidate} opened successfully.")
-                    val = msg_status(s, 'STATUS')
-                    if val['status'] == 1:
-                        print(f"[FLOAT] Successfully connected on {s.port}")
-                        return val
-                    else:
-                        print(f"[FLOAT] STATUS command failed on {s.port}: {val}")
+                    if s.is_open:
                         s.close()
-                except SerialException as e:
-                    print(f"[FLOAT] Connection failed on {port_candidate}: {str(e)}")
-                    try:
+                except Exception as close_e:
+                    print(f"[FLOAT] Error closing port after failure: {close_e}")
+            except Exception as e:
+                print(f"[FLOAT] Unexpected error on {port_candidate}: {str(e)}")
+                try:
+                    if s.is_open:
                         s.close()
-                    except Exception as close_e:
-                        print(f"[FLOAT] Error closing port after failure: {close_e}")
-                    continue
-                except Exception as e:
-                    print(f"[FLOAT] Unexpected error on {port_candidate}: {str(e)}")
-                    try:
-                        s.close()
-                    except Exception as close_e:
-                        print(f"[FLOAT] Error closing port after unexpected error: {close_e}")
-                    continue
-            print("[FLOAT] No available ports found")
-            return {
-                'text': "NO USB",
-                'status': 0
-            }
+                except Exception as close_e:
+                    print(f"[FLOAT] Error closing port after unexpected error: {close_e}")
+
+        print("[FLOAT] No FLOAT bridge found on any available port")
+        return {
+            'text': "NO USB",
+            'status': 0
+        }
      
 
 def _is_debug_serial_line(line: str):
