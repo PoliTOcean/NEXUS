@@ -4,11 +4,17 @@ import logging
 import platform
 import argparse
 import os
+import shutil
+import tempfile
 from dotenv import load_dotenv
 
 from utils_rov import mapping_viz
 
 load_dotenv()
+
+# matplotlib writes its cache/config here; default to the platform temp dir so it
+# works on Linux, macOS and Windows without a hardcoded /tmp.
+os.environ.setdefault("MPLCONFIGDIR", os.path.join(tempfile.gettempdir(), "matplotlib"))
 
 
 
@@ -16,14 +22,34 @@ log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
 
 def get_browser_path():
-    possible_paths = [
-        "/snap/bin/chromium",
-        "/usr/bin/chromium"
-    ]
+    # Per-OS install locations for Chrome/Chromium/Edge, then a PATH lookup so a
+    # browser installed anywhere on PATH is still found.
+    possible_paths = {
+        "Linux": [
+            "/snap/bin/chromium",
+            "/usr/bin/chromium",
+            "/usr/bin/chromium-browser",
+            "/usr/bin/google-chrome",
+        ],
+        "Darwin": [
+            "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+            "/Applications/Chromium.app/Contents/MacOS/Chromium",
+        ],
+        "Windows": [
+            r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+            r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+            r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
+        ],
+    }.get(platform.system(), [])
 
     for path in possible_paths:
         if os.path.exists(path):
             return path
+
+    for name in ("chromium", "chromium-browser", "google-chrome", "chrome", "msedge"):
+        found = shutil.which(name)
+        if found:
+            return found
 
     return None
 

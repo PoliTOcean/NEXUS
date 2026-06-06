@@ -53,22 +53,48 @@ class Joystick():
         print(f"controller name: {self.name}")
         
         if "Xbox" in self.name:
-            # Attempt to determine USB/Bluetooth via lsusb output
-            try:
-                lsusb_output = subprocess.check_output(["lsusb"]).decode()
-                if "Xbox" in lsusb_output:
-                    self.__connection_type = "USB"
-                else:
-                    self.__connection_type = "Bluetooth"
-            except Exception:
-                self.__connection_type = "Bluetooth"
+            self.__connection_type = self.__detect_connection_type()
         print(f"connected via {self.__connection_type}")
 
         with open(self.__path_mappings, "r") as jmaps:
             mappings = json.load(jmaps)
             if self.name in mappings:
-                self.__mappings = mappings[self.name][platform.system()][self.__connection_type]
+                os_mappings = mappings[self.name]
+                # The mappings file is keyed by OS (e.g. "Linux", "Darwin"). Fall
+                # back to "Linux" when the current OS has no dedicated entry so the
+                # controller still works on platforms not listed in the config.
+                system = platform.system()
+                if system not in os_mappings and "Linux" in os_mappings:
+                    print(f"[JOYSTICK] No mappings for {system}, falling back to Linux")
+                    system = "Linux"
+                self.__mappings = os_mappings[system][self.__connection_type]
         self.active = True
+
+    def __detect_connection_type(self):
+        """Best-effort USB vs Bluetooth detection, per OS.
+
+        Each platform uses a different USB enumeration tool; failures fall back to
+        "Bluetooth" so a missing tool never crashes joystick setup.
+        """
+        system = platform.system()
+        try:
+            if system == "Linux":
+                output = subprocess.check_output(["lsusb"]).decode()
+                return "USB" if "Xbox" in output else "Bluetooth"
+            if system == "Darwin":
+                output = subprocess.check_output(
+                    ["system_profiler", "SPUSBDataType"]
+                ).decode()
+                return "USB" if ("Xbox" in output or "Controller" in output) else "Bluetooth"
+            if system == "Windows":
+                output = subprocess.check_output(
+                    ["powershell", "-NoProfile", "-Command",
+                     "Get-PnpDevice -PresentOnly | Select-Object -ExpandProperty FriendlyName"]
+                ).decode(errors="replace")
+                return "USB" if "Xbox" in output else "Bluetooth"
+        except Exception:
+            pass
+        return "Bluetooth"
 
     def __close(self):
         sdl2.SDL_JoystickClose(self.__joystick)
