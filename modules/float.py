@@ -45,57 +45,60 @@ def _save_float_config(next_config):
         config_file.write("\n")
 
 
+# Float body length (m); the firmware requires ascent_target_m + this < descent_target_m.
+FLOAT_LENGTH_M = 0.51
+
+
 def _profile_from_config(config):
+    # New per-phase schema (descent/ascent). Fall back to the legacy key names so
+    # a float.json that predates the rename still loads correctly.
     return {
         "profile_count": int(config.get("profile_count", 2)),
-        "deep_target_m": float(config.get("deep_target_m", config.get("target_depth", 2.5))),
-        "shallow_top_m": float(config.get("shallow_top_m", config.get("shallow_target_depth", 0.4))),
+        "descent_target_m": float(config.get("descent_target_m", config.get("deep_target_m", config.get("target_depth", 2.5)))),
+        "ascent_target_m": float(config.get("ascent_target_m", config.get("shallow_top_m", config.get("shallow_target_depth", 0.4)))),
         "depth_tolerance_m": float(config.get("depth_tolerance_m", config.get("max_error", 0.33))),
         "hold_s": float(config.get("hold_s", 30.0)),
-        "pid_timeout_s": float(config.get("pid_timeout_s", 180.0)),
+        "descent_timeout_s": float(config.get("descent_timeout_s", config.get("pid_timeout_s", 180.0))),
         "ascent_timeout_s": float(config.get("ascent_timeout_s", 120.0)),
-        "surface_offset_m": float(config.get("surface_offset_m", 0.10)),
-        "pool_depth_m": float(config.get("pool_depth_m", 0.70)),
-        "bottom_clearance_m": float(config.get("bottom_clearance_m", 0.07)),
+        "surface_rest_offset_m": float(config.get("surface_rest_offset_m", config.get("surface_offset_m", 0.10))),
     }
 
 
 def _validate_profile(payload):
     profile = _profile_from_config(payload)
-    shallow_bottom_m = profile["shallow_top_m"] + 0.51
+    ascent_target_bottom_m = profile["ascent_target_m"] + FLOAT_LENGTH_M
 
     if not 1 <= profile["profile_count"] <= 10:
         raise ValueError("profile_count must be in [1, 10]")
-    for field in ("deep_target_m", "shallow_top_m"):
+    for field in ("descent_target_m", "ascent_target_m", "surface_rest_offset_m"):
         if not 0.0 <= profile[field] <= 5.0:
             raise ValueError(f"{field} must be in [0.0, 5.0]")
     if not 0.005 <= profile["depth_tolerance_m"] <= 1.0:
         raise ValueError("depth_tolerance_m must be in [0.005, 1.0]")
     if not 1.0 <= profile["hold_s"] <= 600.0:
         raise ValueError("hold_s must be in [1, 600]")
-    for field in ("pid_timeout_s", "ascent_timeout_s"):
+    for field in ("descent_timeout_s", "ascent_timeout_s"):
         if not 5.0 <= profile[field] <= 900.0:
             raise ValueError(f"{field} must be in [5, 900]")
-    if profile["surface_offset_m"] < 0.0:
-        raise ValueError("surface_offset_m must be >= 0")
-    if shallow_bottom_m >= profile["deep_target_m"]:
-        raise ValueError("shallow bottom target must be lower than deep target")
+    if ascent_target_bottom_m >= profile["descent_target_m"]:
+        raise ValueError("ascent_target_m + 0.51 must be lower than descent_target_m")
 
-    profile["shallow_bottom_m"] = shallow_bottom_m
+    profile["ascent_target_bottom_m"] = ascent_target_bottom_m
     return profile
 
 
 def _profile_set_command(profile):
+    # Field order is fixed and must match the firmware payload exactly.
     values = " ".join(
         [
             str(profile["profile_count"]),
-            f"{profile['deep_target_m']:.3f}",
-            f"{profile['shallow_top_m']:.3f}",
+            f"{profile['descent_target_m']:.3f}",
+            f"{profile['ascent_target_m']:.3f}",
             f"{profile['depth_tolerance_m']:.3f}",
             f"{profile['hold_s']:.1f}",
-            f"{profile['pid_timeout_s']:.1f}",
+            f"{profile['descent_timeout_s']:.1f}",
             f"{profile['ascent_timeout_s']:.1f}",
-            f"{profile['surface_offset_m']:.3f}",
+            f"{profile['surface_rest_offset_m']:.3f}",
         ]
     )
     return f"PROFILE_SET {values}"
@@ -104,9 +107,11 @@ def _profile_set_command(profile):
 def _save_profile_cache(profile):
     config = _load_float_config()
     config.update(profile)
-    config["target_depth"] = profile["deep_target_m"]
+    # Keep the legacy aliases in sync: the matplotlib plot in utils_float/float.py
+    # reads target_depth/max_error/shallow_target_depth to draw the target lines.
+    config["target_depth"] = profile["descent_target_m"]
     config["max_error"] = profile["depth_tolerance_m"]
-    config["shallow_target_depth"] = profile["shallow_top_m"]
+    config["shallow_target_depth"] = profile["ascent_target_m"]
     _save_float_config(config)
 
 
@@ -351,8 +356,8 @@ def float_profile_get():
             }), 200
 
         profile = _profile_from_config({**cached_profile, **firmware_profile})
-        profile['shallow_bottom_m'] = float(
-            firmware_profile.get('shallow_bottom_m', profile['shallow_top_m'] + 0.51)
+        profile['ascent_target_bottom_m'] = float(
+            firmware_profile.get('ascent_target_bottom_m', profile['ascent_target_m'] + FLOAT_LENGTH_M)
         )
         _save_profile_cache(profile)
         return jsonify({
