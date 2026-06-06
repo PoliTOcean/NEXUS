@@ -87,6 +87,10 @@ export function listenFloatProfile(signal?: AbortSignal) {
   return getJson<NexusFloatListenResponse>("/FLOAT/listen", signal)
 }
 
+export function setFloatSyringe(uNorm: number, durationS: number, signal?: AbortSignal) {
+  return sendFloatCommand(`SYRINGE_SET ${uNorm} ${durationS}`, signal)
+}
+
 export function getFloatProfile(signal?: AbortSignal) {
   return getJson<NexusFloatProfileResponse>("/FLOAT/profile", signal)
 }

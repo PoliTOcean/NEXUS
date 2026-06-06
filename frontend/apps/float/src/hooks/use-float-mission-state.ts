@@ -13,6 +13,7 @@ import {
   setFloatMotorConfig,
   setFloatPidConfig,
   setFloatProfile,
+  setFloatSyringe,
   startFloat,
 } from "@/lib/nexus-client"
 import type {
@@ -34,18 +35,20 @@ const MAX_LOG_CHARS = 5000
 const PROFILE_POLL_ATTEMPTS = 40
 const PROFILE_POLL_DELAY_MS = 250
 
+const FLOAT_LENGTH_M = 0.51
+const SYRINGE_DURATION_MIN_S = 0.5
+const SYRINGE_DURATION_MAX_S = 300
+
 const DEFAULT_RUNTIME_PROFILE: FloatRuntimeProfile = {
   profile_count: 2,
-  deep_target_m: 2.5,
-  shallow_top_m: 0.4,
-  shallow_bottom_m: 0.91,
+  descent_target_m: 2.5,
+  ascent_target_m: 0.4,
+  ascent_target_bottom_m: 0.91,
   depth_tolerance_m: 0.33,
   hold_s: 30,
-  pid_timeout_s: 180,
+  descent_timeout_s: 180,
   ascent_timeout_s: 120,
-  surface_offset_m: 0.1,
-  pool_depth_m: 0.7,
-  bottom_clearance_m: 0.07,
+  surface_rest_offset_m: 0.1,
 }
 
 const DEFAULT_RUNTIME_PID_CONFIG: FloatRuntimePidConfig = {
@@ -270,16 +273,16 @@ function sleep(ms: number) {
 }
 
 function validateRuntimeProfile(profile: FloatRuntimeProfile) {
-  const shallowBottom = profile.shallow_top_m + 0.51
+  const ascentBottom = profile.ascent_target_m + FLOAT_LENGTH_M
 
   if (profile.profile_count < 1 || profile.profile_count > 10) {
     return "Profile count must be between 1 and 10."
   }
-  if (profile.deep_target_m < 0 || profile.deep_target_m > 5) {
-    return "Deep target must be between 0 and 5 m."
+  if (profile.descent_target_m < 0 || profile.descent_target_m > 5) {
+    return "Descent target must be between 0 and 5 m."
   }
-  if (profile.shallow_top_m < 0 || profile.shallow_top_m > 5) {
-    return "Shallow top target must be between 0 and 5 m."
+  if (profile.ascent_target_m < 0 || profile.ascent_target_m > 5) {
+    return "Ascent target must be between 0 and 5 m."
   }
   if (profile.depth_tolerance_m < 0.005 || profile.depth_tolerance_m > 1) {
     return "Depth tolerance must be between 0.005 and 1 m."
@@ -287,17 +290,17 @@ function validateRuntimeProfile(profile: FloatRuntimeProfile) {
   if (profile.hold_s < 1 || profile.hold_s > 600) {
     return "Hold time must be between 1 and 600 s."
   }
-  if (profile.pid_timeout_s < 5 || profile.pid_timeout_s > 900) {
-    return "PID timeout must be between 5 and 900 s."
+  if (profile.descent_timeout_s < 5 || profile.descent_timeout_s > 900) {
+    return "Descent timeout must be between 5 and 900 s."
   }
   if (profile.ascent_timeout_s < 5 || profile.ascent_timeout_s > 900) {
     return "Ascent timeout must be between 5 and 900 s."
   }
-  if (profile.surface_offset_m < 0) {
-    return "Surface offset must be 0 or greater."
+  if (profile.surface_rest_offset_m < 0 || profile.surface_rest_offset_m > 5) {
+    return "Surface rest offset must be between 0 and 5 m."
   }
-  if (shallowBottom >= profile.deep_target_m) {
-    return "Shallow bottom target must be lower than the deep target."
+  if (ascentBottom >= profile.descent_target_m) {
+    return "Ascent target + 0.51 m (float length) must be lower than the descent target."
   }
 
   return null
@@ -499,7 +502,7 @@ export function useFloatMissionState() {
       try {
         const response = await setFloatProfile({
           ...nextProfile,
-          shallow_bottom_m: nextProfile.shallow_top_m + 0.51,
+          ascent_target_bottom_m: nextProfile.ascent_target_m + FLOAT_LENGTH_M,
         })
 
         if (!isSuccessStatus(response)) {
@@ -820,6 +823,47 @@ export function useFloatMissionState() {
     [addLog, runCommand]
   )
 
+  const applySyringe = useCallback(
+    async (uNorm: number, durationS: number) => {
+      if (!Number.isFinite(uNorm) || !Number.isFinite(durationS)) {
+        addLog("Syringe command skipped: position and duration are required.", "warning")
+        return false
+      }
+      if (durationS < SYRINGE_DURATION_MIN_S || durationS > SYRINGE_DURATION_MAX_S) {
+        const message = `ERR: durationS in [${SYRINGE_DURATION_MIN_S}, ${SYRINGE_DURATION_MAX_S}]`
+        addLog(`Syringe command not sent: ${message}`, "warning")
+        return false
+      }
+
+      // The firmware clamps u_norm to [0, 1]; clamp here too for a clear command.
+      const clampedU = Math.min(1, Math.max(0, uNorm))
+
+      setBusyCommand("SYRINGE_SET")
+      setLastAck({ command: "SYRINGE_SET", status: "pending" })
+      addLog(`Sending SYRINGE_SET ${clampedU} ${durationS}...`)
+
+      try {
+        const response = await setFloatSyringe(clampedU, durationS)
+        if (!isSuccessStatus(response)) {
+          setLastAck({ command: "SYRINGE_SET", status: "failed" })
+          addLog(`SYRINGE_SET failed: ${response.text}`, "error")
+          return false
+        }
+        setLastAck({ command: "SYRINGE_SET", status: "success" })
+        addLog(`SYRINGE_SET successful: ${response.text}`, "success")
+        return true
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error)
+        setLastAck({ command: "SYRINGE_SET", status: "failed" })
+        addLog(`SYRINGE_SET failed: ${message}`, "error")
+        return false
+      } finally {
+        setBusyCommand(null)
+      }
+    },
+    [addLog]
+  )
+
   const fetchProfileData = useCallback(async () => {
     setBusyCommand("FETCH_PROFILE")
     setProfile({
@@ -971,6 +1015,7 @@ export function useFloatMissionState() {
     applyRuntimeMotorConfig,
     applyRuntimePidConfig,
     applyRuntimeProfile,
+    applySyringe,
     commands,
     fetchProfileData,
     refreshRuntimeBalanceConfig,

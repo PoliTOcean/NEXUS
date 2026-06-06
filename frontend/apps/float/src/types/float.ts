@@ -64,16 +64,14 @@ export type NexusFloatListenResponse = {
 
 export type FloatRuntimeProfile = {
   profile_count: number
-  deep_target_m: number
-  shallow_top_m: number
-  shallow_bottom_m?: number
+  descent_target_m: number
+  ascent_target_m: number
+  ascent_target_bottom_m?: number
   depth_tolerance_m: number
   hold_s: number
-  pid_timeout_s: number
+  descent_timeout_s: number
   ascent_timeout_s: number
-  surface_offset_m: number
-  pool_depth_m?: number
-  bottom_clearance_m?: number
+  surface_rest_offset_m: number
 }
 
 export type NexusFloatProfileResponse = {

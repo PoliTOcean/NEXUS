@@ -39,30 +39,26 @@ const FLOAT_LENGTH_M = 0.51
 
 const MATE_PROFILE: FloatRuntimeProfile = {
   profile_count: 2,
-  deep_target_m: 2.5,
-  shallow_top_m: 0.4,
-  shallow_bottom_m: 0.91,
+  descent_target_m: 2.5,
+  ascent_target_m: 0.4,
+  ascent_target_bottom_m: 0.91,
   depth_tolerance_m: 0.33,
   hold_s: 30,
-  pid_timeout_s: 180,
+  descent_timeout_s: 180,
   ascent_timeout_s: 120,
-  surface_offset_m: 0.1,
-  pool_depth_m: 0.7,
-  bottom_clearance_m: 0.07,
+  surface_rest_offset_m: 0.1,
 }
 
 const POOL_PROFILE: FloatRuntimeProfile = {
   profile_count: 1,
-  deep_target_m: 0.63,
-  shallow_top_m: 0.06,
-  shallow_bottom_m: 0.57,
+  descent_target_m: 0.63,
+  ascent_target_m: 0.06,
+  ascent_target_bottom_m: 0.57,
   depth_tolerance_m: 0.025,
   hold_s: 8,
-  pid_timeout_s: 45,
+  descent_timeout_s: 45,
   ascent_timeout_s: 45,
-  surface_offset_m: 0.1,
-  pool_depth_m: 0.7,
-  bottom_clearance_m: 0.07,
+  surface_rest_offset_m: 0.1,
 }
 
 function formatPackageValue(value: unknown) {
@@ -77,48 +73,42 @@ function formatPackageValue(value: unknown) {
 
 type ProfileFormState = Record<
   | "profile_count"
-  | "deep_target_m"
-  | "shallow_top_m"
+  | "descent_target_m"
+  | "ascent_target_m"
   | "depth_tolerance_m"
   | "hold_s"
-  | "pid_timeout_s"
+  | "descent_timeout_s"
   | "ascent_timeout_s"
-  | "surface_offset_m"
-  | "pool_depth_m"
-  | "bottom_clearance_m",
+  | "surface_rest_offset_m",
   string
 >
 
 function profileToForm(profile: FloatRuntimeProfile): ProfileFormState {
   return {
     profile_count: String(profile.profile_count),
-    deep_target_m: String(profile.deep_target_m),
-    shallow_top_m: String(profile.shallow_top_m),
+    descent_target_m: String(profile.descent_target_m),
+    ascent_target_m: String(profile.ascent_target_m),
     depth_tolerance_m: String(profile.depth_tolerance_m),
     hold_s: String(profile.hold_s),
-    pid_timeout_s: String(profile.pid_timeout_s),
+    descent_timeout_s: String(profile.descent_timeout_s),
     ascent_timeout_s: String(profile.ascent_timeout_s),
-    surface_offset_m: String(profile.surface_offset_m),
-    pool_depth_m: String(profile.pool_depth_m ?? 0.7),
-    bottom_clearance_m: String(profile.bottom_clearance_m ?? 0.07),
+    surface_rest_offset_m: String(profile.surface_rest_offset_m),
   }
 }
 
 function formToProfile(form: ProfileFormState): FloatRuntimeProfile {
-  const shallowTop = Number(form.shallow_top_m)
+  const ascentTarget = Number(form.ascent_target_m)
 
   return {
     profile_count: Number(form.profile_count),
-    deep_target_m: Number(form.deep_target_m),
-    shallow_top_m: shallowTop,
-    shallow_bottom_m: shallowTop + FLOAT_LENGTH_M,
+    descent_target_m: Number(form.descent_target_m),
+    ascent_target_m: ascentTarget,
+    ascent_target_bottom_m: ascentTarget + FLOAT_LENGTH_M,
     depth_tolerance_m: Number(form.depth_tolerance_m),
     hold_s: Number(form.hold_s),
-    pid_timeout_s: Number(form.pid_timeout_s),
+    descent_timeout_s: Number(form.descent_timeout_s),
     ascent_timeout_s: Number(form.ascent_timeout_s),
-    surface_offset_m: Number(form.surface_offset_m),
-    pool_depth_m: Number(form.pool_depth_m),
-    bottom_clearance_m: Number(form.bottom_clearance_m),
+    surface_rest_offset_m: Number(form.surface_rest_offset_m),
   }
 }
 
@@ -175,6 +165,70 @@ function FloatParameterPanel({
   )
 }
 
+function FloatSyringePanel({
+  disabled,
+  onApply,
+}: {
+  disabled: boolean
+  onApply: (uNorm: number, durationS: number) => Promise<boolean>
+}) {
+  const [position, setPosition] = useState("0.5")
+  const [duration, setDuration] = useState("10")
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    void onApply(Number(position), Number(duration))
+  }
+
+  return (
+    <Panel className={`bg-card/70 ${PARAMETER_RADIUS_CLASS}`}>
+      <PanelHeader>
+        <PanelTitle>Syringe Control</PanelTitle>
+        <PanelDescription>Direct SYRINGE_SET command</PanelDescription>
+      </PanelHeader>
+      <PanelContent>
+        <form className="space-y-4" onSubmit={handleSubmit}>
+          <ParameterInput
+            label="Position"
+            unit="u"
+            type="number"
+            inputMode="decimal"
+            step="0.01"
+            min={0}
+            max={1}
+            helperText="0 = retracted (float), 1 = extended (sink)"
+            value={position}
+            disabled={disabled}
+            onChange={(event) => setPosition(event.target.value)}
+          />
+          <ParameterInput
+            label="Duration"
+            unit="s"
+            type="number"
+            inputMode="decimal"
+            step="0.5"
+            min={0.5}
+            max={300}
+            helperText="Valid range 0.5–300 s"
+            value={duration}
+            disabled={disabled}
+            onChange={(event) => setDuration(event.target.value)}
+          />
+          <div className="flex justify-end">
+            <Button
+              type="submit"
+              disabled={disabled}
+              className={`min-w-28 ${PARAMETER_RADIUS_CLASS}`}
+            >
+              SET SYRINGE
+            </Button>
+          </div>
+        </form>
+      </PanelContent>
+    </Panel>
+  )
+}
+
 function FloatRuntimeProfilePanel({
   profile,
   statusText,
@@ -190,12 +244,13 @@ function FloatRuntimeProfilePanel({
 }) {
   const resolvedProfile = profile ?? MATE_PROFILE
   const [preset, setPreset] = useState("custom")
+  const [showAdvanced, setShowAdvanced] = useState(false)
   const [form, setForm] = useState<ProfileFormState>(() =>
     profileToForm(resolvedProfile)
   )
 
   const parsedProfile = useMemo(() => formToProfile(form), [form])
-  const shallowBottom = parsedProfile.shallow_bottom_m ?? parsedProfile.shallow_top_m + FLOAT_LENGTH_M
+  const ascentBottom = parsedProfile.ascent_target_bottom_m ?? parsedProfile.ascent_target_m + FLOAT_LENGTH_M
 
   function updateField(field: keyof ProfileFormState, value: string) {
     setPreset("custom")
@@ -211,19 +266,6 @@ function FloatRuntimeProfilePanel({
     if (value === "mate") {
       setForm(profileToForm(MATE_PROFILE))
     }
-  }
-
-  function handlePoolHelperChange(field: "pool_depth_m" | "bottom_clearance_m", value: string) {
-    setPreset("custom")
-    setForm((currentForm) => {
-      const nextForm = { ...currentForm, [field]: value }
-      const poolDepth = Number(nextForm.pool_depth_m)
-      const clearance = Number(nextForm.bottom_clearance_m)
-      if (Number.isFinite(poolDepth) && Number.isFinite(clearance)) {
-        nextForm.deep_target_m = String(Math.max(0, poolDepth - clearance))
-      }
-      return nextForm
-    })
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -268,15 +310,15 @@ function FloatRuntimeProfilePanel({
             </div>
             <div className="grid gap-3 rounded-md border bg-muted/20 p-3 sm:grid-cols-3">
               <div>
-                <div className="text-xs uppercase text-muted-foreground">Deep target</div>
+                <div className="text-xs uppercase text-muted-foreground">Descent target</div>
                 <div className="font-mono text-sm tabular-nums">
-                  {formatMeters(parsedProfile.deep_target_m)}
+                  {formatMeters(parsedProfile.descent_target_m)}
                 </div>
               </div>
               <div>
-                <div className="text-xs uppercase text-muted-foreground">Shallow bottom</div>
+                <div className="text-xs uppercase text-muted-foreground">Ascent bottom</div>
                 <div className="font-mono text-sm tabular-nums">
-                  {formatMeters(shallowBottom)}
+                  {formatMeters(ascentBottom)}
                 </div>
               </div>
               <div>
@@ -288,69 +330,27 @@ function FloatRuntimeProfilePanel({
             </div>
           </div>
 
+          {/* Essential parameters: the 4 fields the operator normally touches. */}
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             <ParameterInput
-              label="Pool Depth"
+              label="Descent Target"
               unit="m"
               type="number"
               inputMode="decimal"
               step="0.01"
-              value={form.pool_depth_m}
+              value={form.descent_target_m}
               disabled={disabled}
-              onChange={(event) => handlePoolHelperChange("pool_depth_m", event.target.value)}
+              onChange={(event) => updateField("descent_target_m", event.target.value)}
             />
             <ParameterInput
-              label="Bottom Clearance"
+              label="Ascent Target"
               unit="m"
               type="number"
               inputMode="decimal"
               step="0.01"
-              value={form.bottom_clearance_m}
+              value={form.ascent_target_m}
               disabled={disabled}
-              onChange={(event) => handlePoolHelperChange("bottom_clearance_m", event.target.value)}
-            />
-            <ParameterInput
-              label="Profile Count"
-              type="number"
-              inputMode="numeric"
-              min={1}
-              max={10}
-              value={form.profile_count}
-              disabled={disabled}
-              onChange={(event) => updateField("profile_count", event.target.value)}
-            />
-            <ParameterInput
-              label="Surface Offset"
-              unit="m"
-              type="number"
-              inputMode="decimal"
-              step="0.01"
-              value={form.surface_offset_m}
-              disabled={disabled}
-              onChange={(event) => updateField("surface_offset_m", event.target.value)}
-            />
-          </div>
-
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            <ParameterInput
-              label="Deep Target"
-              unit="m"
-              type="number"
-              inputMode="decimal"
-              step="0.01"
-              value={form.deep_target_m}
-              disabled={disabled}
-              onChange={(event) => updateField("deep_target_m", event.target.value)}
-            />
-            <ParameterInput
-              label="Shallow Top"
-              unit="m"
-              type="number"
-              inputMode="decimal"
-              step="0.01"
-              value={form.shallow_top_m}
-              disabled={disabled}
-              onChange={(event) => updateField("shallow_top_m", event.target.value)}
+              onChange={(event) => updateField("ascent_target_m", event.target.value)}
             />
             <ParameterInput
               label="Tolerance"
@@ -372,26 +372,61 @@ function FloatRuntimeProfilePanel({
               disabled={disabled}
               onChange={(event) => updateField("hold_s", event.target.value)}
             />
-            <ParameterInput
-              label="PID Timeout"
-              unit="s"
-              type="number"
-              inputMode="decimal"
-              step="1"
-              value={form.pid_timeout_s}
-              disabled={disabled}
-              onChange={(event) => updateField("pid_timeout_s", event.target.value)}
-            />
-            <ParameterInput
-              label="Ascent Timeout"
-              unit="s"
-              type="number"
-              inputMode="decimal"
-              step="1"
-              value={form.ascent_timeout_s}
-              disabled={disabled}
-              onChange={(event) => updateField("ascent_timeout_s", event.target.value)}
-            />
+          </div>
+
+          {/* Advanced parameters: collapsed by default, pre-filled with defaults. */}
+          <div className="space-y-3">
+            <button
+              type="button"
+              className="text-xs font-medium uppercase tracking-wide text-muted-foreground hover:text-foreground"
+              onClick={() => setShowAdvanced((open) => !open)}
+            >
+              {showAdvanced ? "▾ Advanced" : "▸ Advanced"}
+            </button>
+            {showAdvanced ? (
+              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                <ParameterInput
+                  label="Profile Count"
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  max={10}
+                  value={form.profile_count}
+                  disabled={disabled}
+                  onChange={(event) => updateField("profile_count", event.target.value)}
+                />
+                <ParameterInput
+                  label="Descent Timeout"
+                  unit="s"
+                  type="number"
+                  inputMode="decimal"
+                  step="1"
+                  value={form.descent_timeout_s}
+                  disabled={disabled}
+                  onChange={(event) => updateField("descent_timeout_s", event.target.value)}
+                />
+                <ParameterInput
+                  label="Ascent Timeout"
+                  unit="s"
+                  type="number"
+                  inputMode="decimal"
+                  step="1"
+                  value={form.ascent_timeout_s}
+                  disabled={disabled}
+                  onChange={(event) => updateField("ascent_timeout_s", event.target.value)}
+                />
+                <ParameterInput
+                  label="Surface Rest Offset"
+                  unit="m"
+                  type="number"
+                  inputMode="decimal"
+                  step="0.01"
+                  value={form.surface_rest_offset_m}
+                  disabled={disabled}
+                  onChange={(event) => updateField("surface_rest_offset_m", event.target.value)}
+                />
+              </div>
+            ) : null}
           </div>
 
           <div className="flex justify-end">
@@ -811,6 +846,7 @@ export function FloatMissionControl() {
     applyRuntimeMotorConfig,
     applyRuntimePidConfig,
     applyRuntimeProfile,
+    applySyringe,
     commands,
     fetchProfileData,
     refreshRuntimeBalanceConfig,
@@ -903,6 +939,11 @@ export function FloatMissionControl() {
                 <FloatParameterPanel
                   disabled={isBusy}
                   onSendTestSteps={sendTestSteps}
+                />
+
+                <FloatSyringePanel
+                  disabled={isBusy}
+                  onApply={applySyringe}
                 />
               </aside>
             </section>
