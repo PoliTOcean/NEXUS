@@ -749,8 +749,11 @@ function createProfilePoints(profileData: FloatProfileData | null) {
   const raw = profileData?.raw
   if (!raw?.times?.length) return []
 
-  return raw.times.map((timestamp, index) => ({
-    timestamp,
+  // The firmware logs one sample per second, so the sample index maps directly
+  // to elapsed seconds. Using the index keeps the X axis readable instead of
+  // plotting raw millisecond timestamps (e.g. 3349730).
+  return raw.times.map((_timestamp, index) => ({
+    timestamp: index,
     depth: raw.depth_m?.[index] ?? raw.depth?.[index],
     pressure: raw.pressure_kpa?.[index] ?? raw.pressure?.[index],
     syringe: raw.syringe_u?.[index] ?? raw.syringe_position_u?.[index],

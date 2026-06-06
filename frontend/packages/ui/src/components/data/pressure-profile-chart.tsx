@@ -41,18 +41,25 @@ export type FloatProfileChartProps = {
   defaultRawView?: boolean
 }
 
+// Distinct hues so the three series stay readable in light and dark mode.
+const SERIES_COLORS = {
+  depth: "oklch(0.62 0.17 245)", // blue (water)
+  pressure: "oklch(0.75 0.15 70)", // amber
+  syringe: "oklch(0.68 0.17 150)", // green
+} as const
+
 const chartConfig = {
   depth: {
     label: "Depth",
-    color: "var(--chart-2)",
+    color: SERIES_COLORS.depth,
   },
   pressure: {
     label: "Pressure",
-    color: "var(--chart-3)",
+    color: SERIES_COLORS.pressure,
   },
   syringe: {
     label: "Syringe",
-    color: "var(--chart-4)",
+    color: SERIES_COLORS.syringe,
   },
 } satisfies ChartConfig
 
@@ -124,7 +131,7 @@ export function FloatProfileChart({
             <table className="w-full table-fixed text-left text-xs">
               <thead className="sticky top-0 bg-background/95 text-muted-foreground">
                 <tr className="border-b">
-                  <th className="px-3 py-2 font-medium">Timestamp</th>
+                  <th className="px-3 py-2 font-medium">Time (s)</th>
                   <th className="px-3 py-2 font-medium">Depth</th>
                   <th className="px-3 py-2 font-medium">Pressure</th>
                   <th className="px-3 py-2 font-medium">Syringe</th>
@@ -154,15 +161,24 @@ export function FloatProfileChart({
           <div className="flex h-full min-h-[220px] flex-col gap-3">
             <div className="shrink-0 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
               <div className="flex items-center gap-1.5">
-                <span className="size-2 rounded-sm bg-[var(--chart-2)]" />
+                <span
+                  className="size-2 rounded-sm"
+                  style={{ backgroundColor: SERIES_COLORS.depth }}
+                />
                 <span>Depth ({depthUnit})</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="size-2 rounded-sm bg-[var(--chart-3)]" />
+                <span
+                  className="size-2 rounded-sm"
+                  style={{ backgroundColor: SERIES_COLORS.pressure }}
+                />
                 <span>Pressure ({pressureUnit})</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="size-2 rounded-sm bg-[var(--chart-4)]" />
+                <span
+                  className="size-2 rounded-sm"
+                  style={{ backgroundColor: SERIES_COLORS.syringe }}
+                />
                 <span>Syringe (u)</span>
               </div>
             </div>
@@ -197,6 +213,7 @@ export function FloatProfileChart({
                   tickMargin={8}
                   minTickGap={24}
                   tickFormatter={formatTimestamp}
+                  label={{ value: "Time (s)", position: "insideBottom", offset: -2, fontSize: 11 }}
                 />
                 <YAxis
                   yAxisId="depth"
@@ -212,6 +229,10 @@ export function FloatProfileChart({
                   axisLine={false}
                   tickMargin={8}
                   width={58}
+                  // Auto-scale around the actual pressure range. Pressure only
+                  // swings a few kPa (~95-105), so a fixed [0, max] axis would
+                  // flatten the curve; this lets it track depth visibly.
+                  domain={["auto", "auto"]}
                 />
                 <YAxis yAxisId="syringe" domain={[0, 1]} hide />
                 <ChartTooltip
