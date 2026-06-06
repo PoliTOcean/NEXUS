@@ -3,9 +3,9 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 MOSQUITTO_CONF="$ROOT_DIR/.devcontainer/mosquitto.conf"
-MOSQUITTO_LOG="/tmp/nexus-mosquitto/mosquitto.log"
+MOSQUITTO_LOG="${TMPDIR:-/tmp}/nexus-mosquitto/mosquitto.log"
 
-mkdir -p /tmp/nexus-mosquitto
+mkdir -p "${TMPDIR:-/tmp}/nexus-mosquitto"
 
 if pgrep -f "mosquitto.*${MOSQUITTO_CONF}" >/dev/null 2>&1; then
   echo "Mosquitto is already running for NEXUS."

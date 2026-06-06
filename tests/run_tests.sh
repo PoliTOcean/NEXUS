@@ -48,22 +48,16 @@ if ! command -v mosquitto >/dev/null 2>&1; then
 fi
 
 
-# Check the status of the Mosquitto service
-service_status=$(sudo service mosquitto status)
-
-# Check if the service is running
-if echo "$service_status" | grep -q "mosquitto is running"; then
+# Ensure Mosquitto is running. Prefer the system service (Linux), otherwise fall
+# back to launching the broker directly (works on Linux and macOS/Homebrew).
+if pgrep -x mosquitto >/dev/null 2>&1; then
     echo "Mosquitto is already running."
+elif command -v service >/dev/null 2>&1 && sudo service mosquitto start >/dev/null 2>&1; then
+    echo "Mosquitto started via service."
 else
-    echo "Mosquitto is not running. Starting the service..."
-    sudo service mosquitto start
-    
-    # Verify if the service started successfully
-    if sudo service mosquitto status | grep -q "mosquitto is running"; then
-        echo "Mosquitto has been started successfully."
-    else
-        echo "Failed to start Mosquitto."
-    fi
+    echo "Starting Mosquitto directly..."
+    mosquitto -d
+    echo "Mosquitto started."
 fi
 
 source "$VENV_DIR/bin/activate"
