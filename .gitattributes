@@ -1,0 +1,45 @@
+# Normalize line endings across Linux, macOS and Windows checkouts.
+# Stored as LF in the repo; Git handles working-tree conversion per platform.
+
+# Default: treat as text and normalize to LF on commit.
+* text=auto eol=lf
+
+# Source and config files: always LF.
+*.py    text eol=lf
+*.ts    text eol=lf
+*.tsx   text eol=lf
+*.js    text eol=lf
+*.jsx   text eol=lf
+*.css   text eol=lf
+*.html  text eol=lf
+*.json  text eol=lf
+*.yaml  text eol=lf
+*.yml   text eol=lf
+*.md    text eol=lf
+*.conf  text eol=lf
+*.txt   text eol=lf
+*.ino   text eol=lf
+*.cfg   text eol=lf
+*.jcfg  text eol=lf
+
+# Shell scripts must be LF or the shebang breaks on Unix.
+*.sh    text eol=lf
+
+# PowerShell scripts run on Windows; keep CRLF.
+*.ps1   text eol=crlf
+
+# Binary assets: never touched.
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+*.pdf   binary
+*.woff  binary
+*.woff2 binary
+*.ttf   binary
+*.eot   binary
+*.mp4   binary
+*.webm  binary
+*.zip   binary
+*.gz    binary
