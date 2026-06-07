@@ -3,6 +3,8 @@
 install:
 	./install.sh
 
+# Il build effettivo è gestito da Turbo (frontend/turbo.json): ricostruisce solo
+# quando l'hash del contenuto dei sorgenti cambia, altrimenti ripristina dalla cache.
 build-ui:
 	cd frontend && pnpm build:apps
 

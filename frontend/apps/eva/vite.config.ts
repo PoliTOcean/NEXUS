@@ -6,7 +6,7 @@ import { defineConfig } from "vite"
 export default defineConfig({
   base: "/eva/",
   build: {
-    outDir: "../../../frontend_dist/eva",
+    outDir: "dist",
     emptyOutDir: true,
   },
   plugins: [react(), tailwindcss()],

@@ -8,7 +8,7 @@
     "lint": "turbo lint",
     "format": "turbo format",
     "typecheck": "turbo typecheck",
-    "build:apps": "pnpm --filter @politocean/eva build && pnpm --filter @politocean/float build"
+    "build:apps": "turbo build --filter=@politocean/eva --filter=@politocean/float && node sync-dist.mjs"
   },
   "devDependencies": {
     "prettier": "^3.8.1",

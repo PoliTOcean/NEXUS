@@ -6,7 +6,7 @@ import { defineConfig } from "vite"
 export default defineConfig({
   base: "/float/",
   build: {
-    outDir: "../../../frontend_dist/float",
+    outDir: "dist",
     emptyOutDir: true,
   },
   plugins: [react(), tailwindcss()],
