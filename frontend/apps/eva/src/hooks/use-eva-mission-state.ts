@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import mqtt, { type MqttClient } from "mqtt"
-import Janus from "janus-gateway"
+import JanusImport from "@/vendor/janus.js"
 import type { UiStatus } from "@politocean/ui"
 
 import {
@@ -66,7 +66,7 @@ type JanusConstructor = {
   }): JanusSession
 }
 
-const JanusClient = Janus as unknown as JanusConstructor
+const JanusClient = JanusImport as unknown as JanusConstructor
 
 const INITIAL_TELEMETRY: EvaTelemetry = {
   heading: null,
@@ -836,13 +836,15 @@ export function useEvaMissionState() {
     function startRealtimeConnections(info: NexusInfo) {
       try {
         startMqtt(info)
-      } catch {
+      } catch (error) {
+        console.error("[NEXUS] MQTT startup error", error)
         if (!disposed) setConnection("mqtt", "error", "Startup error")
       }
 
       try {
         startJanus(info)
-      } catch {
+      } catch (error) {
+        console.error("[NEXUS] Janus startup error", error)
         if (!disposed) setConnection("janus", "error", "Startup error")
       }
     }
