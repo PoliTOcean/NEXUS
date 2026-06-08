@@ -244,7 +244,7 @@ Default local backend port is `8000`. This avoids the common macOS AirPlay Recei
 
 | Tool | Minimum / expected |
 |:-----|:-------------------|
-| Python | 3.10+ recommended |
+| Python | **3.12 (required)** — 3.13 is not supported, some native deps (numpy/matplotlib) have no 3.13 wheels |
 | Node.js | 20+ |
 | pnpm | 9.x, via Corepack or local install |
 | Mosquitto | Needed for EVA MQTT mock tests |
@@ -252,14 +252,28 @@ Default local backend port is `8000`. This avoids the common macOS AirPlay Recei
 
 ### One-command Setup
 
+**Linux / macOS:**
+
 ```bash
 cd path/to/NEXUS
 ./install.sh
 ```
 
+**Windows (PowerShell):**
+
+```powershell
+cd path\to\NEXUS
+./install.ps1
+```
+
+> The install scripts create the `venv` with **Python 3.12** (`py -3.12` on Windows,
+> `python3.12` on Linux/macOS). If 3.12 is missing, install it from
+> [python.org](https://www.python.org/downloads/release/python-3128/) — it can be
+> installed alongside other versions (e.g. 3.13), no need to uninstall.
+
 The install script does the following:
 
-1. creates or reuses `venv`;
+1. creates or reuses `venv` (with Python 3.12);
 2. installs `requirements.txt`;
 3. enters `frontend/`;
 4. enables Corepack if `pnpm` is missing and Corepack is available;
