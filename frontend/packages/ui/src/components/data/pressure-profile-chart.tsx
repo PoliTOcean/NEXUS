@@ -158,117 +158,177 @@ export function FloatProfileChart({
             </table>
           </ScrollArea>
         ) : (
-          <div className="flex h-full min-h-[220px] flex-col gap-3">
-            <div className="shrink-0 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-              <div className="flex items-center gap-1.5">
-                <span
-                  className="size-2 rounded-sm"
-                  style={{ backgroundColor: SERIES_COLORS.depth }}
-                />
-                <span>Depth ({depthUnit})</span>
+          <div className="flex h-full min-h-0 flex-col gap-3 overflow-y-auto">
+            {/* Top chart: depth + pressure share the time axis but use their
+                own Y scales (depth ~0-3 m, pressure ~95-125 kPa). The two charts
+                split the panel ~3:2; min-h keeps each legible and lets the
+                parent scroll only when the panel is very short. */}
+            <div className="flex min-h-[150px] flex-[3] flex-col gap-2">
+              <div className="shrink-0 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className="size-2 rounded-sm"
+                    style={{ backgroundColor: SERIES_COLORS.depth }}
+                  />
+                  <span>Depth ({depthUnit})</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className="size-2 rounded-sm"
+                    style={{ backgroundColor: SERIES_COLORS.pressure }}
+                  />
+                  <span>Pressure ({pressureUnit})</span>
+                </div>
               </div>
-              <div className="flex items-center gap-1.5">
-                <span
-                  className="size-2 rounded-sm"
-                  style={{ backgroundColor: SERIES_COLORS.pressure }}
-                />
-                <span>Pressure ({pressureUnit})</span>
-              </div>
-              <div className="flex items-center gap-1.5">
+              <ChartContainer
+                config={chartConfig}
+                className={cn("min-h-0 flex-1 w-full", chartClassName)}
+              >
+                <AreaChart
+                  accessibilityLayer
+                  data={chartData}
+                  margin={{ left: 8, right: 12, top: 8, bottom: 4 }}
+                  syncId="float-profile"
+                >
+                  <defs>
+                    <linearGradient id="depthFill" x1="0" y1="0" x2="0" y2="1">
+                      <stop
+                        offset="5%"
+                        stopColor="var(--color-depth)"
+                        stopOpacity={0.26}
+                      />
+                      <stop
+                        offset="95%"
+                        stopColor="var(--color-depth)"
+                        stopOpacity={0.03}
+                      />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid vertical={false} />
+                  <XAxis
+                    dataKey="timestamp"
+                    tickLine={false}
+                    axisLine={false}
+                    tickMargin={8}
+                    minTickGap={24}
+                    tickFormatter={formatTimestamp}
+                  />
+                  <YAxis
+                    yAxisId="depth"
+                    tickLine={false}
+                    axisLine={false}
+                    tickMargin={8}
+                    width={48}
+                  />
+                  <YAxis
+                    yAxisId="pressure"
+                    orientation="right"
+                    tickLine={false}
+                    axisLine={false}
+                    tickMargin={8}
+                    width={58}
+                    // Auto-scale around the actual pressure range. Pressure only
+                    // swings a few kPa (~95-125), so a fixed [0, max] axis would
+                    // flatten the curve; this lets it track depth visibly.
+                    domain={["auto", "auto"]}
+                  />
+                  <ChartTooltip
+                    cursor={false}
+                    content={<ChartTooltipContent indicator="line" />}
+                  />
+                  <Area
+                    yAxisId="depth"
+                    dataKey="depth"
+                    type="natural"
+                    fill="url(#depthFill)"
+                    stroke="var(--color-depth)"
+                    strokeWidth={2}
+                    connectNulls
+                  />
+                  <Area
+                    yAxisId="pressure"
+                    dataKey="pressure"
+                    type="natural"
+                    fill="transparent"
+                    stroke="var(--color-pressure)"
+                    strokeWidth={2.5}
+                    strokeDasharray="5 3"
+                    connectNulls
+                  />
+                </AreaChart>
+              </ChartContainer>
+            </div>
+
+            {/* Bottom chart: syringe u on its own [0, 1] scale, so it never
+                borrows the depth axis range and gets stretched. */}
+            <div className="flex min-h-[120px] flex-[2] flex-col gap-2">
+              <div className="shrink-0 flex items-center gap-1.5 text-xs text-muted-foreground">
                 <span
                   className="size-2 rounded-sm"
                   style={{ backgroundColor: SERIES_COLORS.syringe }}
                 />
                 <span>Syringe (u)</span>
               </div>
-            </div>
-            <ChartContainer
-              config={chartConfig}
-              className={cn("min-h-0 flex-1 w-full", chartClassName)}
-            >
-              <AreaChart
-                accessibilityLayer
-                data={chartData}
-                margin={{ left: 8, right: 12, top: 8, bottom: 4 }}
+              <ChartContainer
+                config={chartConfig}
+                className={cn("min-h-0 flex-1 w-full", chartClassName)}
               >
-                <defs>
-                  <linearGradient id="depthFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop
-                      offset="5%"
-                      stopColor="var(--color-depth)"
-                      stopOpacity={0.26}
-                    />
-                    <stop
-                      offset="95%"
-                      stopColor="var(--color-depth)"
-                      stopOpacity={0.03}
-                    />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid vertical={false} />
-                <XAxis
-                  dataKey="timestamp"
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={8}
-                  minTickGap={24}
-                  tickFormatter={formatTimestamp}
-                  label={{ value: "Time (s)", position: "insideBottom", offset: -2, fontSize: 11 }}
-                />
-                <YAxis
-                  yAxisId="depth"
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={8}
-                  width={48}
-                />
-                <YAxis
-                  yAxisId="pressure"
-                  orientation="right"
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={8}
-                  width={58}
-                  // Auto-scale around the actual pressure range. Pressure only
-                  // swings a few kPa (~95-105), so a fixed [0, max] axis would
-                  // flatten the curve; this lets it track depth visibly.
-                  domain={["auto", "auto"]}
-                />
-                <YAxis yAxisId="syringe" domain={[0, 1]} hide />
-                <ChartTooltip
-                  cursor={false}
-                  content={<ChartTooltipContent indicator="line" />}
-                />
-                <Area
-                  yAxisId="depth"
-                  dataKey="depth"
-                  type="natural"
-                  fill="url(#depthFill)"
-                  stroke="var(--color-depth)"
-                  strokeWidth={2}
-                  connectNulls
-                />
-                <Area
-                  yAxisId="pressure"
-                  dataKey="pressure"
-                  type="natural"
-                  fill="transparent"
-                  stroke="var(--color-pressure)"
-                  strokeWidth={2.5}
-                  strokeDasharray="5 3"
-                  connectNulls
-                />
-                <Area
-                  yAxisId="syringe"
-                  dataKey="syringe"
-                  type="natural"
-                  fill="transparent"
-                  stroke="var(--color-syringe)"
-                  strokeWidth={2}
-                  connectNulls
-                />
-              </AreaChart>
-            </ChartContainer>
+                <AreaChart
+                  accessibilityLayer
+                  data={chartData}
+                  margin={{ left: 8, right: 12, top: 8, bottom: 4 }}
+                  syncId="float-profile"
+                >
+                  <defs>
+                    <linearGradient id="syringeFill" x1="0" y1="0" x2="0" y2="1">
+                      <stop
+                        offset="5%"
+                        stopColor="var(--color-syringe)"
+                        stopOpacity={0.26}
+                      />
+                      <stop
+                        offset="95%"
+                        stopColor="var(--color-syringe)"
+                        stopOpacity={0.03}
+                      />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid vertical={false} />
+                  <XAxis
+                    dataKey="timestamp"
+                    tickLine={false}
+                    axisLine={false}
+                    tickMargin={8}
+                    minTickGap={24}
+                    tickFormatter={formatTimestamp}
+                    label={{ value: "Time (s)", position: "insideBottom", offset: -2, fontSize: 11 }}
+                  />
+                  <YAxis
+                    yAxisId="syringe"
+                    domain={[0, 1]}
+                    ticks={[0, 0.25, 0.5, 0.75, 1]}
+                    tickFormatter={(value: number) => value.toFixed(2)}
+                    tickLine={false}
+                    axisLine={false}
+                    tickMargin={8}
+                    width={48}
+                  />
+                  <ChartTooltip
+                    cursor={false}
+                    content={<ChartTooltipContent indicator="line" />}
+                  />
+                  <Area
+                    yAxisId="syringe"
+                    dataKey="syringe"
+                    type="natural"
+                    fill="url(#syringeFill)"
+                    stroke="var(--color-syringe)"
+                    strokeWidth={2}
+                    connectNulls
+                  />
+                </AreaChart>
+              </ChartContainer>
+            </div>
           </div>
         )}
       </CardContent>
