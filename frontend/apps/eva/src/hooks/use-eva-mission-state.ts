@@ -21,6 +21,13 @@ import type {
   NexusInfo,
   NexusStatusPayload,
 } from "@/types/eva"
+import coralStubImageUrl from "@/assets/coral-stub.jpg"
+
+// Dev-only: when VITE_CORAL_STUB is set, the primary debug camera streams the
+// sample coral-garden image (with the orange ruler) instead of the animated
+// test pattern, so the Coral Garden capture flow can be tested in-browser
+// without hardware and exercise the positive (metrics) path.
+const CORAL_STUB_ENABLED = Boolean(import.meta.env.VITE_CORAL_STUB)
 
 type JanusStreamInfo = {
   id: number | string
@@ -304,7 +311,11 @@ function normalizeDebugCamera(
   }
 }
 
-function createDebugCameraStream(label: string, aspectRatio: EvaCamera["aspectRatio"]) {
+function createDebugCameraStream(
+  label: string,
+  aspectRatio: EvaCamera["aspectRatio"],
+  imageUrl?: string
+) {
   const canvas = document.createElement("canvas")
   canvas.width = aspectRatio === "4/3" ? 1024 : aspectRatio === "21/9" ? 1680 : 1280
   canvas.height = aspectRatio === "4/3" ? 768 : 720
@@ -314,12 +325,44 @@ function createDebugCameraStream(label: string, aspectRatio: EvaCamera["aspectRa
 
   let animationFrameId = 0
 
+  // Stub mode: stream a static image (e.g. the coral-garden sample) so the
+  // capture flow can be exercised against a real frame in the browser.
+  let stubImage: HTMLImageElement | null = null
+  if (imageUrl) {
+    stubImage = new Image()
+    stubImage.src = imageUrl
+  }
+
   function draw() {
     if (!context) return
 
-    const elapsedSeconds = performance.now() / 1000
     const width = canvas.width
     const height = canvas.height
+
+    if (stubImage) {
+      context.fillStyle = "black"
+      context.fillRect(0, 0, width, height)
+      if (stubImage.complete && stubImage.naturalWidth > 0) {
+        // contain-fit the image so the ruler/structure aren't distorted
+        const scale = Math.min(
+          width / stubImage.naturalWidth,
+          height / stubImage.naturalHeight
+        )
+        const drawW = stubImage.naturalWidth * scale
+        const drawH = stubImage.naturalHeight * scale
+        context.drawImage(
+          stubImage,
+          (width - drawW) / 2,
+          (height - drawH) / 2,
+          drawW,
+          drawH
+        )
+      }
+      animationFrameId = window.requestAnimationFrame(draw)
+      return
+    }
+
+    const elapsedSeconds = performance.now() / 1000
     const hue = (elapsedSeconds * 24) % 360
 
     context.fillStyle = `hsl(${hue}, 46%, 12%)`
@@ -718,9 +761,12 @@ export function useEvaMissionState() {
 
         const nextCameras = debugCameraList.map((camera, index) => {
           const nextCamera = normalizeDebugCamera(camera, index)
+          const stubUrl =
+            CORAL_STUB_ENABLED && index === 0 ? coralStubImageUrl : undefined
           const debugStream = createDebugCameraStream(
             nextCamera.name,
-            nextCamera.aspectRatio
+            nextCamera.aspectRatio,
+            stubUrl
           )
 
           if (debugStream) {

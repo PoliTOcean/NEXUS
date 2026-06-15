@@ -1,0 +1,4 @@
+[submodule "external/mate_task_2026"]
+	path = external/mate_task_2026
+	url = https://github.com/PoliTOcean/Mate_task_2026
+	branch = main

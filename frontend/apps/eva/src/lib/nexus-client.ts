@@ -1,4 +1,5 @@
 import type { NexusControllerStatus, NexusInfo } from "@/types/eva"
+import type { CoralAnalysisResult } from "@/types/coral"
 
 export function getNexusBaseUrl() {
   return import.meta.env.VITE_NEXUS_BASE_URL?.replace(/\/$/, "") ?? ""
@@ -25,4 +26,30 @@ export function getNexusInfo(signal?: AbortSignal) {
 
 export function getNexusControllerStatus(signal?: AbortSignal) {
   return getJson<NexusControllerStatus>("/CONTROLLER/start_status", signal)
+}
+
+/**
+ * Send a captured camera frame to the coral-garden CV pipeline.
+ *
+ * A 422 is a valid, structured CV failure (e.g. ruler not found) — its JSON body
+ * is returned so the UI can show a friendly message. Other non-2xx are thrown.
+ */
+export async function analyzeCoralGarden(
+  image: Blob,
+  signal?: AbortSignal
+): Promise<CoralAnalysisResult> {
+  const form = new FormData()
+  form.append("image", image, "coral.jpg")
+
+  const response = await fetch(`${getNexusBaseUrl()}/coral/analyze`, {
+    method: "POST",
+    body: form,
+    signal,
+  })
+
+  if (!response.ok && response.status !== 422) {
+    throw new Error(`NEXUS /coral/analyze failed with ${response.status}`)
+  }
+
+  return response.json() as Promise<CoralAnalysisResult>
 }

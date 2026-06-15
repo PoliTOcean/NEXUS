@@ -3,6 +3,7 @@ import { StatusBadge, Stopwatch } from "@politocean/ui"
 
 import { EvaCameraDeck } from "@/components/eva-camera-deck"
 import { EvaControllerMapDialog } from "@/components/eva-controller-map-dialog"
+import { EvaCoralCapture } from "@/components/eva-coral-capture"
 import { EvaJoystickStatusPanel } from "@/components/eva-joystick-status-panel"
 import { EvaTelemetryPanel } from "@/components/eva-telemetry-rail"
 import { useEvaMissionState } from "@/hooks/use-eva-mission-state"
@@ -11,10 +12,15 @@ export function EvaMissionControl() {
   const { state, selectCamera, setCameraEnabled } = useEvaMissionState()
   const [controllerMapOpen, setControllerMapOpen] = useState(false)
 
+  const primaryCamera =
+    state.cameras.find((camera) => camera.id === state.primaryCameraId) ??
+    state.cameras[0] ??
+    null
+
   return (
     <main className="h-svh bg-background text-foreground">
       <div className="flex h-full min-h-0 flex-col gap-3 p-3">
-        <header className="flex shrink-0 flex-wrap items-center justify-between gap-3 rounded-md border bg-card/70 px-4 py-3">
+        <header className="relative flex shrink-0 flex-wrap items-center justify-between gap-3 rounded-md border bg-card/70 px-4 py-3">
           <div>
             <h1 className="text-xl font-semibold tracking-tight">
               Eva Mission Control
@@ -22,6 +28,12 @@ export function EvaMissionControl() {
             <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
               ROV / Live Backend
             </p>
+          </div>
+
+          <div className="pointer-events-none absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 lg:block">
+            <div className="pointer-events-auto">
+              <EvaCoralCapture camera={primaryCamera} />
+            </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
