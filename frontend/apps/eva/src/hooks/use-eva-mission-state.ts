@@ -22,12 +22,19 @@ import type {
   NexusStatusPayload,
 } from "@/types/eva"
 import coralStubImageUrl from "@/assets/coral-stub.jpg"
+import crabStubImageUrl from "@/assets/crab-stub.jpg"
 
-// Dev-only: when VITE_CORAL_STUB is set, the primary debug camera streams the
-// sample coral-garden image (with the orange ruler) instead of the animated
-// test pattern, so the Coral Garden capture flow can be tested in-browser
-// without hardware and exercise the positive (metrics) path.
+// Dev-only: stream a static sample image on the primary debug camera instead of
+// the animated test pattern, so the capture flows can be tested in-browser
+// without hardware (positive path). VITE_CORAL_STUB shows the coral-garden image
+// (orange ruler); VITE_CRAB_STUB shows the crab-sample image. Coral wins if both.
 const CORAL_STUB_ENABLED = Boolean(import.meta.env.VITE_CORAL_STUB)
+const CRAB_STUB_ENABLED = Boolean(import.meta.env.VITE_CRAB_STUB)
+const STUB_IMAGE_URL = CORAL_STUB_ENABLED
+  ? coralStubImageUrl
+  : CRAB_STUB_ENABLED
+    ? crabStubImageUrl
+    : undefined
 
 type JanusStreamInfo = {
   id: number | string
@@ -761,8 +768,7 @@ export function useEvaMissionState() {
 
         const nextCameras = debugCameraList.map((camera, index) => {
           const nextCamera = normalizeDebugCamera(camera, index)
-          const stubUrl =
-            CORAL_STUB_ENABLED && index === 0 ? coralStubImageUrl : undefined
+          const stubUrl = index === 0 ? STUB_IMAGE_URL : undefined
           const debugStream = createDebugCameraStream(
             nextCamera.name,
             nextCamera.aspectRatio,
