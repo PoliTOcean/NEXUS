@@ -134,6 +134,12 @@ function toNumber(value: number | string | undefined) {
   return Number.isFinite(parsed) ? parsed : null
 }
 
+// Negate a possibly-null number (preserves null). Used to flip the pitch sign so
+// the UI matches the vehicle: nose-up should read as positive pitch, not as a dive.
+function negate(value: number | null) {
+  return value === null ? null : -value
+}
+
 function normalizeStatusValue(
   value: EvaJoystickStatusValue | boolean | number | undefined
 ): EvaJoystickStatusValue {
@@ -528,8 +534,8 @@ export function useEvaMissionState() {
         ...currentTelemetry,
         heading: toNumber(payload.yaw),
         roll: toNumber(payload.roll),
-        pitch: toNumber(payload.pitch),
-        pitchReference: toNumber(payload.reference_pitch),
+        pitch: negate(toNumber(payload.pitch)),
+        pitchReference: negate(toNumber(payload.reference_pitch)),
         absoluteAltitude: toNumber(payload.depth),
         relativeAltitude: toNumber(payload.reference_z),
       }))
