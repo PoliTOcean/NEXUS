@@ -5,6 +5,13 @@ $ErrorActionPreference = "Stop"
 $RootDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location $RootDir
 
+# Fetch git submodules (e.g. external/mate_task_2026, which provides the coral
+# and crab CV pipelines used by the /coral and /crab backend routes). Without
+# this those modules fail to import.
+if (Test-Path "$RootDir\.gitmodules") {
+    git submodule update --init --recursive
+}
+
 # Python 3.12 is required: some native dependencies (numpy/contourpy/matplotlib)
 # ship Windows wheels only up to 3.12, so 3.13 would force a source build and fail.
 # Select 3.12 explicitly through the Python launcher (py) so the version installed
@@ -24,7 +31,9 @@ if (-not $py312Ok) {
 }
 
 py -3.12 -m venv venv
-& "$RootDir\venv\Scripts\python.exe" -m pip install --no-warn-script-location -r requirements.txt
+# --no-cache-dir keeps the pip wheel cache from doubling peak disk usage:
+# ultralytics (Task 2.1 crab detector) pulls in torch + CUDA wheels (several GB).
+& "$RootDir\venv\Scripts\python.exe" -m pip install --no-cache-dir --no-warn-script-location -r requirements.txt
 
 Set-Location "$RootDir\frontend"
 if (-not (Get-Command pnpm -ErrorAction SilentlyContinue)) {

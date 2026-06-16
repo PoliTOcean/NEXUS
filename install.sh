@@ -4,6 +4,13 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$ROOT_DIR"
 
+# Fetch git submodules (e.g. external/mate_task_2026, which provides the coral
+# and crab CV pipelines used by the /coral and /crab backend routes). Without
+# this those modules fail to import.
+if [ -f "$ROOT_DIR/.gitmodules" ]; then
+  git submodule update --init --recursive
+fi
+
 # Python 3.12 is required: some native dependencies (numpy/contourpy/matplotlib)
 # ship wheels only up to 3.12. Prefer python3.12 if available; otherwise fall back
 # to python3 with a warning (on Linux the source build usually succeeds).
@@ -24,7 +31,10 @@ fi
 
 "$PYTHON" -m venv venv
 source "$ROOT_DIR/venv/bin/activate"
-python -m pip install --no-warn-script-location -r requirements.txt
+# --no-cache-dir keeps the pip wheel cache from doubling peak disk usage. This
+# matters because ultralytics (Task 2.1 crab detector) pulls in torch + CUDA
+# wheels (several GB); caching them can fill a small disk during extraction.
+python -m pip install --no-cache-dir --no-warn-script-location -r requirements.txt
 
 cd "$ROOT_DIR/frontend"
 if ! command -v pnpm >/dev/null 2>&1; then
