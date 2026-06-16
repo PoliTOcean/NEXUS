@@ -72,20 +72,28 @@ buttons:
     value: 0
     onShiftValue: 
   LB:
-    onPress: "DEPTH_REFERENCE_OFFSET"
-    onRelease:
-    topic: "state_commands/"
+    # Bumper sinistro: apre la pinza (doppione di A). Comando profondità
+    # precedente disattivato:
+    # onPress: "DEPTH_REFERENCE_OFFSET"
+    # value: 0.02
+    onPress: "OPEN_NIPPER"
+    onRelease: "STOP_NIPPER"
+    topic: "arm_commands/"
     onShiftPress:
     onShiftRelease:
-    value: 0.02
+    value:
     onShiftValue:
   RB:
-    onPress: "DEPTH_REFERENCE_OFFSET"
-    onRelease:
-    topic: "state_commands/"
+    # Bumper destro: chiude la pinza (doppione di Y). Comando profondità
+    # precedente disattivato:
+    # onPress: "DEPTH_REFERENCE_OFFSET"
+    # value: -0.02
+    onPress: "CLOSE_NIPPER"
+    onRelease: "STOP_NIPPER"
+    topic: "arm_commands/"
     onShiftPress:
     onShiftRelease:
-    value: -0.02
+    value:
     onShiftValue:
   D-Pad-Up:
     onPress: "PITCH_REFERENCE_OFFSET"
