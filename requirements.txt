@@ -69,3 +69,6 @@ Werkzeug==3.0.1
 pytz
 wsproto==1.2.0
 svgwrite
+# Task 2.1 crab detector (YOLOv8). Pulls in torch (heavy). On a small disk use
+# `pip install --no-cache-dir` to avoid the wheel cache filling the disk.
+ultralytics==8.4.68

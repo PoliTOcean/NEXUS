@@ -4,6 +4,7 @@ import { StatusBadge, Stopwatch } from "@politocean/ui"
 import { EvaCameraDeck } from "@/components/eva-camera-deck"
 import { EvaControllerMapDialog } from "@/components/eva-controller-map-dialog"
 import { EvaCoralCapture } from "@/components/eva-coral-capture"
+import { EvaCrabCapture } from "@/components/eva-crab-capture"
 import { EvaJoystickStatusPanel } from "@/components/eva-joystick-status-panel"
 import { EvaTelemetryPanel } from "@/components/eva-telemetry-rail"
 import { useEvaMissionState } from "@/hooks/use-eva-mission-state"
@@ -31,8 +32,9 @@ export function EvaMissionControl() {
           </div>
 
           <div className="pointer-events-none absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 lg:block">
-            <div className="pointer-events-auto">
+            <div className="pointer-events-auto flex items-center gap-2">
               <EvaCoralCapture camera={primaryCamera} />
+              <EvaCrabCapture camera={primaryCamera} />
             </div>
           </div>
 

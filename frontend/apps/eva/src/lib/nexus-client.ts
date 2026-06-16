@@ -1,5 +1,6 @@
 import type { NexusControllerStatus, NexusInfo } from "@/types/eva"
 import type { CoralAnalysisResult } from "@/types/coral"
+import type { CrabAnalysisResult } from "@/types/crab"
 
 export function getNexusBaseUrl() {
   return import.meta.env.VITE_NEXUS_BASE_URL?.replace(/\/$/, "") ?? ""
@@ -52,4 +53,29 @@ export async function analyzeCoralGarden(
   }
 
   return response.json() as Promise<CoralAnalysisResult>
+}
+
+/**
+ * Send a captured camera frame to the invasive-crab counter (Task 2.1).
+ *
+ * A 422 carries a structured CV failure body; other non-2xx are thrown.
+ */
+export async function analyzeCrabSample(
+  image: Blob,
+  signal?: AbortSignal
+): Promise<CrabAnalysisResult> {
+  const form = new FormData()
+  form.append("image", image, "crab.jpg")
+
+  const response = await fetch(`${getNexusBaseUrl()}/crab/analyze`, {
+    method: "POST",
+    body: form,
+    signal,
+  })
+
+  if (!response.ok && response.status !== 422) {
+    throw new Error(`NEXUS /crab/analyze failed with ${response.status}`)
+  }
+
+  return response.json() as Promise<CrabAnalysisResult>
 }
