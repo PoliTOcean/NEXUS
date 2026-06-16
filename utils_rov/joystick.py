@@ -101,6 +101,10 @@ class Joystick():
         self.active = False
 
     def update(self):
+        # get_events() drains the SDL queue (SDL_GETEVENT), so we must read it
+        # exactly once per tick and iterate the returned list. Calling it again
+        # inside the loop would consume freshly-arrived events and silently drop
+        # them, which made small/slow joystick motions feel unresponsive.
         for event in sdl2.ext.get_events():
             if event.type == sdl2.SDL_JOYAXISMOTION:
                 self.__on_axis_changed(self.__mappings["axes"][event.jaxis.axis], event.jaxis.value)
@@ -128,8 +132,6 @@ class Joystick():
                 elif event.jhat.value == 2:
                     self.__on_button_changed(self.__mappings["joyhat"][3], 1)
                     self.__last_pressed = 3
-
-            sdl2.ext.get_events().clear()
 
 
     def status(self):

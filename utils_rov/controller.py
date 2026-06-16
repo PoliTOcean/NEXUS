@@ -14,8 +14,14 @@ __CONFIG_JOYSTICK_KEY__ = "joystick"
 __CONFIG_JOYSTICK_FLIGHT_KEY__ = "joystick_flight"
 __CONFIG_MQTT_KEY__ = "mqtt"
 
-INTERVAL = 0.03         #sec
-MIN_DIFFERENCE = 50    #difference from last command sendt in order to send
+INTERVAL = 0.03         #sec, min time between two axes payloads (~33 Hz)
+# Min change (on the -32768..32767 axis scale) from the last sent value before
+# we send again. Kept low so small/slow stick motions past the deadzone still
+# produce updates; the deadzone (config) already filters out idle jitter.
+MIN_DIFFERENCE = 10
+# How often to flush the current axes state even if it sits below MIN_DIFFERENCE,
+# so the final fine adjustment when the stick settles is never dropped.
+SETTLE_FLUSH_INTERVAL = 0.2  # sec
 
 
 class ROVController():
@@ -114,18 +120,31 @@ class ROVController():
 
     
     def __on_buttonChanged(self, id_button, state):
-        if state and self.shift == 0:
-            command = self.__joystick.commands["buttons"][id_button]["onPress"]
-            value = self.__joystick.commands["buttons"][id_button]["value"]
-        elif state and self:
-            command = self.__joystick.commands["buttons"][id_button]["onShiftPress"]
-            value = self.__joystick.commands["buttons"][id_button]["onShiftValue"]
-        elif state == 0 and self.shift == 0:
-            command = self.__joystick.commands["buttons"][id_button]["onRelease"]
-            value=0
-        elif state == 0 and self.shift == 1:
-            command = self.__joystick.commands["buttons"][id_button]["onShiftRelease"]
-            value=0
+        # `.get()` everywhere so a missing key (the two joystick configs use
+        # slightly different schemas, e.g. flight has no onShiftRelease) never
+        # raises and crashes the run loop. command/value always have a default.
+        button = self.__joystick.commands["buttons"][id_button]
+        command = None
+        value = 0
+
+        if state:
+            if self.shift:
+                command = button.get("onShiftPress") or button.get("onPress")
+                value = button.get("onShiftValue", button.get("value"))
+            else:
+                command = button.get("onPress")
+                value = button.get("value")
+        else:
+            # On release we must always emit the stop command. The shift state
+            # may have flipped between press and release, and the shift release
+            # entry is often empty (e.g. STOP_WRIST), so fall back to the plain
+            # onRelease so the stop is never dropped -> the arm/wrist can't get
+            # stuck spinning ("perdura").
+            if self.shift:
+                command = button.get("onShiftRelease") or button.get("onRelease")
+            else:
+                command = button.get("onRelease")
+            value = 0
 
         if self.debug:
             print(f"button: {id_button}, state: {state}, command: {command}, value:{value}")
@@ -212,11 +231,24 @@ class ROVController():
 
                 if (current_time - self.last_send_time) >= INTERVAL:
                     should_send_axes = False
+                    has_pending_diff = False
                     for axes, last_value in self.last_value_send.items():
-                        if axes in self.__joystick.axesStates and \
-                           abs(self.__joystick.axesStates[axes] - last_value) > MIN_DIFFERENCE:
+                        if axes not in self.__joystick.axesStates:
+                            continue
+                        diff = abs(self.__joystick.axesStates[axes] - last_value)
+                        if diff > MIN_DIFFERENCE:
                             should_send_axes = True
                             break
+                        if diff > 0:
+                            has_pending_diff = True
+
+                    # Settle flush: the stick stopped moving but the last value we
+                    # sent is still slightly off the current one (a sub-threshold
+                    # residual). Push it after a short delay so the final fine
+                    # adjustment isn't left undelivered.
+                    if not should_send_axes and has_pending_diff and \
+                       (current_time - self.last_send_time) >= SETTLE_FLUSH_INTERVAL:
+                        should_send_axes = True
 
                     if should_send_axes or self.to_send:
                         if self.__mqttClient.status == MQTTStatus.Connected:
@@ -249,8 +281,11 @@ class ROVController():
                 print("\n[Controller] KeyboardInterrupt received. Stopping...")
                 self.is_running = False
             except Exception as e:
+                # Short backoff only: a 1s sleep here froze control for a whole
+                # second on any transient error, which felt like the controller
+                # "stalling". Keep it small so input stays responsive.
                 print(f"[Controller] Unexpected error in run loop: {e}")
-                time.sleep(1)
+                time.sleep(0.05)
 
         print("[Controller] Run loop finished. Disconnecting components...")
         if self.__mqttClient:
