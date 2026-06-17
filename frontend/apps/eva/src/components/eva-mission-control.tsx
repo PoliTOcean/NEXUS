@@ -5,6 +5,8 @@ import { EvaCameraDeck } from "@/components/eva-camera-deck"
 import { EvaControllerMapDialog } from "@/components/eva-controller-map-dialog"
 import { EvaCoralCapture } from "@/components/eva-coral-capture"
 import { EvaCrabCapture } from "@/components/eva-crab-capture"
+import { EvaIcebergPanel } from "@/components/eva-iceberg-panel"
+import { EvaEdnaPanel } from "@/components/eva-edna-panel"
 import { EvaJoystickStatusPanel } from "@/components/eva-joystick-status-panel"
 import { EvaTelemetryPanel } from "@/components/eva-telemetry-rail"
 import { useEvaMissionState } from "@/hooks/use-eva-mission-state"
@@ -35,6 +37,8 @@ export function EvaMissionControl() {
             <div className="pointer-events-auto flex items-center gap-2">
               <EvaCoralCapture camera={primaryCamera} />
               <EvaCrabCapture camera={primaryCamera} />
+              <EvaIcebergPanel />
+              <EvaEdnaPanel />
             </div>
           </div>
 

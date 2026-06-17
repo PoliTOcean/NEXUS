@@ -29,10 +29,10 @@ NEXUS is the mission-station software used to operate PoliTOcean systems from a 
 - a **Flask backend** for hardware-facing services and HTTP APIs;
 - an **EVA frontend** for ROV telemetry, cameras, controller state, and mission control;
 - a **FLOAT frontend** for serial connection, commands, runtime profile/configuration, profile data, packages, and logs;
-- **MATE task CV pipelines** (Coral Garden measurement, Task 1.2; invasive crab counter, Task 2.1) exposed as `/coral` and `/crab` backend routes and triggered from EVA;
+- **MATE task modules** — CV pipelines (Coral Garden measurement, Task 1.2; invasive crab counter, Task 2.1) plus pure calculators (Iceberg threat level, Task 2.2; eDNA frequency, Task 2.5) exposed as `/coral`, `/crab`, `/iceberg` and `/edna` backend routes and triggered from EVA;
 - test utilities for MQTT, Janus/WebRTC, and mission telemetry simulation.
 
-The CV pipelines live in the [`Mate_task_2026`](https://github.com/PoliTOcean/Mate_task_2026) repository, vendored here as the `external/mate_task_2026` **git submodule**. Operators capture a camera frame in EVA; the backend runs the pipeline and returns measurements/counts plus an annotated image.
+The task logic lives in the [`Mate_task_2026`](https://github.com/PoliTOcean/Mate_task_2026) repository, vendored here as the `external/mate_task_2026` **git submodule**. The CV tasks capture a camera frame in EVA and return measurements/counts plus an annotated image; the calculator tasks (iceberg, eDNA) take manual numeric input from an EVA dialog and return a pure result — no camera, no model.
 
 The current repository is a monorepo. The old static Flask UI has been kept in `legacy_frontend/` for rollback, while the active React/Vite UI lives in `frontend/` and is served by Flask after build.
 
@@ -186,10 +186,14 @@ NEXUS/
     coral_cv.py               loads analyze() from the submodule (Task 1.2)
     crab.py                   /crab/* routes (Task 2.1 invasive crab counter)
     crab_cv.py                loads analyze() from the submodule (Task 2.1)
+    iceberg.py                /iceberg/* route (Task 2.2 iceberg threat level)
+    iceberg_logic.py          loads evaluate() from the submodule (Task 2.2)
+    edna.py                   /edna/* route (Task 2.5 eDNA frequency)
+    edna_logic.py             loads frequency() from the submodule (Task 2.5)
     info.json                 debug/production runtime endpoints
 
   external/
-    mate_task_2026/           git submodule: coral + crab CV pipelines
+    mate_task_2026/           git submodule: coral/crab CV + iceberg/eDNA calculators
 
   utils_rov/
     controller.py             ROV controller orchestration
@@ -496,12 +500,17 @@ and use the UI to run `START`, `STATUS`, runtime settings, command, package, and
 | `GET` | `/info` | `modules/index.py` | Returns runtime configuration. |
 | `GET` | `/CONTROLLER/start_status` | `modules/joystick.py` | Starts/checks ROV controller and joystick status. |
 
-### MATE Task CV API
+### MATE Task API
 
-Both endpoints take a captured camera frame (multipart `image`), run the CV
-pipeline from the `external/mate_task_2026` submodule, and return JSON plus an
-annotated image served back from `captures/`. A CV failure (e.g. ruler not
-found) returns HTTP `422` with a structured body rather than a transport error.
+All task logic lives in the `external/mate_task_2026` submodule and is re-exported
+through thin importlib wrappers (the `Task X.Y` folder names have spaces/dots, so
+they aren't importable packages). The CV tasks and the pure calculators share the
+backend pattern but differ in input.
+
+**CV tasks.** Both endpoints take a captured camera frame (multipart `image`), run
+the pipeline, and return JSON plus an annotated image served back from `captures/`.
+A CV failure (e.g. ruler not found) returns HTTP `422` with a structured body
+rather than a transport error.
 
 | Method | Path | Owner | Purpose |
 |:-------|:-----|:------|:--------|
@@ -510,9 +519,19 @@ found) returns HTTP `422` with a structured body rather than a transport error.
 | `POST` | `/crab/analyze` | `modules/crab.py` | Task 2.1: detect and count invasive European Green crabs (YOLOv8). Returns `{ok, green_count, total_detections, annotated_url, ...}`. |
 | `GET` | `/crab/captures/<file>` | `modules/crab.py` | Serve a saved crab input/annotated image. |
 
+**Pure calculators.** These take manual numeric input as JSON (no camera, no model)
+and return a pure result. A structured failure (bad input / zero total) returns
+`400` or `422` with a body rather than a transport error.
+
+| Method | Path | Owner | Purpose |
+|:-------|:-----|:------|:--------|
+| `POST` | `/iceberg/evaluate` | `modules/iceberg.py` | Task 2.2: given an iceberg info sheet (`lat`, `lon`, `heading_deg`, `keel_depth_m`), compute the green/yellow/red surface + subsea threat for the 4 fixed oil platforms. Returns `{ok, platforms: [{name, passing_distance_nm, water_depth_m, keel_ratio, surface_threat, subsea_threat}, ...]}`. |
+| `POST` | `/edna/frequency` | `modules/edna.py` | Task 2.5: given species `counts` (dict or list), compute each species' % frequency for the judge. Returns `{ok, total, species: [{name, count, percent, percent_display}, ...]}`. |
+
 These flows are triggered from the EVA header buttons ("Coral Garden" / "Crab
-Counter"). For in-browser testing without hardware, the primary debug camera can
-stream a sample image via `VITE_CORAL_STUB=1` or `VITE_CRAB_STUB=1`.
+Counter" / "Iceberg" / "eDNA"). For in-browser testing of the CV tasks without
+hardware, the primary debug camera can stream a sample image via
+`VITE_CORAL_STUB=1` or `VITE_CRAB_STUB=1`; the calculators need no camera.
 
 ### EVA Realtime Contract
 

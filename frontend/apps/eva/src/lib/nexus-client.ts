@@ -1,6 +1,8 @@
 import type { NexusControllerStatus, NexusInfo } from "@/types/eva"
 import type { CoralAnalysisResult } from "@/types/coral"
 import type { CrabAnalysisResult } from "@/types/crab"
+import type { IcebergEvaluation, IcebergInput } from "@/types/iceberg"
+import type { EdnaFrequencyResult } from "@/types/edna"
 
 export function getNexusBaseUrl() {
   return import.meta.env.VITE_NEXUS_BASE_URL?.replace(/\/$/, "") ?? ""
@@ -78,4 +80,54 @@ export async function analyzeCrabSample(
   }
 
   return response.json() as Promise<CrabAnalysisResult>
+}
+
+/**
+ * Evaluate the iceberg threat level for the 4 fixed oil platforms (Task 2.2).
+ *
+ * Pure calculation: posts the iceberg info sheet (lat/lon/heading/keel depth)
+ * and returns the per-platform surface/subsea threat levels. A 400 means the
+ * sheet was malformed; it's thrown rather than returned.
+ */
+export async function evaluateIceberg(
+  iceberg: IcebergInput,
+  signal?: AbortSignal
+): Promise<IcebergEvaluation> {
+  const response = await fetch(`${getNexusBaseUrl()}/iceberg/evaluate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ iceberg }),
+    signal,
+  })
+
+  if (!response.ok) {
+    throw new Error(`NEXUS /iceberg/evaluate failed with ${response.status}`)
+  }
+
+  return response.json() as Promise<IcebergEvaluation>
+}
+
+/**
+ * Compute the eDNA species frequency (%) for the judge (Task 2.5).
+ *
+ * Pure arithmetic: posts the species counts and returns each species' share of
+ * the total. A 422 carries a structured failure (e.g. empty / zero total); its
+ * body is returned so the UI can show a friendly message. Other non-2xx throw.
+ */
+export async function calculateEdnaFrequency(
+  counts: Record<string, number>,
+  signal?: AbortSignal
+): Promise<EdnaFrequencyResult> {
+  const response = await fetch(`${getNexusBaseUrl()}/edna/frequency`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ counts }),
+    signal,
+  })
+
+  if (!response.ok && response.status !== 422) {
+    throw new Error(`NEXUS /edna/frequency failed with ${response.status}`)
+  }
+
+  return response.json() as Promise<EdnaFrequencyResult>
 }
