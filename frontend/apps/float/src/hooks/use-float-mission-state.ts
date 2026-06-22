@@ -7,6 +7,7 @@ import {
   getFloatPidConfig,
   getFloatProfile,
   getFloatStatus,
+  holdFloatPid,
   listenFloatProfile,
   sendFloatCommand,
   setFloatBalanceConfig,
@@ -38,6 +39,12 @@ const PROFILE_POLL_DELAY_MS = 250
 const FLOAT_LENGTH_M = 0.51
 const SYRINGE_DURATION_MIN_S = 0.5
 const SYRINGE_DURATION_MAX_S = 300
+// Firmware constraint on PID_HOLD <depth_m>: depthTarget in [0.1, 5.0] m
+// (depth of the float top; FLOAT_TOP_TO_SENSOR_M is 0).
+const PID_HOLD_DEPTH_MIN_M = 0.1
+const PID_HOLD_DEPTH_MAX_M = 5.0
+const PID_HOLD_DURATION_MIN_S = 0.5
+const PID_HOLD_DURATION_MAX_S = 300
 
 const DEFAULT_RUNTIME_PROFILE: FloatRuntimeProfile = {
   profile_count: 2,
@@ -864,6 +871,49 @@ export function useFloatMissionState() {
     [addLog]
   )
 
+  const applyPidHold = useCallback(
+    async (depthM: number, durationS: number) => {
+      if (!Number.isFinite(depthM) || !Number.isFinite(durationS)) {
+        addLog("PID hold command skipped: depth and duration are required.", "warning")
+        return false
+      }
+      if (depthM < PID_HOLD_DEPTH_MIN_M || depthM > PID_HOLD_DEPTH_MAX_M) {
+        const message = `ERR: depth in [${PID_HOLD_DEPTH_MIN_M}, ${PID_HOLD_DEPTH_MAX_M}] m`
+        addLog(`PID hold command not sent: ${message}`, "warning")
+        return false
+      }
+      if (durationS < PID_HOLD_DURATION_MIN_S || durationS > PID_HOLD_DURATION_MAX_S) {
+        const message = `ERR: durationS in [${PID_HOLD_DURATION_MIN_S}, ${PID_HOLD_DURATION_MAX_S}]`
+        addLog(`PID hold command not sent: ${message}`, "warning")
+        return false
+      }
+
+      setBusyCommand("PID_HOLD")
+      setLastAck({ command: "PID_HOLD", status: "pending" })
+      addLog(`Sending PID_HOLD ${depthM} ${durationS}...`)
+
+      try {
+        const response = await holdFloatPid(depthM, durationS)
+        if (!isSuccessStatus(response)) {
+          setLastAck({ command: "PID_HOLD", status: "failed" })
+          addLog(`PID_HOLD failed: ${response.text}`, "error")
+          return false
+        }
+        setLastAck({ command: "PID_HOLD", status: "success" })
+        addLog(`PID_HOLD successful: ${response.text}`, "success")
+        return true
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error)
+        setLastAck({ command: "PID_HOLD", status: "failed" })
+        addLog(`PID_HOLD failed: ${message}`, "error")
+        return false
+      } finally {
+        setBusyCommand(null)
+      }
+    },
+    [addLog]
+  )
+
   const fetchProfileData = useCallback(async () => {
     setBusyCommand("FETCH_PROFILE")
     setProfile({
@@ -1016,6 +1066,7 @@ export function useFloatMissionState() {
     applyRuntimePidConfig,
     applyRuntimeProfile,
     applySyringe,
+    applyPidHold,
     commands,
     fetchProfileData,
     refreshRuntimeBalanceConfig,

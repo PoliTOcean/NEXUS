@@ -91,6 +91,10 @@ export function setFloatSyringe(uNorm: number, durationS: number, signal?: Abort
   return sendFloatCommand(`SYRINGE_SET ${uNorm} ${durationS}`, signal)
 }
 
+export function holdFloatPid(depthM: number, durationS: number, signal?: AbortSignal) {
+  return sendFloatCommand(`PID_HOLD ${depthM} ${durationS}`, signal)
+}
+
 export function getFloatProfile(signal?: AbortSignal) {
   return getJson<NexusFloatProfileResponse>("/FLOAT/profile", signal)
 }

@@ -45,8 +45,11 @@ def _save_float_config(next_config):
         config_file.write("\n")
 
 
-# Float body length (m); the firmware requires ascent_target_m + this < descent_target_m.
-FLOAT_LENGTH_M = 0.51
+# Offset cima->fondo del float (m) = SENSOR_TO_BOTTOM_M + SENSOR_TO_TOP_M nel
+# firmware (0.49 - 0.01). Il firmware richiede ascent_target_m + questo <
+# descent_target_m (vedi validateConfig / ascentTargetBottomM): teniamo lo stesso
+# valore per validare lato GUI esattamente come l'ESPA.
+FLOAT_LENGTH_M = 0.48
 
 
 def _profile_from_config(config):
@@ -60,7 +63,7 @@ def _profile_from_config(config):
         "hold_s": float(config.get("hold_s", 30.0)),
         "descent_timeout_s": float(config.get("descent_timeout_s", config.get("pid_timeout_s", 180.0))),
         "ascent_timeout_s": float(config.get("ascent_timeout_s", 120.0)),
-        "surface_rest_offset_m": float(config.get("surface_rest_offset_m", config.get("surface_offset_m", 0.10))),
+        "surface_rest_offset_m": float(config.get("surface_rest_offset_m", config.get("surface_offset_m", 0.15))),
     }
 
 
@@ -81,7 +84,7 @@ def _validate_profile(payload):
         if not 5.0 <= profile[field] <= 900.0:
             raise ValueError(f"{field} must be in [5, 900]")
     if ascent_target_bottom_m >= profile["descent_target_m"]:
-        raise ValueError("ascent_target_m + 0.51 must be lower than descent_target_m")
+        raise ValueError(f"ascent_target_m + {FLOAT_LENGTH_M} must be lower than descent_target_m")
 
     profile["ascent_target_bottom_m"] = ascent_target_bottom_m
     return profile

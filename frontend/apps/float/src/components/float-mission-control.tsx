@@ -229,6 +229,70 @@ function FloatSyringePanel({
   )
 }
 
+function FloatPidHoldPanel({
+  disabled,
+  onApply,
+}: {
+  disabled: boolean
+  onApply: (depthM: number, durationS: number) => Promise<boolean>
+}) {
+  const [depth, setDepth] = useState("2.5")
+  const [duration, setDuration] = useState("30")
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    void onApply(Number(depth), Number(duration))
+  }
+
+  return (
+    <Panel className={`bg-card/70 ${PARAMETER_RADIUS_CLASS}`}>
+      <PanelHeader>
+        <PanelTitle>PID Depth Hold</PanelTitle>
+        <PanelDescription>Direct PID_HOLD command</PanelDescription>
+      </PanelHeader>
+      <PanelContent>
+        <form className="space-y-4" onSubmit={handleSubmit}>
+          <ParameterInput
+            label="Depth"
+            unit="m"
+            type="number"
+            inputMode="decimal"
+            step="0.1"
+            min={0.1}
+            max={5}
+            helperText="Float-top depth, valid range 0.1–5.0 m"
+            value={depth}
+            disabled={disabled}
+            onChange={(event) => setDepth(event.target.value)}
+          />
+          <ParameterInput
+            label="Duration"
+            unit="s"
+            type="number"
+            inputMode="decimal"
+            step="0.5"
+            min={0.5}
+            max={300}
+            helperText="Hold time, valid range 0.5–300 s"
+            value={duration}
+            disabled={disabled}
+            onChange={(event) => setDuration(event.target.value)}
+          />
+          <div className="flex justify-end">
+            <Button
+              type="submit"
+              disabled={disabled}
+              className={`min-w-28 ${PARAMETER_RADIUS_CLASS}`}
+            >
+              HOLD DEPTH
+            </Button>
+          </div>
+        </form>
+      </PanelContent>
+    </Panel>
+  )
+}
+
 function FloatRuntimeProfilePanel({
   profile,
   statusText,
@@ -847,6 +911,7 @@ export function FloatMissionControl() {
     applyRuntimePidConfig,
     applyRuntimeProfile,
     applySyringe,
+    applyPidHold,
     commands,
     fetchProfileData,
     refreshRuntimeBalanceConfig,
@@ -944,6 +1009,11 @@ export function FloatMissionControl() {
                 <FloatSyringePanel
                   disabled={isBusy}
                   onApply={applySyringe}
+                />
+
+                <FloatPidHoldPanel
+                  disabled={isBusy}
+                  onApply={applyPidHold}
                 />
               </aside>
             </section>

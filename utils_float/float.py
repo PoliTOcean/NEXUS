@@ -24,6 +24,11 @@ with open(FLOAT_CONFIG_PATH) as f:
 TARGET_DEPTH = float_config.get("target_depth", 2.5)
 MAX_ERROR = float_config.get("max_error", 0.33)
 SHALLOW_TARGET_DEPTH = float_config.get("shallow_target_depth", 0.40)
+# depth_m del firmware e' riferito alla CIMA del float (parte da ~0 in superficie).
+# Il target di discesa e' invece riferito al FONDO: per allinearlo alla curva
+# riportata sottraiamo l'offset cima->fondo (SENSOR_TO_BOTTOM_M + SENSOR_TO_TOP_M).
+# Il target di salita (40 cm) e' gia' riferito alla cima -> nessun offset.
+GEOM_OFFSET = float_config.get("geom_offset_m", 0.48)
 
 
 def plot_pressure_time(data, arg, ylabel):
@@ -37,10 +42,12 @@ def plot_pressure_time(data, arg, ylabel):
     plt.plot(time_seconds, y_values, linestyle='-', marker='o', label=ylabel)
     
     if arg == 'depth':
-        plt.axhline(y=TARGET_DEPTH, color='r', linestyle='--', label=f'Deep target ({TARGET_DEPTH}m)')
-        plt.axhline(y=TARGET_DEPTH + MAX_ERROR, color='orange', linestyle=':', label=f'Deep + Error ({TARGET_DEPTH + MAX_ERROR:.2f}m)')
-        plt.axhline(y=TARGET_DEPTH - MAX_ERROR, color='orange', linestyle=':', label=f'Deep - Error ({TARGET_DEPTH - MAX_ERROR:.2f}m)')
-        plt.axhline(y=SHALLOW_TARGET_DEPTH, color='g', linestyle='--', label=f'Shallow target ({SHALLOW_TARGET_DEPTH}m)')
+        # Target di discesa riportato sulla CIMA (come depth_m): 2.5 m fondo -> ~2.02 m cima.
+        deep_top = TARGET_DEPTH - GEOM_OFFSET
+        plt.axhline(y=deep_top, color='r', linestyle='--', label=f'Deep target ({deep_top:.2f}m top | {TARGET_DEPTH}m bottom)')
+        plt.axhline(y=deep_top + MAX_ERROR, color='orange', linestyle=':', label=f'Deep + Error ({deep_top + MAX_ERROR:.2f}m)')
+        plt.axhline(y=deep_top - MAX_ERROR, color='orange', linestyle=':', label=f'Deep - Error ({deep_top - MAX_ERROR:.2f}m)')
+        plt.axhline(y=SHALLOW_TARGET_DEPTH, color='g', linestyle='--', label=f'Shallow target ({SHALLOW_TARGET_DEPTH}m top)')
         plt.axhline(y=SHALLOW_TARGET_DEPTH + MAX_ERROR, color='lime', linestyle=':', label=f'Shallow + Error ({SHALLOW_TARGET_DEPTH + MAX_ERROR:.2f}m)')
         plt.axhline(y=SHALLOW_TARGET_DEPTH - MAX_ERROR, color='lime', linestyle=':', label=f'Shallow - Error ({SHALLOW_TARGET_DEPTH - MAX_ERROR:.2f}m)')
         plt.legend()
