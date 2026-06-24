@@ -35,8 +35,6 @@ export function EvaMissionControl() {
 
           <div className="pointer-events-none absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 lg:block">
             <div className="pointer-events-auto flex items-center gap-2">
-              <EvaCoralCapture camera={primaryCamera} />
-              <EvaCrabCapture camera={primaryCamera} />
               <EvaIcebergPanel />
               <EvaEdnaPanel />
             </div>
@@ -65,7 +63,7 @@ export function EvaMissionControl() {
 
         <section className="min-h-0 flex-1 overflow-hidden">
           <div className="grid h-full min-h-0 grid-cols-[280px_minmax(0,1fr)] gap-3 overflow-hidden 2xl:grid-cols-[300px_minmax(0,1fr)]">
-            <aside className="flex min-h-0 flex-col gap-3 overflow-hidden">
+            <aside className="flex min-h-0 flex-col gap-3 overflow-y-auto">
               <Stopwatch
                 title="Stopwatch"
 
@@ -79,6 +77,10 @@ export function EvaMissionControl() {
               />
 
               <EvaTelemetryPanel telemetry={state.telemetry} />
+
+              {/* EVA task panels: non-modal so they never cover the camera. */}
+              <EvaCrabCapture camera={primaryCamera} />
+              <EvaCoralCapture camera={primaryCamera} />
             </aside>
 
             <EvaCameraDeck

@@ -1,19 +1,18 @@
-import { useCallback, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 import {
   Button,
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
   MetricCard,
+  Panel,
+  PanelContent,
+  PanelHeader,
+  PanelTitle,
 } from "@politocean/ui"
 import { HugeiconsIcon } from "@hugeicons/react"
 import { CrabIcon } from "@hugeicons/core-free-icons"
 
 import { captureFrameFromStream } from "@/lib/capture-frame"
+import { onEvaCommand } from "@/lib/eva-command-bus"
 import { analyzeCrabSample, getNexusBaseUrl } from "@/lib/nexus-client"
 import type { EvaCamera } from "@/types/eva"
 import type { CrabAnalysisResult } from "@/types/crab"
@@ -37,7 +36,6 @@ export function EvaCrabCapture({ camera }: { camera: EvaCamera | null }) {
   const [status, setStatus] = useState<Status>("idle")
   const [result, setResult] = useState<CrabAnalysisResult | null>(null)
   const [errorMessage, setErrorMessage] = useState<string>("")
-  const [dialogOpen, setDialogOpen] = useState(false)
   const abortRef = useRef<AbortController | null>(null)
 
   const busy = status === "capturing" || status === "analyzing"
@@ -52,7 +50,6 @@ export function EvaCrabCapture({ camera }: { camera: EvaCamera | null }) {
 
     setResult(null)
     setErrorMessage("")
-    setDialogOpen(true)
 
     try {
       setStatus("capturing")
@@ -77,75 +74,77 @@ export function EvaCrabCapture({ camera }: { camera: EvaCamera | null }) {
     }
   }, [camera])
 
+  // Gamepad: D-pad Up (CRAB_CAPTURE) fires the capture automatically. Keep a ref
+  // to the latest runCapture so we subscribe to the bus only once.
+  const runCaptureRef = useRef(runCapture)
+  useEffect(() => {
+    runCaptureRef.current = runCapture
+  }, [runCapture])
+
+  useEffect(() => {
+    return onEvaCommand((command) => {
+      if (command === "CRAB_CAPTURE") void runCaptureRef.current()
+    })
+  }, [])
+
   const annotatedSrc =
     result?.annotated_url ? `${getNexusBaseUrl()}${result.annotated_url}` : null
 
   return (
-    <>
-      <Button
-        type="button"
-        variant="secondary"
-        size="sm"
-        disabled={!canCapture}
-        onClick={runCapture}
-        title={
-          canCapture
-            ? "Cattura un frame e conta i granchi verdi invasivi"
-            : "Nessuno stream camera disponibile"
-        }
-      >
-        <HugeiconsIcon icon={CrabIcon} strokeWidth={2} data-icon="inline-start" />
-        {busy ? "Analisi..." : "Crab Counter"}
-      </Button>
+    <Panel className="shrink-0 bg-card/70">
+      <PanelHeader className="flex items-center justify-between gap-2 space-y-0 p-3">
+        <PanelTitle className="flex items-center gap-2">
+          <HugeiconsIcon icon={CrabIcon} strokeWidth={2} className="size-4" />
+          Crab Counter
+        </PanelTitle>
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          disabled={!canCapture}
+          onClick={runCapture}
+          title={
+            canCapture
+              ? "Cattura un frame e conta i granchi verdi invasivi (D-pad Su)"
+              : "Nessuno stream camera disponibile"
+          }
+        >
+          {busy ? "Analisi..." : "Scatta"}
+        </Button>
+      </PanelHeader>
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Crab Counter — Specie invasive</DialogTitle>
-            <DialogDescription>
-              {status === "capturing" && "Cattura del frame in corso..."}
-              {status === "analyzing" && "Inferenza YOLOv8 in corso..."}
-              {status === "done" && "Granchi verdi invasivi rilevati nel campione."}
-              {status === "error" && errorMessage}
-              {status === "idle" && "—"}
-            </DialogDescription>
-          </DialogHeader>
+      <PanelContent className="space-y-2 p-3 pt-0">
+        <p className="text-xs text-muted-foreground">
+          {status === "capturing" && "Cattura del frame in corso..."}
+          {status === "analyzing" && "Inferenza YOLOv8 in corso..."}
+          {status === "done" && "Granchi verdi invasivi rilevati nel campione."}
+          {status === "error" && errorMessage}
+          {status === "idle" && "D-pad Su per scattare e contare."}
+        </p>
 
-          {annotatedSrc && (
-            <img
-              src={annotatedSrc}
-              alt="Campione granchi annotato"
-              className="w-full rounded-md border"
+        {annotatedSrc && (
+          <img
+            src={annotatedSrc}
+            alt="Campione granchi annotato"
+            className="w-full rounded-md border"
+          />
+        )}
+
+        {status === "done" && result && (
+          <div className="grid grid-cols-2 gap-2">
+            <MetricCard
+              label="Green crabs (invasivi)"
+              value={result.green_count}
+              compact
             />
-          )}
-
-          {status === "done" && result && (
-            <div className="grid grid-cols-2 gap-2">
-              <MetricCard
-                label="Green crabs (invasivi)"
-                value={result.green_count}
-                compact
-              />
-              <MetricCard
-                label="Rilevamenti totali"
-                value={result.total_detections}
-                compact
-              />
-            </div>
-          )}
-
-          <DialogFooter showCloseButton>
-            <Button
-              type="button"
-              variant="default"
-              disabled={!canCapture}
-              onClick={runCapture}
-            >
-              {busy ? "Analisi..." : "Ri-scatta"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+            <MetricCard
+              label="Rilevamenti totali"
+              value={result.total_detections}
+              compact
+            />
+          </div>
+        )}
+      </PanelContent>
+    </Panel>
   )
 }

@@ -21,7 +21,7 @@ export function EvaJoystickStatusPanel({
   onOpenControllerMap,
 }: EvaJoystickStatusPanelProps) {
   return (
-    <Panel className="min-h-0 overflow-hidden bg-card/70">
+    <Panel className="shrink-0 bg-card/70">
       <PanelHeader className="flex items-center justify-between gap-2 space-y-0 p-3">
         <PanelTitle>Joystick</PanelTitle>
         <Button

@@ -40,9 +40,9 @@ export function EvaTelemetryPanel({ telemetry }: EvaTelemetryPanelProps) {
         },
       ]}
       columns={1}
-      className="min-h-0 flex-1 bg-card/70"
+      className="shrink-0 bg-card/70"
       headerClassName="p-3"
-      contentClassName="min-h-0 overflow-y-auto p-3 pt-0"
+      contentClassName="p-3 pt-0"
       gridClassName="grid-cols-1 gap-3"
     />
   )

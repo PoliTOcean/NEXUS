@@ -8,12 +8,15 @@ buttons:
     value:
     onShiftValue:
   Y:
-    onPress: "CLOSE_NIPPER"
-    onRelease: "STOP_NIPPER"
-    topic: "arm_commands/"
+    # EVA task Coral Garden: cattura/sostituisce la foto FRONTE. Comando pinza
+    # precedente disattivato (doppione di RB):
+    # onPress: "CLOSE_NIPPER" / onRelease: "STOP_NIPPER" / topic: "arm_commands/"
+    onPress: "CORAL_FRONT"
+    onRelease:
+    topic: "eva_commands/"
     onShiftPress:
     onShiftRelease:
-    value:
+    value: 1
     onShiftValue:
   X:
     onPress: "ROTATE_WRIST_CCW"
@@ -24,12 +27,16 @@ buttons:
     value:
     onShiftValue:
   A:
-    onPress: "OPEN_NIPPER"
-    onRelease: "STOP_NIPPER"
-    topic: "arm_commands/"
+    # EVA task Coral Garden: cattura/sostituisce la foto RETRO. Con fronte+retro
+    # presenti la ricostruzione parte da sola. Comando pinza precedente
+    # disattivato (doppione di LB):
+    # onPress: "OPEN_NIPPER" / onRelease: "STOP_NIPPER" / topic: "arm_commands/"
+    onPress: "CORAL_BACK"
+    onRelease:
+    topic: "eva_commands/"
     onShiftPress:
     onShiftRelease:
-    value:
+    value: 1
     onShiftValue:
   View:
     onPress: "VERTICAL_MODE_TOGGLE"
@@ -96,20 +103,26 @@ buttons:
     value:
     onShiftValue:
   D-Pad-Up:
-    onPress: "PITCH_REFERENCE_OFFSET"
-    onRelease: 
-    topic: "state_commands/"
+    # EVA task Crab Counter: scatto automatico (cattura + conta + mostra). Trim
+    # pitch precedente disattivato:
+    # onPress: "PITCH_REFERENCE_OFFSET" / value: 2.0 / topic: "state_commands/"
+    onPress: "CRAB_CAPTURE"
+    onRelease:
+    topic: "eva_commands/"
     onShiftPress:
     onShiftRelease:
-    value: 2.0
+    value: 1
     onShiftValue:
   D-Pad-Down:
-    onPress: "PITCH_REFERENCE_OFFSET"
+    # EVA task Coral Garden: apre/avvia la sessione (reset frame + risultato).
+    # Trim pitch precedente disattivato:
+    # onPress: "PITCH_REFERENCE_OFFSET" / value: -2.0 / topic: "state_commands/"
+    onPress: "CORAL_OPEN"
     onRelease:
-    topic: "state_commands/"
+    topic: "eva_commands/"
     onShiftPress:
     onShiftRelease:
-    value: -2.0
+    value: 1
     onShiftValue:
   D-Pad-Left:
     onPress: "PREV_CAMERA"

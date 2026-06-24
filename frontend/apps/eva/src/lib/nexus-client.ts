@@ -58,6 +58,35 @@ export async function analyzeCoralGarden(
 }
 
 /**
+ * Reconstruct the coral garden from a FRONT + BACK photo pair (Task 1.2).
+ *
+ * The CV model needs both views to rebuild the structure and place the targets.
+ * A 422 carries a structured CV failure body (e.g. ruler not found, or the
+ * two-photo `reconstruct` not yet available on the backend); other non-2xx throw.
+ */
+export async function reconstructCoralGarden(
+  front: Blob,
+  back: Blob,
+  signal?: AbortSignal
+): Promise<CoralAnalysisResult> {
+  const form = new FormData()
+  form.append("front", front, "coral-front.jpg")
+  form.append("back", back, "coral-back.jpg")
+
+  const response = await fetch(`${getNexusBaseUrl()}/coral/reconstruct`, {
+    method: "POST",
+    body: form,
+    signal,
+  })
+
+  if (!response.ok && response.status !== 422) {
+    throw new Error(`NEXUS /coral/reconstruct failed with ${response.status}`)
+  }
+
+  return response.json() as Promise<CoralAnalysisResult>
+}
+
+/**
  * Send a captured camera frame to the invasive-crab counter (Task 2.1).
  *
  * A 422 carries a structured CV failure body; other non-2xx are thrown.

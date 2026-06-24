@@ -7,6 +7,7 @@ import {
   getNexusControllerStatus,
   getNexusInfo,
 } from "@/lib/nexus-client"
+import { emitEvaCommand, type EvaCommand } from "@/lib/eva-command-bus"
 import type {
   EvaCamera,
   EvaFisheyeSettings,
@@ -660,6 +661,7 @@ export function useEvaMissionState() {
         setConnection("mqtt", "success", "Connected")
         mqttClient?.subscribe("status/")
         mqttClient?.subscribe("camera_control/")
+        mqttClient?.subscribe("eva_commands/")
       })
 
       mqttClient.on("reconnect", () => {
@@ -687,6 +689,19 @@ export function useEvaMissionState() {
         if (topic === "camera_control/") {
           if (text.includes("NEXT_CAMERA")) switchCameraByOffset(1)
           if (text.includes("PREV_CAMERA")) switchCameraByOffset(-1)
+          return
+        }
+
+        // Gamepad-driven EVA task commands (Crab/Coral). The backend publishes
+        // e.g. {"CRAB_CAPTURE": 1}; re-emit the command key on the bus so the
+        // task panels can react (see eva-command-bus.ts).
+        if (topic === "eva_commands/") {
+          try {
+            const cmd = Object.keys(JSON.parse(text))[0] as EvaCommand
+            if (cmd) emitEvaCommand(cmd)
+          } catch {
+            /* payload non valido: ignora */
+          }
           return
         }
 

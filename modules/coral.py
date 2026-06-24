@@ -63,6 +63,54 @@ def coral_analyze():
     return jsonify(payload), (200 if result["ok"] else 422)
 
 
+@app.route("/coral/reconstruct", methods=["POST"])
+def coral_reconstruct():
+    """Reconstruct the coral garden from a FRONT + BACK photo pair.
+
+    The CV model needs both views to rebuild the structure and place the targets,
+    so this takes two images instead of one. Mirrors /coral/analyze otherwise.
+    """
+    CAPTURE_DIR.mkdir(parents=True, exist_ok=True)
+
+    front = request.files.get("front")
+    back = request.files.get("back")
+    if front is None or back is None:
+        return jsonify({"ok": False, "error": "no_image"}), 400
+
+    ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%f")
+    front_path = CAPTURE_DIR / f"{ts}_front.jpg"
+    back_path = CAPTURE_DIR / f"{ts}_back.jpg"
+    front.save(str(front_path))
+    back.save(str(back_path))
+
+    try:
+        result = coral_cv.reconstruct(
+            str(front_path), str(back_path), str(CAPTURE_DIR), str(EQUATIONS_PATH)
+        )
+    except FileNotFoundError as exc:
+        # Submodule not initialised.
+        return jsonify({"ok": False, "error": "cv_unavailable", "detail": str(exc)}), 422
+    except AttributeError as exc:
+        # Submodule present but the two-photo `reconstruct` function not added yet.
+        return jsonify({"ok": False, "error": "cv_unavailable", "detail": str(exc)}), 422
+
+    annotated_url = None
+    if result.get("annotated_path"):
+        annotated_url = f"/coral/captures/{Path(result['annotated_path']).name}"
+
+    payload = {
+        "ok": result["ok"],
+        "length_cm": result["length_cm"],
+        "height_cm": result["height_cm"],
+        "targets_count": result["targets_count"],
+        "annotated_url": annotated_url,
+        "captured_at": ts,
+        "error": result["error"],
+    }
+
+    return jsonify(payload), (200 if result["ok"] else 422)
+
+
 @app.route("/coral/captures/<path:filename>", methods=["GET"])
 def coral_capture_file(filename):
     return send_from_directory(CAPTURE_DIR, filename)

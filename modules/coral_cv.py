@@ -45,3 +45,19 @@ def analyze(image_path, output_dir, equations_path=None):
       {ok, length_cm, height_cm, targets_count, annotated_path, error}
     """
     return _load_cv_module().analyze(image_path, output_dir, equations_path)
+
+
+def reconstruct(front_path, back_path, output_dir, equations_path=None):
+    """Reconstruct the coral garden from a FRONT + BACK photo pair.
+
+    Delegates to the submodule's `reconstruct`, which must accept the two image
+    paths and return the same dict shape as `analyze`:
+      {ok, length_cm, height_cm, targets_count, annotated_path, error}
+
+    The submodule function does not exist yet (it's the CV team's work); until it
+    is added the attribute lookup raises AttributeError, which the Flask route
+    surfaces as `cv_unavailable`.
+    """
+    return _load_cv_module().reconstruct(
+        front_path, back_path, output_dir, equations_path
+    )
