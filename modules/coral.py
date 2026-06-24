@@ -98,12 +98,19 @@ def coral_reconstruct():
     if result.get("annotated_path"):
         annotated_url = f"/coral/captures/{Path(result['annotated_path']).name}"
 
+    # The .obj mesh is written into CAPTURE_DIR; expose it for download so the
+    # operator can open it in a CAD tool. Served by /coral/captures/<file>.
+    obj_url = None
+    if result.get("obj_path"):
+        obj_url = f"/coral/captures/{Path(result['obj_path']).name}"
+
     payload = {
         "ok": result["ok"],
         "length_cm": result["length_cm"],
         "height_cm": result["height_cm"],
         "targets_count": result["targets_count"],
         "annotated_url": annotated_url,
+        "obj_url": obj_url,
         "captured_at": ts,
         "error": result["error"],
     }

@@ -50,14 +50,14 @@ def analyze(image_path, output_dir, equations_path=None):
 def reconstruct(front_path, back_path, output_dir, equations_path=None):
     """Reconstruct the coral garden from a FRONT + BACK photo pair.
 
-    Delegates to the submodule's `reconstruct`, which must accept the two image
-    paths and return the same dict shape as `analyze`:
-      {ok, length_cm, height_cm, targets_count, annotated_path, error}
+    Delegates to the submodule's headless `reconstruct`, which builds the 3D
+    model and exports a `.obj` (no GUI). Returns the analyze-shaped dict plus the
+    path to the generated mesh:
+      {ok, length_cm, height_cm, targets_count, annotated_path, obj_path, error}
 
-    The submodule function does not exist yet (it's the CV team's work); until it
-    is added the attribute lookup raises AttributeError, which the Flask route
-    surfaces as `cv_unavailable`.
+    `back_path` may be falsy (single front view).
     """
     return _load_cv_module().reconstruct(
-        front_path, back_path, output_dir, equations_path
+        front_path, back_path or None, output_dir=output_dir,
+        equations_path=equations_path
     )
