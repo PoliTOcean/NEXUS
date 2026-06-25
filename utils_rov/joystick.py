@@ -25,6 +25,10 @@ class Joystick():
                                 "PITCH": 0
                                 }
         self.active = False
+        # Previous-state caches so polling only fires callbacks on real changes.
+        self.__last_axes = {}
+        self.__last_buttons = {}
+        self.__last_hat = -1
         sdl2.SDL_Init(sdl2.SDL_INIT_JOYSTICK)
         self.__path_mappings = os.path.join(os.path.dirname(__file__), "config/XboxOneController.json")
 
@@ -101,37 +105,55 @@ class Joystick():
         self.active = False
 
     def update(self):
-        # get_events() drains the SDL queue (SDL_GETEVENT), so we must read it
-        # exactly once per tick and iterate the returned list. Calling it again
-        # inside the loop would consume freshly-arrived events and silently drop
-        # them, which made small/slow joystick motions feel unresponsive.
-        for event in sdl2.ext.get_events():
-            if event.type == sdl2.SDL_JOYAXISMOTION:
-                self.__on_axis_changed(self.__mappings["axes"][event.jaxis.axis], event.jaxis.value)
-            elif event.type == sdl2.SDL_JOYDEVICEADDED:
-                self.__open()
-                print("[JOYSTICK] Joystick added")
-            elif event.type == sdl2.SDL_JOYDEVICEREMOVED:
-                self.__close()
-                print("[JOYSTICK] Joystick removed")
-            elif event.type == sdl2.SDL_JOYBUTTONDOWN or event.type == sdl2.SDL_JOYBUTTONUP:
-                #print(event.jbutton.button)
-                self.__on_button_changed(self.__mappings["buttons"][event.jbutton.button], event.jbutton.state)
-            elif event.type == sdl2.SDL_JOYHATMOTION:
-                if event.jhat.value == 0:
-                    self.__on_button_changed(self.__mappings["joyhat"][self.__last_pressed], 0)
-                elif event.jhat.value == 1:
-                    self.__on_button_changed(self.__mappings["joyhat"][0], 1)
-                    self.__last_pressed = 0
-                elif event.jhat.value == 4:
-                    self.__on_button_changed(self.__mappings["joyhat"][1], 1)
-                    self.__last_pressed = 1
-                elif event.jhat.value == 8:
-                    self.__on_button_changed(self.__mappings["joyhat"][2], 1)
-                    self.__last_pressed = 2    
-                elif event.jhat.value == 2:
-                    self.__on_button_changed(self.__mappings["joyhat"][3], 1)
-                    self.__last_pressed = 3
+        # If a joystick is already connected (e.g. plugged in before NEXUS
+        # started), SDL may never deliver the initial SDL_JOYDEVICEADDED event
+        # in a headless/joystick-only setup, so __open() would never run and no
+        # axes would ever be read. Open it proactively here when one is present
+        # but not yet active.
+        if not self.active and sdl2.SDL_NumJoysticks() > 0:
+            self.__open()
+            print("[JOYSTICK] Joystick opened (already connected at startup)")
+        if not self.active:
+            return
+
+        # NOTE: we poll the joystick state directly instead of using the SDL
+        # event queue (sdl2.ext.get_events()). SDL only pumps events on the
+        # thread that called SDL_Init; NEXUS runs update() on the controller
+        # thread while SDL_Init ran on the main/import thread, so the event
+        # queue stays empty there and no axis motion was ever delivered.
+        # SDL_JoystickUpdate() + Get*() work from any thread.
+        sdl2.SDL_JoystickUpdate()
+
+        for axis, command in enumerate(self.__mappings["axes"]):
+            value = sdl2.SDL_JoystickGetAxis(self.__joystick, axis)
+            if value != self.__last_axes.get(axis):
+                self.__last_axes[axis] = value
+                self.__on_axis_changed(command, value)
+
+        for button, command in enumerate(self.__mappings["buttons"]):
+            state = sdl2.SDL_JoystickGetButton(self.__joystick, button)
+            if state != self.__last_buttons.get(button):
+                self.__last_buttons[button] = state
+                self.__on_button_changed(command, state)
+
+        # D-pad / hat: map the same value codes the event path used.
+        hat = sdl2.SDL_JoystickGetHat(self.__joystick, 0)
+        if hat != self.__last_hat:
+            self.__last_hat = hat
+            if hat == 0:
+                self.__on_button_changed(self.__mappings["joyhat"][self.__last_pressed], 0)
+            elif hat == 1:
+                self.__on_button_changed(self.__mappings["joyhat"][0], 1)
+                self.__last_pressed = 0
+            elif hat == 4:
+                self.__on_button_changed(self.__mappings["joyhat"][1], 1)
+                self.__last_pressed = 1
+            elif hat == 8:
+                self.__on_button_changed(self.__mappings["joyhat"][2], 1)
+                self.__last_pressed = 2
+            elif hat == 2:
+                self.__on_button_changed(self.__mappings["joyhat"][3], 1)
+                self.__last_pressed = 3
 
 
     def status(self):
