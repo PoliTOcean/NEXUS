@@ -22,20 +22,22 @@ import type {
   NexusInfo,
   NexusStatusPayload,
 } from "@/types/eva"
-import coralStubImageUrl from "@/assets/coral-stub.jpg"
+import coralStubImageUrl from "@/assets/coral-front-photo.jpg"
+import coralBackStubImageUrl from "@/assets/coral-back-photo.jpg"
 import crabStubImageUrl from "@/assets/crab-stub.jpg"
 
-// Dev-only: stream a static sample image on the primary debug camera instead of
-// the animated test pattern, so the capture flows can be tested in-browser
-// without hardware (positive path). VITE_CORAL_STUB shows the coral-garden image
-// (orange ruler); VITE_CRAB_STUB shows the crab-sample image. Coral wins if both.
-const CORAL_STUB_ENABLED = Boolean(import.meta.env.VITE_CORAL_STUB)
-const CRAB_STUB_ENABLED = Boolean(import.meta.env.VITE_CRAB_STUB)
-const STUB_IMAGE_URL = CORAL_STUB_ENABLED
-  ? coralStubImageUrl
-  : CRAB_STUB_ENABLED
-    ? crabStubImageUrl
-    : undefined
+// Dev-only: stream static sample images on the debug cameras instead of the
+// animated test pattern, so the capture flows can be tested in-browser without
+// hardware. With a stub flag on, the first three debug cameras carry:
+//   cam 0 (primary) = coral FRONT (orange ruler) -> Y
+//   cam 1           = coral BACK                  -> A
+//   cam 2           = crab sample                 -> D-pad Up
+const STUBS_ENABLED =
+  Boolean(import.meta.env.VITE_CORAL_STUB) ||
+  Boolean(import.meta.env.VITE_CRAB_STUB)
+const STUB_IMAGE_BY_INDEX: Array<string | undefined> = STUBS_ENABLED
+  ? [coralStubImageUrl, coralBackStubImageUrl, crabStubImageUrl]
+  : []
 
 type JanusStreamInfo = {
   id: number | string
@@ -344,6 +346,17 @@ function createDebugCameraStream(
   let stubImage: HTMLImageElement | null = null
   if (imageUrl) {
     stubImage = new Image()
+    // Render the stub at its NATIVE resolution: resize the canvas to the photo
+    // once loaded so the captured frame is pixel-faithful to the source. The
+    // previous 1280x720 contain-fit downscaled + letterboxed + re-JPEG'd the
+    // image, which shifted the backend CV target detection. captureStream
+    // follows the canvas size, so the grabbed frame becomes the full-res photo.
+    stubImage.onload = () => {
+      if (stubImage && stubImage.naturalWidth > 0) {
+        canvas.width = stubImage.naturalWidth
+        canvas.height = stubImage.naturalHeight
+      }
+    }
     stubImage.src = imageUrl
   }
 
@@ -354,23 +367,13 @@ function createDebugCameraStream(
     const height = canvas.height
 
     if (stubImage) {
-      context.fillStyle = "black"
-      context.fillRect(0, 0, width, height)
       if (stubImage.complete && stubImage.naturalWidth > 0) {
-        // contain-fit the image so the ruler/structure aren't distorted
-        const scale = Math.min(
-          width / stubImage.naturalWidth,
-          height / stubImage.naturalHeight
-        )
-        const drawW = stubImage.naturalWidth * scale
-        const drawH = stubImage.naturalHeight * scale
-        context.drawImage(
-          stubImage,
-          (width - drawW) / 2,
-          (height - drawH) / 2,
-          drawW,
-          drawH
-        )
+        // Canvas is sized to the photo (see onload): draw 1:1, no downscale or
+        // letterbox, so the captured frame matches the source pixel-for-pixel.
+        context.drawImage(stubImage, 0, 0, width, height)
+      } else {
+        context.fillStyle = "black"
+        context.fillRect(0, 0, width, height)
       }
       animationFrameId = window.requestAnimationFrame(draw)
       return
@@ -789,7 +792,7 @@ export function useEvaMissionState() {
 
         const nextCameras = debugCameraList.map((camera, index) => {
           const nextCamera = normalizeDebugCamera(camera, index)
-          const stubUrl = index === 0 ? STUB_IMAGE_URL : undefined
+          const stubUrl = STUB_IMAGE_BY_INDEX[index]
           const debugStream = createDebugCameraStream(
             nextCamera.name,
             nextCamera.aspectRatio,

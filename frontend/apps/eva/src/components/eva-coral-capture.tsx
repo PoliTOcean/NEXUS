@@ -282,6 +282,14 @@ export function EvaCoralCapture({ camera }: { camera: EvaCamera | null }) {
             <MetricCard label="Target" value={result.targets_count} compact />
           </div>
         )}
+
+        {status === "done" && result?.obj_url && (
+          <Button asChild variant="secondary" size="sm" className="w-full">
+            <a href={`${getNexusBaseUrl()}${result.obj_url}`} download>
+              Scarica modello 3D (.obj)
+            </a>
+          </Button>
+        )}
       </PanelContent>
     </Panel>
   )
