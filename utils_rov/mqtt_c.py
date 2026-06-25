@@ -25,6 +25,11 @@ class MQTTClient():
         self.__client.on_connect = self.__on_connect
         self.__client.on_message = self.__on_message
         self.__client.on_disconnect = self.__on_disconnect
+        # Keep retrying forever with capped backoff when the broker dies / the
+        # network drops. Without this the loop thread can give up and the client
+        # stays Disconnected until NEXUS is restarted (e.g. ROV tether unplugged
+        # mid-mission). 1s initial, doubling up to 8s.
+        self.__client.reconnect_delay_set(min_delay=1, max_delay=8)
 
     @property
     def status(self):
@@ -49,6 +54,25 @@ class MQTTClient():
             print(f"[MQTT] Connection initiation failed: {e}")
             self.__status = MQTTStatus.Disconnected
             # loop_start() wasn't called, so no auto-reconnect yet
+
+    def ensure_connected(self):
+        """Watchdog hook: force a reconnect if we are not Connected.
+
+        paho's background loop usually reconnects on its own, but it can get
+        wedged in Connecting (e.g. broker died and came back, or the tether was
+        unplugged mid-mission), leaving NEXUS unable to send axes until a manual
+        restart. Calling this periodically from the controller thread (NOT from
+        an MQTT callback) recovers from that. Safe: reconnect() only re-opens
+        the existing socket; the loop thread keeps running.
+        """
+        if self.__status == MQTTStatus.Connected:
+            return
+        try:
+            print(f"[MQTT] Watchdog: status={self.__status}, forcing reconnect...")
+            self.__client.reconnect()
+        except (OSError, Exception) as e:
+            # Broker still down — the loop's own backoff keeps trying too.
+            print(f"[MQTT] Watchdog reconnect failed: {e}")
 
     def disconnect(self):
         if self.__status != MQTTStatus.Disconnected:

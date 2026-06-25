@@ -225,8 +225,11 @@ class ROVController():
                     mqtt_status = self.__mqttClient.status
                     if self.debug and mqtt_status != MQTTStatus.Connected:
                          print(f"[Controller] MQTT Status Check: {mqtt_status}")
-                    if mqtt_status == MQTTStatus.Disconnected:
-                         pass
+                    # Watchdog: if MQTT isn't healthy (broker died, tether
+                    # unplugged, or client wedged in Connecting), kick a
+                    # reconnect so axes resume without restarting NEXUS.
+                    if mqtt_status != MQTTStatus.Connected:
+                         self.__mqttClient.ensure_connected()
                     last_status_check_time = current_time
 
                 if (current_time - self.last_send_time) >= INTERVAL:

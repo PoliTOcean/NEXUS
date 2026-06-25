@@ -110,9 +110,24 @@ class Joystick():
         # in a headless/joystick-only setup, so __open() would never run and no
         # axes would ever be read. Open it proactively here when one is present
         # but not yet active.
-        if not self.active and sdl2.SDL_NumJoysticks() > 0:
+        # Refresh SDL's device list so plug/unplug is noticed even though we
+        # don't drain the event queue (see note below).
+        sdl2.SDL_JoystickUpdate()
+        present = sdl2.SDL_NumJoysticks() > 0
+
+        # Controller unplugged mid-mission: drop the dead handle so a re-plug
+        # re-opens it cleanly instead of polling a stale joystick forever.
+        if self.active and not present:
+            print("[JOYSTICK] Joystick disconnected")
+            self.__close()
+
+        # Open proactively when a joystick is present but not yet active. Covers
+        # both "already plugged in at startup" (SDL never sends the initial
+        # JOYDEVICEADDED in our headless setup) and "re-plugged after unplug".
+        if not self.active and present:
             self.__open()
-            print("[JOYSTICK] Joystick opened (already connected at startup)")
+            print("[JOYSTICK] Joystick opened")
+
         if not self.active:
             return
 
@@ -121,8 +136,7 @@ class Joystick():
         # thread that called SDL_Init; NEXUS runs update() on the controller
         # thread while SDL_Init ran on the main/import thread, so the event
         # queue stays empty there and no axis motion was ever delivered.
-        # SDL_JoystickUpdate() + Get*() work from any thread.
-        sdl2.SDL_JoystickUpdate()
+        # SDL_JoystickUpdate() (called above) + Get*() work from any thread.
 
         for axis, command in enumerate(self.__mappings["axes"]):
             value = sdl2.SDL_JoystickGetAxis(self.__joystick, axis)
